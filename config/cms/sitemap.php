@@ -17,10 +17,10 @@ return [
         // \CMS\SiteManager\Models\CmsKit\Testimonial::class,
 
         // Dynamic format (specify URL prefix and optionally slug field)
-        // \App\Models\Service::class => [
-        //     'url_prefix' => '/services/',
-        //     'slug_field' => 'slug', // optional, defaults to 'slug'
-        // ],
+        CMS\SiteManager\Models\CmsKit\Blog::class => [
+            'url_prefix' => '/blogs/',
+            'slug_field' => 'slug', // optional, defaults to 'slug'
+        ],
     ],
 
     /*

@@ -10,6 +10,66 @@
  *   config/cms/database.php -> banners.items.extra_fields
  */
 return [
+    'about' => [
+        'items' => [
+            'title' => true,
+            'subtitle' => true,
+            'description' => true,
+            'image_1' => true,
+            'image_1_alt' => true,
+            'image_2' => true,
+            'image_2_alt' => true,
+            'image_3' => true,
+            'image_3_alt' => true,
+            'image_4' => true,
+            'image_4_alt' => true,
+            'status' => true,
+            'required' => ['title'],
+        ],
+    ],
+    'mission-vision' => [
+        'max_items' => 3,
+        'items' => [
+            'title' => true,
+            'description' => true,
+            'image' => true,
+            'image_alt' => true,
+            'order' => true,
+            'status' => true,
+            'required' => ['title', 'description'],
+        ],
+    ],
+    'why-choose-us' => [
+        'max_items' => 4,
+        'section' => [
+            'title' => true,
+            'subtitle' => true,
+            'description' => true,
+            'section_image' => true,
+            'status' => true,
+            'required' => ['title'],
+        ],
+        'items' => [
+            'title' => true,
+            'description' => true,
+            'order' => true,
+            'status' => true,
+            'required' => ['title', 'description'],
+        ],
+    ],
+    'successful-journeys' => [
+        'items' => [
+            'year' => true,
+            'description' => true,
+            'image_1' => true,
+            'image_1_alt' => true,
+            'image_2' => true,
+            'image_2_alt' => true,
+            'order' => true,
+            'status' => true,
+            'required' => ['year', 'description'],
+        ],
+    ],
     'languages' => [
         'items' => [
             'flag' => true,
@@ -60,23 +120,23 @@ return [
     ],
     'banners' => [
         'max_items' => 5, // Dynamic limit for banners
-        'allowed_types' => ['image', 'video'], // Available banner types
+        'allowed_types' => ['image'], // Available banner types
         'items' => [
             'banner_type' => true, // New: image, video toggle
             'line_1' => true,
             'line_2' => true,
-            'content' => true,
+            'content' => false,
             'image' => true,
-            'video_url' => true, // New: for video banners
-            'video_file' => true, // New: for video file uploads
+            'video_url' => false, // New: for video banners
+            'video_file' => false, // New: for video file uploads
             'image_alt' => true,
             'buttons' => true, // New: JSON array of buttons
-            'additional_buttons'=> true, // New: toggle for additional buttons
-            'google_review_text' => true, // New
-            'google_rating' => true, // New
-            'google_review_count' => true, // New
-            'google_avatars' => true, // New: for the avatars in screenshot
-            'google_avatars_alt' => true, // New: alt text for avatars
+            'additional_buttons'=> false, // New: toggle for additional buttons
+            'google_review_text' => false, // New
+            'google_rating' => false, // New
+            'google_review_count' => false, // New
+            'google_avatars' => false, // New: for the avatars in screenshot
+            'google_avatars_alt' => false, // New: alt text for avatars
             'order' => true,
             'status' => true,
             'extra_fields' => [],
@@ -88,44 +148,52 @@ return [
     ],
     'site-information' => [
         'company_name' => true,
-        'address' => true,
-        'country' => true,
-        'po_box' => true,
-        'fax' => true,
+        'address' => false,
+        'country' => false,
+        'po_box' => false,
+        'fax' => false,
         'phone_1' => true,
         'phone_2' => true,
-        'phone_3' => true,
-        'phone_4' => true,
+        'phone_3' => false,
+        'phone_4' => false,
         'whatsapp_number' => true,
         'email_1' => true,
-        'email_2' => true,
-        'email_3' => true,
-        'email_4' => true,
+        'email_2' => false,
+        'email_3' => false,
+        'email_4' => false,
         'receipt_email' => true,
         'privacy_policy' => true,
         'terms_and_conditions' => true,
         'disclaimer' => true,
         'logo' => true,
         'logo_alt' => true,
-        'footer_logo' => true,
-        'footer_logo_alt' => true,
-        'footer_description' => true,
+        'footer_logo' => false,
+        'footer_logo_alt' => false,
+        'footer_description' => false,
         'facebook' => true,
         'twitter' => true,
         'linkedin' => true,
         'instagram' => true,
-        'tiktok' => true,
-        'snapchat' => true,
-        'pinterest' => true,
+        'tiktok' => false,
+        'snapchat' => false,
+        'pinterest' => false,
         'youtube' => true,
-        'skype' => true,
+        'skype' => false,
         'whatsapp_social' => true,
-        'vimeo' => true,
+        'vimeo' => false,
         'gtag' => true,
         'custom_head_script' => true,
         'custom_body_script' => true,
-        'extra_fields' => [],
-        'required' => ['company_name', 'address', 'phone_1', 'email_1', 'receipt_email', 'logo', 'favicon'], // Fields that are mandatory
+        'extra_fields' => [
+            'cookie_policy' => [
+                'type' => 'textarea',
+                'label' => 'Cookie Policy',
+                'editor' => 'tinymce',
+                'translatable' => true,
+                'column_class' => 'col-12',
+            ],
+        ],
+        'required' => ['company_name', 'phone_1', 'email_1', 'receipt_email', 'logo', 'favicon'], // Fields that are mandatory
     ],
     'locations' => [
         'section' => [
@@ -166,9 +234,9 @@ return [
         'section' => [
             'title' => true,
             'listing_title' => true,
-            'description' => true,
-            'banner' => true,
-            'banner_alt' => true,
+            'description' => false,
+            'banner' => false,
+            'banner_alt' => false,
             'status' => true,
             'extra_fields' => [],
             'required' => ['title'],
@@ -180,18 +248,174 @@ return [
             'published_at' => true,
             'feature_image' => true,
             'feature_image_alt' => true,
-            'detail_image' => true,
-            'detail_image_alt' => true,
-            'banner_image' => true,
-            'banner_alt' => true,
+            'detail_image' => false,
+            'detail_image_alt' => false,
+            'banner_image' => false,
+            'banner_alt' => false,
             'image_3' => true,
             'image_3_alt' => true,
             'image_4' => true,
             'image_4_alt' => true,
             'order' => true,
             'status' => true,
-            'extra_fields' => [],
+            'extra_fields' => 
+            [ 'published_by' => [
+                    'type' => 'text',
+                    'label' => 'Published By',
+                    'placeholder' => 'Dist3Admin',
+                    'translatable' => true,
+                ],
+                'type' => [
+                    'type' => 'text',
+                    'label' => 'Type',
+                    'placeholder' => 'e.g. Buying Properties, Real Estate',
+                    'translatable' => true,
+                ]
+            ],
             'required' => ['title', 'content', 'published_at', 'feature_image', 'feature_image_alt'],
+        ],
+    ],
+    'careers' => [
+        'section' => [
+            'title' => true,
+            'description' => true,
+            'banner' => false,
+            'banner_alt' => false,
+            'filter_enabled' => true,
+            'filters' => true,
+            'filterable_columns' => ['job_type', 'department', 'location', 'country', 'base'],
+            'extra_fields' => [],
+            'required' => ['title'],
+        ],
+        'items' => [
+            'columns' => [
+                'title' => true,
+                'job_type' => true,
+                'department' => true,
+                'location' => true,
+                'published_date' => true,
+                'order' => true,
+                'status' => true,
+            ],
+            'title' => true,
+            'slug' => true,
+            'short_description' => true,
+            'job_type' => true,
+            'job_type_options' => [
+                'full_time' => [
+                    'en' => 'Full Time',
+                    'ar' => 'دوام كامل',
+                ],
+                'part_time' => [
+                    'en' => 'Part Time',
+                    'ar' => 'دوام جزئي',
+
+                ],
+                'remote' => [
+                    'en' => 'Remote',
+                    'ar' => 'عن بعد',
+                ],
+            ],
+            'department' => true,
+            'location' => true,
+            'country' => true,
+            'base' => true,
+            'base_options' => [
+                'temporary' => [
+                    'en' => 'Temporary',
+                    'ar' => 'مؤقت',
+                ],
+                'permanent' => [
+                    'en' => 'Permanent',
+                    'ar' => 'دائم',
+                ],
+                'contract' => [
+                    'en' => 'Contract',
+                    'ar' => 'عقد',
+                ],
+            ],
+            'about' => true,
+            'responsibilities' => true,
+            'requirements' => true,
+            'join_the_team' => true,
+            'published_date' => true,
+            'order' => true,
+            'status' => true,
+            'extra_fields' => [],
+            'required' => ['title', 'job_type', 'department', 'location', 'published_date'],
+        ],
+        'departments' => [
+            'columns' => [
+                'title' => true,
+                'description' => true,
+                'order' => true,
+                'status' => true,
+            ],
+            'title' => true,
+            'description' => true,
+            'stats' => false,
+            'order' => true,
+            'status' => true,
+            'extra_fields' => [],
+            'required' => ['title'],
+        ],
+        'candidates' => [
+            'columns' => [
+                'name' => true,
+                'email' => true,
+                'phone' => true,
+                'state' => true,
+                'country' => true,
+                'apply_for' => true,
+                'experience' => true,
+                'designation' => true,
+                'additional_information' => true,
+                'attachment' => true,
+                'privacy' => true,
+                'submitted_at' => true,
+            ],
+            'name' => true,
+            'email' => true,
+            'phone' => true,
+            'state' => true,
+            'country' => true,
+            'apply_for' => true,
+            'experience' => true,
+            'designation' => true,
+            'submitted' => true,
+            'additional_information' => true,
+            'attachment' => true,
+            'privacy' => true,
+            'extra_fields' => [],
+        ],
+    ],
+    'properties' => [
+        'property_types' => [
+            'apartment' => ['en' => 'Apartment', 'ar' => 'شقة'],
+            'villa' => ['en' => 'Villa', 'ar' => 'فيلا'],
+            'townhouse' => ['en' => 'Townhouse', 'ar' => 'منزل تاون'],
+            'penthouse' => ['en' => 'Penthouse', 'ar' => 'بيت على الطابق العلوي'],
+            'office' => ['en' => 'Office', 'ar' => 'مكتب'],
+            'warehouse' => ['en' => 'Warehouse', 'ar' => 'مستودع'],
+        ],
+        'listing_types' => [
+            'rent' => ['en' => 'Rent', 'ar' => 'إيجار'],
+            'sale' => ['en' => 'Sale', 'ar' => 'بيع'],
+        ],
+        'source_types' => [
+            'manual' => ['en' => 'Manual', 'ar' => 'Manual'],
+            'sync' => ['en' => 'Sync', 'ar' => 'Sync'],
+        ],
+        'currencies' => [
+            'AED' => 'AED',
+            'USD' => 'USD',
+            'EUR' => 'EUR',
+        ],
+        'nearby_place_types' => [
+            'school' => ['en' => 'School', 'ar' => 'مدرسة'],
+            'hospital' => ['en' => 'Hospital', 'ar' => 'مستشفي'],
+            'restaurant' => ['en' => 'Restaurant', 'ar' => 'مطعم'],
+            'attraction' => ['en' => 'Attraction', 'ar' => 'معلم سياحي'],
         ],
     ],
     'faqs' => [
@@ -211,4 +435,5 @@ return [
         ],
     ],
 ];
+
 

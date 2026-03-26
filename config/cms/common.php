@@ -18,18 +18,33 @@ return [
     ],
 
     'modules' => [
-        'testimonials' => true,
+        'about' => true,
+        'mission-vision' => true,
+        'why-choose-us' => true,
+        'successful-journeys' => true,
+        'testimonials' => false,
         'languages' => true,
         'metadata' => true,
         'site-information' => true,
         'sitemap' => true,
         'banners' => true,
-        'faqs' => true,
+        'faqs' => false,
         'enquiries' => true,
         'locations' => true,
-        'brands' => true,
-        'newsletter-signups' => true,
+        'brands' => false,
+        'newsletter-signups' => false,
         'blogs' => true,
+        'careers' => true,
+        'properties' => true,
+        'agents' => true,
+        'nearby-places' => true,
+    ],
+
+    'careers' => [
+        'common_section' => true,
+        'vacancies' => true,
+        'departments' => true,
+        'candidates' => true,
     ],
 
     'tinymce' => [

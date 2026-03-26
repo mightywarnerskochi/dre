@@ -10,6 +10,7 @@
     @endif
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     @php
         $primaryColor = config('cms-kit.common.theme.primary_color', '#dc3545');
         $normalizedPrimary = ltrim($primaryColor, '#');
@@ -126,7 +127,48 @@
                         </div>
                     </div>
                     @endif
-                    
+
+                    @if(
+                        (config('cms-kit.common.modules.about', true) && $cmsUser->can('about.view')) ||
+                        (config('cms-kit.common.modules.mission-vision', true) && $cmsUser->can('mission-vision.view')) ||
+                        (config('cms-kit.common.modules.why-choose-us', true) && $cmsUser->can('why-choose-us.view')) ||
+                        (config('cms-kit.common.modules.successful-journeys', true) && $cmsUser->can('successful-journeys.view'))
+                    )
+                    <div class="nav-item sidebar-group">
+                        <a class="nav-link d-flex align-items-center sidebar-group-toggle @if(request()->routeIs('cms.about.*') || request()->routeIs('cms.mission-vision.*') || request()->routeIs('cms.why-choose-us.*') || request()->routeIs('cms.successful-journeys.*')) active @endif"
+                           data-bs-toggle="collapse" href="#aboutMenu" role="button"
+                           aria-expanded="@if(request()->routeIs('cms.about.*') || request()->routeIs('cms.mission-vision.*') || request()->routeIs('cms.why-choose-us.*') || request()->routeIs('cms.successful-journeys.*')) true @else false @endif">
+                            <i class="fas fa-circle-info"></i>
+                            <span>About</span>
+                            <i class="fas fa-chevron-down ms-auto sidebar-chevron"></i>
+                        </a>
+                        <div class="collapse sidebar-submenu @if(request()->routeIs('cms.about.*') || request()->routeIs('cms.mission-vision.*') || request()->routeIs('cms.why-choose-us.*') || request()->routeIs('cms.successful-journeys.*')) show @endif" id="aboutMenu">
+                            <nav class="nav flex-column">
+                                @if(config('cms-kit.common.modules.about', true) && $cmsUser->can('about.view'))
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.about.*')) active @endif" href="{{ route('cms.about.edit') }}">
+                                    About
+                                </a>
+                                @endif
+                                @if(config('cms-kit.common.modules.mission-vision', true) && $cmsUser->can('mission-vision.view'))
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.mission-vision.*')) active @endif" href="{{ route('cms.mission-vision.index') }}">
+                                    Mission & Vision
+                                </a>
+                                @endif
+                                @if(config('cms-kit.common.modules.why-choose-us', true) && $cmsUser->can('why-choose-us.view'))
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.why-choose-us.*')) active @endif" href="{{ route('cms.why-choose-us.index') }}">
+                                    Why Choose Us
+                                </a>
+                                @endif
+                                @if(config('cms-kit.common.modules.successful-journeys', true) && $cmsUser->can('successful-journeys.view'))
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.successful-journeys.*')) active @endif" href="{{ route('cms.successful-journeys.index') }}">
+                                    Successful Journey
+                                </a>
+                                @endif
+                            </nav>
+                        </div>
+                    </div>
+                    @endif
+
                     @if(config('cms-kit.common.modules.testimonials', true) && $cmsUser->can('testimonials.view'))
                     <a class="nav-link @if(Route::is('cms.testimonials.*')) active @endif" href="{{ route('cms.testimonials.index') }}">
                         <i class="fas fa-comment-dots"></i> Testimonials
@@ -180,6 +222,77 @@
                     <a class="nav-link @if(Route::is('cms.blogs.*')) active @endif" href="{{ route('cms.blogs.index') }}">
                         <i class="fas fa-blog"></i> Blogs
                     </a>
+                    @endif
+
+                    @if(config('cms-kit.common.modules.careers', true) && $cmsUser->can('careers.view'))
+                    <div class="nav-item sidebar-group">
+                        <a class="nav-link d-flex align-items-center sidebar-group-toggle @if(request()->routeIs('cms.careers.*')) active @endif" 
+                           data-bs-toggle="collapse" href="#careersMenu" role="button" 
+                           aria-expanded="@if(request()->routeIs('cms.careers.*')) true @else false @endif">
+                            <i class="fas fa-briefcase"></i>
+                            <span>Careers</span>
+                            <i class="fas fa-chevron-down ms-auto sidebar-chevron"></i>
+                        </a>
+                        <div class="collapse sidebar-submenu @if(request()->routeIs('cms.careers.*')) show @endif" id="careersMenu">
+                            <nav class="nav flex-column">
+                                @if(config('cms-kit.common.careers.common_section', true))
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.careers.common')) active @endif" href="{{ route('cms.careers.common') }}">
+                                    Common Section
+                                </a>
+                                @endif
+                                @if(config('cms-kit.common.careers.vacancies', true))
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.careers.vacancies.index') || request()->routeIs('cms.careers.create') || request()->routeIs('cms.careers.edit')) active @endif" href="{{ route('cms.careers.vacancies.index') }}">
+                                    Vacancies
+                                </a>
+                                @endif
+                                @if(config('cms-kit.common.careers.departments', true))
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.careers.departments.*')) active @endif" href="{{ route('cms.careers.departments.index') }}">
+                                    Departments
+                                </a>
+                                @endif
+                                @if(config('cms-kit.common.careers.candidates', true))
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.careers.candidates.*')) active @endif" href="{{ route('cms.careers.candidates.index') }}">
+                                    Candidates
+                                </a>
+                                @endif
+                            </nav>
+                        </div>
+                    </div>
+                    @endif
+
+                    @if(
+                        (config('cms-kit.common.modules.properties', true) && $cmsUser->can('property.view')) ||
+                        (config('cms-kit.common.modules.agents', true) && $cmsUser->can('agents.view')) ||
+                        (config('cms-kit.common.modules.nearby-places', true) && $cmsUser->can('nearby-places.view'))
+                    )
+                    <div class="nav-item sidebar-group">
+                        <a class="nav-link d-flex align-items-center sidebar-group-toggle @if(request()->routeIs('cms.properties.*') || request()->routeIs('cms.agents.*') || request()->routeIs('cms.nearby-places.*')) active @endif"
+                           data-bs-toggle="collapse" href="#propertiesMenu" role="button"
+                           aria-expanded="@if(request()->routeIs('cms.properties.*') || request()->routeIs('cms.agents.*') || request()->routeIs('cms.nearby-places.*')) true @else false @endif">
+                            <i class="fas fa-building"></i>
+                            <span>Properties</span>
+                            <i class="fas fa-chevron-down ms-auto sidebar-chevron"></i>
+                        </a>
+                        <div class="collapse sidebar-submenu @if(request()->routeIs('cms.properties.*') || request()->routeIs('cms.agents.*') || request()->routeIs('cms.nearby-places.*')) show @endif" id="propertiesMenu">
+                            <nav class="nav flex-column">
+                                @if(config('cms-kit.common.modules.properties', true) && $cmsUser->can('property.view'))
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.properties.*')) active @endif" href="{{ route('cms.properties.index') }}">
+                                    Listings
+                                </a>
+                                @endif
+                                @if(config('cms-kit.common.modules.agents', true) && $cmsUser->can('agents.view'))
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.agents.*')) active @endif" href="{{ route('cms.agents.index') }}">
+                                    Agents
+                                </a>
+                                @endif
+                                @if(config('cms-kit.common.modules.nearby-places', true) && $cmsUser->can('nearby-places.view'))
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.nearby-places.*')) active @endif" href="{{ route('cms.nearby-places.index') }}">
+                                    Nearby Places
+                                </a>
+                                @endif
+                            </nav>
+                        </div>
+                    </div>
                     @endif
 
                     {{-- User Management Group --}}
@@ -280,6 +393,23 @@
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof tinymce === 'undefined' || !document.querySelector('.tinymce-extra-field')) {
+                return;
+            }
+
+            tinymce.init({
+                selector: '.tinymce-extra-field',
+                height: 350,
+                plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
+                toolbar: 'undo redo | blocks | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+                branding: false,
+                promotion: false
+            });
+        });
+    </script>
     @stack('scripts')
 </body>
 </html>

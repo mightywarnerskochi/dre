@@ -1,6 +1,54 @@
 <?php
 
 return [
+    'about' => [
+        'image_1' => [
+            'width' => 800,
+            'height' => 800,
+            'max_size' => 1024,
+        ],
+        'image_2' => [
+            'width' => 800,
+            'height' => 800,
+            'max_size' => 1024,
+        ],
+        'image_3' => [
+            'width' => 800,
+            'height' => 800,
+            'max_size' => 1024,
+        ],
+        'image_4' => [
+            'width' => 800,
+            'height' => 800,
+            'max_size' => 1024,
+        ],
+    ],
+    'mission-vision' => [
+        'image' => [
+            'width' => 800,
+            'height' => 800,
+            'max_size' => 1024,
+        ],
+    ],
+    'why-choose-us' => [
+        'section_image' => [
+            'width' => 1200,
+            'height' => 900,
+            'max_size' => 2048,
+        ],
+    ],
+    'successful-journeys' => [
+        'image_1' => [
+            'width' => 800,
+            'height' => 800,
+            'max_size' => 1024,
+        ],
+        'image_2' => [
+            'width' => 800,
+            'height' => 800,
+            'max_size' => 1024,
+        ],
+    ],
     'testimonials' => [
         'item_image' => [
             'max_size' => 512,
@@ -86,5 +134,18 @@ return [
             'max_size' => 512,
         ],
     ],
+    'properties' => [
+        'image' => [
+            'width' => 1400,
+            'height' => 900,
+            'max_size' => 4096,
+        ],
+    ],
+    'agents' => [
+        'image' => [
+            'width' => 600,
+            'height' => 600,
+            'max_size' => 2048,
+        ],
+    ],
 ];
-
