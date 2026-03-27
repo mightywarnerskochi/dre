@@ -13,10 +13,13 @@ return new class extends Migration
             $table->string('name');
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
+            $table->string('whatsapp_number', 50)->nullable();
             $table->string('image')->nullable();
+            $table->string('image_alt')->nullable()->after('image');
             $table->string('designation')->nullable();
             $table->string('experience')->nullable();
             $table->text('description')->nullable();
+            $table->json('translations')->nullable();
             $table->boolean('status')->default(true);
             $table->timestamp('created_at')->nullable();
         });

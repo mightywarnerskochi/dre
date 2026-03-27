@@ -23,12 +23,14 @@ return new class extends Migration
             $table->unsignedInteger('sqft')->nullable();
             $table->string('address')->nullable();
             $table->string('full_address')->nullable();
-            $table->string('zip_code')->nullable();
+            $table->string('postal_code')->nullable();
             $table->string('city')->nullable();
             $table->string('community')->nullable();
             $table->string('country')->nullable();
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
+            $table->string('images_directory')->nullable();
+            $table->text('images')->nullable();
             $table->foreignId('agent_id')->nullable()->constrained('agents')->nullOnDelete();
             $table->boolean('status')->default(true);
             $table->unsignedInteger('order')->default(1);

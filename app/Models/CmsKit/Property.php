@@ -4,6 +4,7 @@ namespace App\Models\CmsKit;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Property extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'prop_id',
         'title',
@@ -25,7 +27,7 @@ class Property extends Model
         'sqft',
         'address',
         'full_address',
-        'zip_code',
+        'postal_code',
         'city',
         'community',
         'country',
@@ -35,6 +37,8 @@ class Property extends Model
         'status',
         'order',
         'published_at',
+        'images_directory',
+        'images',
     ];
 
     protected $casts = [
@@ -55,11 +59,6 @@ class Property extends Model
         return $this->hasOne(PropertyDetail::class);
     }
 
-    public function images(): HasMany
-    {
-        return $this->hasMany(PropertyImage::class)->orderBy('order')->orderBy('id');
-    }
-
     public function translations(): HasMany
     {
         return $this->hasMany(PropertyTranslation::class);
@@ -72,9 +71,42 @@ class Property extends Model
             ->orderByPivot('order');
     }
 
-    public function featuredImage(): HasOne
+    public function getSanitizedPropIdAttribute(): string
     {
-        return $this->hasOne(PropertyImage::class)->where('is_featured', true)->orderBy('order');
+        // Replace everything that's not a letter, digit or hyphen with a hyphen
+        $sanitized = preg_replace('/[^A-Za-z0-9\-]/', '-', $this->prop_id ?? '');
+        return trim($sanitized, '-') ?: "PROP-{$this->id}";
+    }
+
+    public function getImagesAttribute(): array
+    {
+        if (!$this->images_directory || !($this->attributes['images'] ?? null)) {
+            return [];
+        }
+
+        $suffixes = explode(',', $this->attributes['images'] ?? '');
+        $images = [];
+        $sanitizedPropId = $this->sanitized_prop_id;
+
+        foreach ($suffixes as $suffix) {
+            $index = trim($suffix);
+            if ($index === '') continue;
+
+            $images[] = (object) [
+                'id' => $index,
+                'image' => "{$this->images_directory}/property_{$sanitizedPropId}_{$index}.jpg",
+                'order' => (int) $index,
+                'is_featured' => $index == '1',
+            ];
+        }
+
+        return $images;
+    }
+
+    public function getFeaturedImageAttribute(): ?object
+    {
+        $images = $this->images;
+        return collect($images)->firstWhere('is_featured', true);
     }
 
     public function getTranslation(string $field, ?string $lang = null): ?string

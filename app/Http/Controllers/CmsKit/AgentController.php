@@ -37,6 +37,7 @@ class AgentController extends Controller
         $rules = [
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
+            'whatsapp_number' => ['nullable', 'string', 'max:50'],
             'image' => [$isUpdate ? 'nullable' : 'nullable', 'image', 'max:' . ($imageConfig['max_size'] ?? 2048)],
             'image_alt' => ['nullable', 'string', 'max:255'],
             'experience' => ['nullable', 'string', 'max:255'],

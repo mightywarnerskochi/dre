@@ -3,16 +3,19 @@
 namespace App\Models\CmsKit;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Agent extends Model
 {
+    use HasFactory;
     public const UPDATED_AT = null;
 
     protected $fillable = [
         'name',
         'email',
         'phone',
+        'whatsapp_number',
         'image',
         'image_alt',
         'designation',

@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\Facades\DataTables;
@@ -95,25 +96,49 @@ class PropertyController extends Controller
         return Str::headline(str_replace(['-', '_'], ' ', $key));
     }
 
+    protected function propertySectionIconConfig(): array
+    {
+        return config('cms-kit.images.properties.section_icon', [
+            'max_size' => 512,
+        ]);
+    }
+
+    protected function resolvedPropertyType(Request $request): string
+    {
+        $propertyType = trim((string) $request->input('property_type'));
+
+        if ($propertyType === 'custom') {
+            return trim((string) $request->input('custom_property_type'));
+        }
+
+        return $propertyType;
+    }
+
     protected function rules(?Property $property = null): array
     {
         $propertyId = $property?->id;
         $languages = $this->activeLanguages();
         $imageConfig = config('cms-kit.images.properties.image', []);
+        $fallbackLocale = config('app.fallback_locale', 'en');
         $rules = [
             'prop_id' => ['nullable', 'string', 'max:255', Rule::unique('properties', 'prop_id')->ignore($propertyId)],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('properties', 'slug')->ignore($propertyId)],
-            'property_type' => ['required', Rule::in(array_keys($this->propertyTypes()))],
+            'property_type' => ['required', 'string', 'max:255'],
+            'custom_property_type' => ['nullable', 'string', 'max:255', 'required_if:property_type,custom'],
             'listing_type' => ['required', Rule::in(array_keys($this->listingTypes()))],
             'source_type' => ['required', Rule::in(array_keys($this->sourceTypes()))],
-            'price' => ['nullable', 'numeric', 'min:0'],
-            'currency' => ['nullable', 'string', 'max:10'],
+        ];
+
+        // Shared Setup Rules
+        $rules += [
+            'price' => ['required', 'numeric', 'min:0'],
+            'currency' => ['required', 'string', 'max:10'],
+            'agent_id' => ['required', 'integer', Rule::exists('agents', 'id')],
             'bedrooms' => ['nullable', 'integer', 'min:0'],
             'bathrooms' => ['nullable', 'integer', 'min:0'],
             'sqft' => ['nullable', 'integer', 'min:0'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
-            'agent_id' => ['nullable', 'integer', Rule::exists('agents', 'id')],
             'status' => ['nullable', 'boolean'],
             'order' => ['nullable', 'integer', 'min:1'],
             'published_at' => ['nullable', 'date'],
@@ -124,35 +149,34 @@ class PropertyController extends Controller
             'nearby_places.*' => ['nullable', 'array'],
             'nearby_places.*.*' => ['integer', Rule::exists('nearby_places', 'id')],
             'existing_images' => ['nullable', 'array'],
-            'existing_images.*.alt_text' => ['nullable', 'string', 'max:255'],
             'existing_images.*.order' => ['nullable', 'integer', 'min:1'],
-            'existing_images.*.is_featured' => ['nullable', 'boolean'],
             'existing_images.*.delete' => ['nullable', 'boolean'],
             'new_images' => ['nullable', 'array'],
             'new_images.*.file' => ['nullable', 'image', 'max:' . ($imageConfig['max_size'] ?? 4096)],
-            'new_images.*.alt_text' => ['nullable', 'string', 'max:255'],
             'new_images.*.order' => ['nullable', 'integer', 'min:1'],
-            'new_images.*.is_featured' => ['nullable', 'boolean'],
         ];
 
         foreach ($languages as $language) {
             $rules["translations.{$language->code}.title"] = ['required', 'string', 'max:255'];
+            $rules["translations.{$language->code}.address"] = ['required', 'string', 'max:255'];
+            $rules["translations.{$language->code}.city"] = ['required', 'string', 'max:255'];
+            $rules["translations.{$language->code}.country"] = ['required', 'string', 'max:255'];
             $rules["translations.{$language->code}.description"] = ['nullable', 'string'];
-            $rules["translations.{$language->code}.address"] = ['nullable', 'string', 'max:255'];
-            $rules["translations.{$language->code}.city"] = ['nullable', 'string', 'max:255'];
             $rules["translations.{$language->code}.community"] = ['nullable', 'string', 'max:255'];
-            $rules["translations.{$language->code}.country"] = ['nullable', 'string', 'max:255'];
-            $rules["translations.{$language->code}.zip_code"] = ['nullable', 'string', 'max:50'];
+            $rules["translations.{$language->code}.postal_code"] = ['nullable', 'string', 'max:50'];
             $rules["translations.{$language->code}.easy_to_access"] = ['nullable', 'array'];
-            $rules["translations.{$language->code}.easy_to_access.*.icon"] = ['nullable', 'string', 'max:255'];
+            $rules["translations.{$language->code}.key_features_text"] = ['nullable', 'string', 'max:2000'];
+            $rules["translations.{$language->code}.easy_to_access.*.current_icon"] = ['nullable', 'string', 'max:255'];
+            $rules["translations.{$language->code}.easy_to_access.*.icon_file"] = ['nullable', 'image', 'max:' . ($this->propertySectionIconConfig()['max_size'] ?? 512)];
             $rules["translations.{$language->code}.easy_to_access.*.label"] = ['nullable', 'string', 'max:255'];
-            $rules["translations.{$language->code}.key_features"] = ['nullable', 'array'];
-            $rules["translations.{$language->code}.key_features.*.text"] = ['nullable', 'string', 'max:2000'];
+            $rules["translations.{$language->code}.key_features_text"] = ['nullable', 'string', 'max:2000'];
             $rules["translations.{$language->code}.amenities"] = ['nullable', 'array'];
-            $rules["translations.{$language->code}.amenities.*.icon"] = ['nullable', 'string', 'max:255'];
+            $rules["translations.{$language->code}.amenities.*.current_icon"] = ['nullable', 'string', 'max:255'];
+            $rules["translations.{$language->code}.amenities.*.icon_file"] = ['nullable', 'image', 'max:' . ($this->propertySectionIconConfig()['max_size'] ?? 512)];
             $rules["translations.{$language->code}.amenities.*.name"] = ['nullable', 'string', 'max:255'];
             $rules["translations.{$language->code}.property_attributes"] = ['nullable', 'array'];
-            $rules["translations.{$language->code}.property_attributes.*.icon"] = ['nullable', 'string', 'max:255'];
+            $rules["translations.{$language->code}.property_attributes.*.current_icon"] = ['nullable', 'string', 'max:255'];
+            $rules["translations.{$language->code}.property_attributes.*.icon_file"] = ['nullable', 'image', 'max:' . ($this->propertySectionIconConfig()['max_size'] ?? 512)];
             $rules["translations.{$language->code}.property_attributes.*.name"] = ['nullable', 'string', 'max:255'];
         }
 
@@ -195,30 +219,67 @@ class PropertyController extends Controller
             ->all();
     }
 
+    protected function normalizedIconRows(Request $request, string $languageCode, string $section, array $rows, array $keys): array
+    {
+        return collect($rows)
+            ->map(function ($row, $index) use ($request, $languageCode, $section, $keys) {
+                $normalized = [];
+
+                foreach ($keys as $key) {
+                    $value = $row[$key] ?? null;
+                    $normalized[$key] = is_string($value) ? trim($value) : $value;
+                }
+
+                $normalized['icon'] = trim((string) ($row['current_icon'] ?? $row['icon'] ?? ''));
+
+                /** @var UploadedFile|null $uploadedIcon */
+                $uploadedIcon = $request->file("translations.{$languageCode}.{$section}.{$index}.icon_file");
+                if ($uploadedIcon) {
+                    $normalized['icon'] = $uploadedIcon->store('properties/section-icons', 'public');
+                }
+
+                return $normalized;
+            })
+            ->filter(function ($row) {
+                foreach ($row as $value) {
+                    if ($value !== null && $value !== '') {
+                        return true;
+                    }
+                }
+
+                return false;
+            })
+            ->values()
+            ->all();
+    }
+
     protected function buildFullAddressFromParts(array $parts): string
     {
         return collect([
             trim((string) ($parts['address'] ?? '')),
             trim((string) ($parts['community'] ?? '')),
             trim((string) ($parts['city'] ?? '')),
-            trim((string) ($parts['zip_code'] ?? '')),
+            trim((string) ($parts['postal_code'] ?? '')),
             trim((string) ($parts['country'] ?? '')),
         ])
             ->filter(fn ($value) => $value !== '')
             ->implode(', ');
     }
 
-    protected function normalizedTranslations(array $translations): array
+    protected function normalizedTranslations(Request $request): array
     {
+        $translations = (array) $request->input('translations', []);
+
         return collect($translations)
-            ->map(function ($translation, $code) {
+            ->map(function ($translation, $code) use ($request) {
                 $normalizedAddress = [
                     'address' => trim((string) ($translation['address'] ?? '')),
                     'community' => trim((string) ($translation['community'] ?? '')),
                     'city' => trim((string) ($translation['city'] ?? '')),
-                    'zip_code' => trim((string) ($translation['zip_code'] ?? '')),
+                    'postal_code' => trim((string) ($translation['postal_code'] ?? '')),
                     'country' => trim((string) ($translation['country'] ?? '')),
                 ];
+                $keyFeaturesText = trim((string) ($translation['key_features_text'] ?? ''));
 
                 return [
                     'language_code' => $code,
@@ -229,11 +290,11 @@ class PropertyController extends Controller
                     'city' => $normalizedAddress['city'],
                     'community' => $normalizedAddress['community'],
                     'country' => $normalizedAddress['country'],
-                    'zip_code' => $normalizedAddress['zip_code'],
-                    'easy_to_access' => $this->normalizedRows($translation['easy_to_access'] ?? [], ['icon', 'label']),
-                    'key_features' => $this->normalizedRows($translation['key_features'] ?? [], ['text']),
-                    'amenities' => $this->normalizedRows($translation['amenities'] ?? [], ['icon', 'name']),
-                    'property_attributes' => $this->normalizedRows($translation['property_attributes'] ?? [], ['icon', 'name']),
+                    'postal_code' => $normalizedAddress['postal_code'],
+                    'easy_to_access' => $this->normalizedIconRows($request, (string) $code, 'easy_to_access', $translation['easy_to_access'] ?? [], ['label']),
+                    'key_features' => $keyFeaturesText !== '' ? [['text' => $keyFeaturesText]] : [],
+                    'amenities' => $this->normalizedIconRows($request, (string) $code, 'amenities', $translation['amenities'] ?? [], ['name']),
+                    'property_attributes' => $this->normalizedIconRows($request, (string) $code, 'property_attributes', $translation['property_attributes'] ?? [], ['name']),
                 ];
             })
             ->filter(function ($translation) {
@@ -248,6 +309,67 @@ class PropertyController extends Controller
             })
             ->values()
             ->all();
+    }
+
+    protected function validateSectionIconUploads(Request $request): void
+    {
+        $iconConfig = $this->propertySectionIconConfig();
+
+        foreach ($this->activeLanguages() as $language) {
+            foreach (['easy_to_access', 'amenities', 'property_attributes'] as $section) {
+                foreach (array_keys((array) $request->input("translations.{$language->code}.{$section}", [])) as $index) {
+                    $field = "translations.{$language->code}.{$section}.{$index}.icon_file";
+                    if ($request->hasFile($field)) {
+                        $this->validateImageWithinLimits($request, $field, $iconConfig, ucfirst(str_replace('_', ' ', $section)) . ' icon');
+                    }
+                }
+            }
+        }
+    }
+
+    protected function managedIconPathsFromTranslations(array $translations): array
+    {
+        return collect($translations)
+            ->flatMap(function ($translation) {
+                return collect([
+                    $translation['easy_to_access'] ?? [],
+                    $translation['amenities'] ?? [],
+                    $translation['property_attributes'] ?? [],
+                ])->flatten(1);
+            })
+            ->pluck('icon')
+            ->filter(fn ($path) => is_string($path) && Str::startsWith($path, 'properties/section-icons/'))
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    protected function managedIconPathsForProperty(Property $property): array
+    {
+        $translations = $property->relationLoaded('translations')
+            ? $property->translations
+            : $property->translations()->get();
+
+        return $translations
+            ->flatMap(function ($translation) {
+                return collect([
+                    $translation->easy_to_access ?? [],
+                    $translation->amenities ?? [],
+                    $translation->property_attributes ?? [],
+                ])->flatten(1);
+            })
+            ->pluck('icon')
+            ->filter(fn ($path) => is_string($path) && Str::startsWith($path, 'properties/section-icons/'))
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    protected function deleteManagedSectionIcons(array $paths): void
+    {
+        foreach (collect($paths)->filter()->unique() as $path) {
+            Storage::disk('public')->delete($path);
+        }
     }
 
     protected function resolveSlug(Request $request, array $translations, ?int $ignoreId = null): string
@@ -358,57 +480,103 @@ class PropertyController extends Controller
 
     protected function syncImages(Property $property, Request $request): void
     {
-        $featuredImageId = null;
-
-        foreach ((array) $request->input('existing_images', []) as $imageId => $payload) {
-            $image = $property->images()->whereKey($imageId)->first();
-
-            if (!$image) {
-                continue;
-            }
-
-            if (!empty($payload['delete'])) {
-                Storage::disk('public')->delete($image->image);
-                $image->delete();
-                continue;
-            }
-
-            $isFeatured = !empty($payload['is_featured']);
-            if ($isFeatured && $featuredImageId === null) {
-                $featuredImageId = $image->id;
-            }
-
-            $image->update([
-                'alt_text' => trim((string) ($payload['alt_text'] ?? '')),
-                'order' => max(1, (int) ($payload['order'] ?? $image->order ?? 1)),
-                'is_featured' => false,
-            ]);
+        $storage = Storage::disk('public');
+        $propertyId = $property->id;
+        $sanitizedPropId = $property->sanitized_prop_id;
+        $dir = "properties/property_{$propertyId}";
+        
+        if (!$storage->exists($dir)) {
+            $storage->makeDirectory($dir);
         }
 
+        $allProcessedImages = [];
+
+        // 1. Process Existing Images
+        foreach ((array) $request->input('existing_images', []) as $suffix => $payload) {
+            $currentPath = "{$dir}/property_" . ($property->old_sanitized_prop_id ?? $sanitizedPropId) . "_{$suffix}.jpg";
+            // Fallback to ID-based path if prop_id path doesn't exist (for migration period or if prop_id changed)
+            if (!$storage->exists($currentPath)) {
+                $currentPath = "{$dir}/property_{$propertyId}_{$suffix}.jpg";
+            }
+            
+            if (!empty($payload['delete'])) {
+                if ($storage->exists($currentPath)) {
+                    $storage->delete($currentPath);
+                }
+                continue;
+            }
+
+            if ($storage->exists($currentPath)) {
+                $allProcessedImages[] = [
+                    'source' => $currentPath,
+                    'order' => (int) ($payload['order'] ?? $suffix),
+                    'is_new' => false
+                ];
+            }
+        }
+
+        // 2. Process New Images
         foreach ((array) $request->input('new_images', []) as $index => $payload) {
             $file = $request->file("new_images.{$index}.file");
-            if (!$file) {
-                continue;
-            }
+            if (!$file) continue;
 
-            $image = $property->images()->create([
-                'image' => $file->store('properties', 'public'),
-                'alt_text' => trim((string) ($payload['alt_text'] ?? '')),
-                'order' => max(1, (int) ($payload['order'] ?? ($property->images()->max('order') + 1))),
-                'is_featured' => false,
-            ]);
+            // Save to a temporary name first
+            $tempName = "temp_" . uniqid() . ".jpg";
+            $tempPath = "{$dir}/{$tempName}";
+            
+            // Convert to JPEG during upload
+            $this->storeAsJpeg($file, $tempPath);
 
-            if (!empty($payload['is_featured']) && $featuredImageId === null) {
-                $featuredImageId = $image->id;
-            }
+            $allProcessedImages[] = [
+                'source' => $tempPath,
+                'order' => (int) ($payload['order'] ?? 999),
+                'is_new' => true
+            ];
         }
 
-        $property->images()->update(['is_featured' => false]);
+        // 3. Sort by intended order
+        usort($allProcessedImages, fn($a, $b) => $a['order'] <=> $b['order']);
 
-        $fallbackFeatured = $featuredImageId ?: $property->images()->orderBy('order')->value('id');
-        if ($fallbackFeatured) {
-            $property->images()->whereKey($fallbackFeatured)->update(['is_featured' => true]);
+        // 4. Sequential Renaming
+        $newSuffixes = [];
+        $tempMapping = [];
+
+        // First pass: rename everything to temporary names to avoid collisions
+        foreach ($allProcessedImages as $index => $img) {
+            $finalIdx = $index + 1;
+            $tempPath = "{$dir}/final_temp_{$finalIdx}.jpg";
+            $storage->move($img['source'], $tempPath);
+            $tempMapping[$finalIdx] = $tempPath;
+            $newSuffixes[] = $finalIdx;
         }
+
+        // Second pass: rename from temporary to final names
+        foreach ($tempMapping as $idx => $tempPath) {
+            $finalPath = "{$dir}/property_{$sanitizedPropId}_{$idx}.jpg";
+            $storage->move($tempPath, $finalPath);
+        }
+
+        // 5. Update Property Model
+        $property->update([
+            'images_directory' => $dir,
+            'images' => implode(',', $newSuffixes),
+        ]);
+    }
+
+    protected function storeAsJpeg($file, $targetPath): void
+    {
+        $image = @imagecreatefromstring(file_get_contents($file->getRealPath()));
+        if (!$image) {
+            Storage::disk('public')->put($targetPath, file_get_contents($file->getRealPath()));
+            return;
+        }
+
+        ob_start();
+        imagejpeg($image, null, 90);
+        $jpgData = ob_get_clean();
+        imagedestroy($image);
+
+        Storage::disk('public')->put($targetPath, $jpgData);
     }
 
     public function index(Request $request)
@@ -417,7 +585,7 @@ class PropertyController extends Controller
             $cmsUser = auth('cms')->user();
             $propertyTypes = $this->propertyTypes();
             $listingTypes = $this->listingTypes();
-            $data = Property::query()->with(['agent', 'featuredImage'])->ordered();
+            $data = Property::query()->with(['agent'])->ordered();
 
             return DataTables::of($data)
                 ->addIndexColumn()
@@ -496,10 +664,11 @@ class PropertyController extends Controller
     public function store(Request $request)
     {
         $request->validate($this->rules());
+        $this->validateSectionIconUploads($request);
         foreach (array_keys((array) $request->input('new_images', [])) as $index) {
             $this->validateImageWithinLimits($request, "new_images.{$index}.file", config('cms-kit.images.properties.image', []), 'Property image');
         }
-        $translations = $this->normalizedTranslations($request->input('translations', []));
+        $translations = $this->normalizedTranslations($request);
         $order = $this->resolveOrderForCreate($request->filled('order') ? (int) $request->order : null);
         $fallbackLocale = config('app.fallback_locale', 'en');
         $fallbackTranslation = collect($translations)->firstWhere('language_code', $fallbackLocale) ?? ($translations[0] ?? []);
@@ -511,7 +680,7 @@ class PropertyController extends Controller
                 'prop_id' => trim((string) $request->input('prop_id')),
                 'title' => $fallbackTranslation['title'] ?? '',
                 'slug' => $this->resolveSlug($request, $translations),
-                'property_type' => $request->input('property_type'),
+                'property_type' => $this->resolvedPropertyType($request),
                 'listing_type' => $request->input('listing_type'),
                 'source_type' => $request->input('source_type', 'manual'),
                 'price' => $request->input('price'),
@@ -521,7 +690,7 @@ class PropertyController extends Controller
                 'sqft' => $request->input('sqft'),
                 'address' => trim((string) ($fallbackTranslation['address'] ?? '')),
                 'full_address' => trim((string) ($fallbackTranslation['full_address'] ?? '')),
-                'zip_code' => trim((string) ($fallbackTranslation['zip_code'] ?? '')),
+                'postal_code' => trim((string) ($fallbackTranslation['postal_code'] ?? '')),
                 'city' => trim((string) ($fallbackTranslation['city'] ?? '')),
                 'community' => trim((string) ($fallbackTranslation['community'] ?? '')),
                 'country' => trim((string) ($fallbackTranslation['country'] ?? '')),
@@ -535,8 +704,8 @@ class PropertyController extends Controller
 
             $property->details()->create([
                 'description' => $fallbackTranslation['description'] ?? '',
-                'year_built' => $request->input('year_built'),
-                'security_deposit' => $request->input('security_deposit'),
+                'year_built' => $request->filled('year_built') ? (int) $request->input('year_built') : null,
+                'security_deposit' => $request->filled('security_deposit') ? (float) $request->input('security_deposit') : null,
                 'direct_from_owner' => trim((string) $request->input('direct_from_owner')),
                 'easy_to_access' => $fallbackTranslation['easy_to_access'] ?? [],
                 'key_features' => $fallbackTranslation['key_features'] ?? [],
@@ -555,7 +724,7 @@ class PropertyController extends Controller
     public function edit($id)
     {
         $property = Property::query()
-            ->with(['details', 'images', 'translations', 'nearbyPlaces'])
+            ->with(['details', 'translations', 'nearbyPlaces'])
             ->findOrFail($id);
         $languages = $this->activeLanguages();
         $agents = Agent::query()->where('status', true)->orderBy('name')->get();
@@ -583,16 +752,18 @@ class PropertyController extends Controller
 
     public function update(Request $request, $id)
     {
-        $property = Property::query()->with(['details', 'images', 'translations'])->findOrFail($id);
+        $property = Property::query()->with(['details', 'translations'])->findOrFail($id);
         $request->validate($this->rules($property));
+        $this->validateSectionIconUploads($request);
         foreach (array_keys((array) $request->input('new_images', [])) as $index) {
             $this->validateImageWithinLimits($request, "new_images.{$index}.file", config('cms-kit.images.properties.image', []), 'Property image');
         }
-        $translations = $this->normalizedTranslations($request->input('translations', []));
+        $translations = $this->normalizedTranslations($request);
         $fallbackLocale = config('app.fallback_locale', 'en');
         $fallbackTranslation = collect($translations)->firstWhere('language_code', $fallbackLocale) ?? ($translations[0] ?? []);
+        $existingIconPaths = $this->managedIconPathsForProperty($property);
 
-        DB::transaction(function () use ($request, $property, $translations, $fallbackTranslation) {
+        DB::transaction(function () use ($request, $property, $translations, $fallbackTranslation, $existingIconPaths) {
             $newOrder = $this->resolveOrderForReorder((int) $request->input('order', $property->order));
             $oldOrder = $property->order;
 
@@ -608,7 +779,7 @@ class PropertyController extends Controller
                 'prop_id' => trim((string) $request->input('prop_id')),
                 'title' => $fallbackTranslation['title'] ?? $property->title,
                 'slug' => $this->resolveSlug($request, $translations, $property->id),
-                'property_type' => $request->input('property_type'),
+                'property_type' => $this->resolvedPropertyType($request),
                 'listing_type' => $request->input('listing_type'),
                 'source_type' => $request->input('source_type', 'manual'),
                 'price' => $request->input('price'),
@@ -618,7 +789,7 @@ class PropertyController extends Controller
                 'sqft' => $request->input('sqft'),
                 'address' => trim((string) ($fallbackTranslation['address'] ?? '')),
                 'full_address' => trim((string) ($fallbackTranslation['full_address'] ?? '')),
-                'zip_code' => trim((string) ($fallbackTranslation['zip_code'] ?? '')),
+                'postal_code' => trim((string) ($fallbackTranslation['postal_code'] ?? '')),
                 'city' => trim((string) ($fallbackTranslation['city'] ?? '')),
                 'community' => trim((string) ($fallbackTranslation['community'] ?? '')),
                 'country' => trim((string) ($fallbackTranslation['country'] ?? '')),
@@ -634,8 +805,8 @@ class PropertyController extends Controller
                 ['property_id' => $property->id],
                 [
                     'description' => $fallbackTranslation['description'] ?? '',
-                    'year_built' => $request->input('year_built'),
-                    'security_deposit' => $request->input('security_deposit'),
+                    'year_built' => $request->filled('year_built') ? (int) $request->input('year_built') : null,
+                    'security_deposit' => $request->filled('security_deposit') ? (float) $request->input('security_deposit') : null,
                     'direct_from_owner' => trim((string) $request->input('direct_from_owner')),
                     'easy_to_access' => $fallbackTranslation['easy_to_access'] ?? [],
                     'key_features' => $fallbackTranslation['key_features'] ?? [],
@@ -648,6 +819,9 @@ class PropertyController extends Controller
             $this->syncNearbyPlaces($property, (array) $request->input('nearby_places', []));
             $this->syncImages($property, $request);
             $this->normalizePropertyOrder();
+
+            $newIconPaths = $this->managedIconPathsFromTranslations($translations);
+            $this->deleteManagedSectionIcons(array_diff($existingIconPaths, $newIconPaths));
         });
 
         return redirect()->route('cms.properties.index')->with('success', 'Property updated successfully.');
@@ -655,12 +829,14 @@ class PropertyController extends Controller
 
     public function destroy($id)
     {
-        $property = Property::query()->with('images')->findOrFail($id);
+        $property = Property::findOrFail($id);
         $order = $property->order;
 
-        foreach ($property->images as $image) {
-            Storage::disk('public')->delete($image->image);
+        if ($property->images_directory) {
+            Storage::disk('public')->deleteDirectory($property->images_directory);
         }
+
+        $this->deleteManagedSectionIcons($this->managedIconPathsForProperty($property));
 
         $property->delete();
         Property::where('order', '>', $order)->decrement('order');
@@ -728,6 +904,8 @@ class PropertyController extends Controller
                 foreach ($property->images as $image) {
                     Storage::disk('public')->delete($image->image);
                 }
+
+                $this->deleteManagedSectionIcons($this->managedIconPathsForProperty($property));
 
                 $property->delete();
             }

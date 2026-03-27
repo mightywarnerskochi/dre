@@ -15,6 +15,15 @@ return new class extends Migration
             $table->string('title')->nullable();
             $table->longText('description')->nullable();
             $table->string('address')->nullable();
+            $table->string('full_address')->nullable();
+            $table->string('city')->nullable();
+            $table->string('community')->nullable();
+            $table->string('country')->nullable();
+            $table->string('postal_code', 50)->nullable();
+            $table->json('easy_to_access')->nullable();
+            $table->json('key_features')->nullable();
+            $table->json('amenities')->nullable();
+            $table->json('property_attributes')->nullable();
             $table->unique(['property_id', 'language_code']);
         });
     }

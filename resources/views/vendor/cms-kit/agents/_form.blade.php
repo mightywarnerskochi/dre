@@ -74,6 +74,11 @@
         @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
     <div class="col-md-6">
+        <label class="form-label fw-bold">WhatsApp Number</label>
+        <input type="text" name="whatsapp_number" class="form-control @error('whatsapp_number') is-invalid @enderror" value="{{ old('whatsapp_number', ->whatsapp_number ?? '') }}" placeholder="e.g. +971501234567">
+        @error('whatsapp_number')<div class="invalid-feedback">{{  }}</div>@enderror
+    </div>
+    <div class="col-md-6">
         <label class="form-label fw-bold">Experience</label>
         <input type="text" name="experience" class="form-control @error('experience') is-invalid @enderror" value="{{ old('experience', $agent->experience ?? '') }}" placeholder="e.g. 8 Years">
         @error('experience')<div class="invalid-feedback">{{ $message }}</div>@enderror

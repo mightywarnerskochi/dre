@@ -15,6 +15,7 @@ return new class extends Migration
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
             $table->string('address')->nullable();
+            $table->json('translations')->nullable();
             $table->boolean('status')->default(true);
         });
     }

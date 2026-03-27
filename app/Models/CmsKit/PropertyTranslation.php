@@ -2,11 +2,13 @@
 
 namespace App\Models\CmsKit;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PropertyTranslation extends Model
 {
+    use HasFactory;
     public $timestamps = false;
 
     protected $fillable = [
@@ -19,7 +21,7 @@ class PropertyTranslation extends Model
         'city',
         'community',
         'country',
-        'zip_code',
+        'postal_code',
         'easy_to_access',
         'key_features',
         'amenities',

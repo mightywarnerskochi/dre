@@ -140,6 +140,9 @@ return [
             'height' => 900,
             'max_size' => 4096,
         ],
+        'section_icon' => [
+            'max_size' => 512,
+        ],
     ],
     'agents' => [
         'image' => [

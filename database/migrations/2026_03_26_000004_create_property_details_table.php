@@ -19,6 +19,7 @@ return new class extends Migration
             $table->json('key_features')->nullable();
             $table->json('amenities')->nullable();
             $table->json('property_attributes')->nullable();
+            $table->string('direct_from_owner')->nullable()->change();
             $table->timestamps();
         });
     }
