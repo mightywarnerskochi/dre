@@ -4,12 +4,12 @@ namespace App\Http\Controllers\CmsKit;
 
 use App\Http\Controllers\Controller;
 use App\Models\CmsKit\WhyChooseUs;
-use CMS\SiteManager\Models\CmsKit\Language;
-use CMS\SiteManager\Models\CmsKit\SectionLabel;
+use App\Support\MediaStorage;
+use App\Models\CmsKit\Language;
+use App\Models\CmsKit\SectionLabel;
 use CMS\SiteManager\Support\ManagesOrderIndex;
 use CMS\SiteManager\Support\ValidatesImageDimensions;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
 class WhyChooseUsController extends Controller
@@ -37,6 +37,8 @@ class WhyChooseUsController extends Controller
     {
         $rules = [
             'section_image' => ['nullable', 'image', 'max:' . (config('cms-kit.images.why-choose-us.section_image.max_size') ?? 2048)],
+            'section_image_alt' => ['nullable', 'string', 'max:255'],
+            'remove_section_image' => ['nullable', 'boolean'],
         ];
 
         foreach (Language::active()->get() as $language) {
@@ -101,15 +103,19 @@ class WhyChooseUsController extends Controller
 
         $data = [
             'translations' => $request->input('translations', []),
+            'section_image_alt' => $request->input('section_image_alt'),
             'status' => $request->boolean('status'),
         ];
 
         if ($request->hasFile('section_image')) {
             if ($section->section_image) {
-                Storage::disk('public')->delete($section->section_image);
+                MediaStorage::delete($section->section_image);
             }
 
-            $data['section_image'] = $request->file('section_image')->store('why-choose-us', 'public');
+            $data['section_image'] = MediaStorage::store($request->file('section_image'), 'why-choose-us');
+        } elseif ($request->boolean('remove_section_image') && $section->section_image) {
+            MediaStorage::delete($section->section_image);
+            $data['section_image'] = null;
         }
 
         $section->forceFill($data)->save();
@@ -243,4 +249,3 @@ class WhyChooseUsController extends Controller
         return response()->json(['success' => true]);
     }
 }
-

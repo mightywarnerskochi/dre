@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->string('whatsapp_number', 50)->nullable();
             $table->string('image')->nullable();
-            $table->string('image_alt')->nullable()->after('image');
+            $table->string('image_alt')->nullable();
             $table->string('designation')->nullable();
             $table->string('experience')->nullable();
             $table->text('description')->nullable();

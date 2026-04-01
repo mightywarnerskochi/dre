@@ -35,9 +35,10 @@
     <div class="login-card">
         <div class="logo">
             @if($siteInfo && $siteInfo->logo)
-                <img src="{{ asset('storage/' . $siteInfo->logo) }}" alt="{{ $siteInfo->logo_alt ?? $siteInfo->company_name }}" class="img-fluid mb-3" style="max-height: 60px;">
-            @endif
+                <img src="{{ media_url($siteInfo->logo) }}" alt="{{ $siteInfo->logo_alt ?? $siteInfo->company_name }}" class="img-fluid mb-3" style="max-height: 60px;">
+            @else
             <h3>{{ $siteInfo->company_name ?? config('cms-kit.common.name', 'CMS Kit') }}</h3>
+            @endif
             <p class="text-muted">Welcome back, Admin</p>
         </div>
 

@@ -1,12 +1,12 @@
 <?php
 
-namespace CMS\SiteManager\Http\Controllers\CmsKit;
+namespace App\Http\Controllers\CmsKit;
 
-use CMS\SiteManager\Models\CmsKit\SiteInformation;
-use CMS\SiteManager\Models\CmsKit\Language;
+use App\Models\CmsKit\SiteInformation;
+use App\Models\CmsKit\Language;
+use App\Support\MediaStorage;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Storage;
 
 class SiteInformationController extends Controller
 {
@@ -74,8 +74,15 @@ class SiteInformationController extends Controller
 
         foreach (['logo' => 2048, 'favicon' => 1024, 'footer_logo' => 2048] as $field => $maxSize) {
             if ($siteInfoConfig[$field] ?? true) {
-                $needsFile = in_array($field, $requiredFields) && !$hasExistingRecord;
+                $existingRecord = SiteInformation::first();
+                $needsFile = in_array($field, $requiredFields)
+                    && (
+                        !$hasExistingRecord
+                        || !$existingRecord?->{$field}
+                        || request()->boolean("remove_{$field}")
+                    );
                 $rules[$field] = ($needsFile ? 'required' : 'nullable') . '|image|max:' . $maxSize;
+                $rules["remove_{$field}"] = 'nullable|boolean';
             }
         }
 
@@ -152,23 +159,34 @@ class SiteInformationController extends Controller
         // Handle File Uploads
         if ($request->hasFile('logo')) {
             if ($siteInfo->logo) {
-                Storage::delete($siteInfo->logo);
+                MediaStorage::delete($siteInfo->logo);
             }
-            $data['logo'] = $request->file('logo')->store('site-info', 'public');
+            $data['logo'] = MediaStorage::storeAs($request->file('logo'), 'site-info', 'logo');
+        } elseif ($request->boolean('remove_logo') && $siteInfo->logo) {
+            MediaStorage::delete($siteInfo->logo);
+            $data['logo'] = null;
+            $data['logo_alt'] = null;
         }
         
         if ($request->hasFile('favicon')) {
             if ($siteInfo->favicon) {
-                Storage::delete($siteInfo->favicon);
+                MediaStorage::delete($siteInfo->favicon);
             }
-            $data['favicon'] = $request->file('favicon')->store('site-info', 'public');
+            $data['favicon'] = MediaStorage::storeAs($request->file('favicon'), 'site-info', 'fav');
+        } elseif ($request->boolean('remove_favicon') && $siteInfo->favicon) {
+            MediaStorage::delete($siteInfo->favicon);
+            $data['favicon'] = null;
         }
 
         if ($request->hasFile('footer_logo')) {
             if ($siteInfo->footer_logo) {
-                Storage::delete($siteInfo->footer_logo);
+                MediaStorage::delete($siteInfo->footer_logo);
             }
-            $data['footer_logo'] = $request->file('footer_logo')->store('site-info', 'public');
+            $data['footer_logo'] = MediaStorage::storeAs($request->file('footer_logo'), 'site-info', 'footer_logo');
+        } elseif ($request->boolean('remove_footer_logo') && $siteInfo->footer_logo) {
+            MediaStorage::delete($siteInfo->footer_logo);
+            $data['footer_logo'] = null;
+            $data['footer_logo_alt'] = null;
         }
 
         $extraFields = [];

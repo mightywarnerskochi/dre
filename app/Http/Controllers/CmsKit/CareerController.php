@@ -1,14 +1,14 @@
 <?php
 
-namespace CMS\SiteManager\Http\Controllers\CmsKit;
+namespace App\Http\Controllers\CmsKit;
 
-use CMS\SiteManager\Models\CmsKit\Career;
-use CMS\SiteManager\Models\CmsKit\CareerDepartment;
-use CMS\SiteManager\Models\CmsKit\Language;
-use CMS\SiteManager\Models\CmsKit\SectionLabel;
+use App\Models\CmsKit\Career;
+use App\Models\CmsKit\CareerDepartment;
+use App\Models\CmsKit\Language;
+use App\Models\CmsKit\SectionLabel;
 use CMS\SiteManager\Support\ManagesOrderIndex;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
+use App\Support\MediaStorage;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -85,6 +85,7 @@ class CareerController extends Controller
             'metadata.og_title' => $this->optionalTextRule(),
             'metadata.og_description' => $this->optionalTextRule(),
             'metadata.og_image' => ['nullable', 'image', 'max:512'],
+            'remove_metadata_og_image' => ['nullable', 'boolean'],
             'metadata.other_meta_tags' => ['nullable', 'string'],
         ];
 
@@ -141,6 +142,7 @@ class CareerController extends Controller
     protected function getCareerSectionValidationRules(): array
     {
         $sectionConfig = config('cms-kit.database.careers.section', []);
+        $section = SectionLabel::firstOrCreate(['section_key' => 'careers']);
         $rules = [
             'section_filters' => ['nullable', 'array'],
         ];
@@ -152,7 +154,10 @@ class CareerController extends Controller
         }
 
         if ($sectionConfig['banner'] ?? true) {
-            $rules['banner'] = ['nullable', 'image', 'max:2048'];
+            $bannerRequired = in_array('banner', $requiredFields, true)
+                && (!$section?->banner || request()->boolean('remove_banner'));
+            $rules['banner'] = [$bannerRequired ? 'required' : 'nullable', 'image', 'max:2048'];
+            $rules['remove_banner'] = ['nullable', 'boolean'];
         }
 
         if ($sectionConfig['banner_alt'] ?? true) {
@@ -556,7 +561,7 @@ class CareerController extends Controller
 
         $metadata = $request->input('metadata', []);
         if ($request->hasFile('metadata.og_image')) {
-            $metadata['og_image'] = $request->file('metadata.og_image')->store('careers/metadata', 'public');
+            $metadata['og_image'] = MediaStorage::store($request->file('metadata.og_image'), 'careers/metadata');
         }
 
         Career::create([
@@ -602,9 +607,12 @@ class CareerController extends Controller
         $existingMetadata = $career->metadata ?? [];
         if ($request->hasFile('metadata.og_image')) {
             if (!empty($existingMetadata['og_image'])) {
-                Storage::disk('public')->delete($existingMetadata['og_image']);
+                MediaStorage::delete($existingMetadata['og_image']);
             }
             $metadata['og_image'] = $request->file('metadata.og_image')->store('careers/metadata', 'public');
+        } elseif ($request->boolean('remove_metadata_og_image') && !empty($existingMetadata['og_image'])) {
+            MediaStorage::delete($existingMetadata['og_image']);
+            $metadata['og_image'] = null;
         } else {
             $metadata['og_image'] = $existingMetadata['og_image'] ?? null;
         }
@@ -709,13 +717,18 @@ class CareerController extends Controller
 
         if (($sectionConfig['banner'] ?? true) && $request->hasFile('banner')) {
             if ($section->banner) {
-                Storage::disk('public')->delete($section->banner);
+                MediaStorage::delete($section->banner);
             }
 
-            $data['banner'] = $request->file('banner')->store('careers/section', 'public');
+            $data['banner'] = MediaStorage::store($request->file('banner'), 'careers/section');
+        } elseif ($request->boolean('remove_banner') && $section->banner) {
+            MediaStorage::delete($section->banner);
+            $data['banner'] = null;
         }
 
-        $data['banner_alt'] = ($sectionConfig['banner_alt'] ?? true) ? trim((string) $request->input('banner_alt', '')) : '';
+        $data['banner_alt'] = ($sectionConfig['banner_alt'] ?? true) && !$request->boolean('remove_banner')
+            ? trim((string) $request->input('banner_alt', ''))
+            : '';
 
         $section->update($data);
 

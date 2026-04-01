@@ -93,7 +93,7 @@
         </small>
         @if(!empty($agent->image))
             <div class="mt-2">
-                <img src="{{ asset('storage/' . $agent->image) }}" alt="{{ $agent->image_alt }}" class="img-thumbnail" style="max-height: 90px;">
+                <img src="{{ media_url($agent->image) }}" alt="{{ $agent->image_alt }}" class="img-thumbnail" style="max-height: 90px;">
             </div>
         @endif
     </div>

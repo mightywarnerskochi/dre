@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\CmsKit;
 
 use App\Http\Controllers\Controller;
+use App\Models\CmsKit\Language;
 use App\Models\CmsKit\SuccessfulJourney;
-use CMS\SiteManager\Models\CmsKit\Language;
+use App\Support\MediaStorage;
 use CMS\SiteManager\Support\ManagesOrderIndex;
 use CMS\SiteManager\Support\ValidatesImageDimensions;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
 class SuccessfulJourneyController extends Controller
@@ -20,8 +20,8 @@ class SuccessfulJourneyController extends Controller
         $rules = [
             'year' => ['required', 'string', 'max:20'],
             'order_index' => ['nullable', 'integer', 'min:1'],
-            'image_1' => [in_array('image_1', config('cms-kit.database.successful-journeys.items.required', []), true) && !$isUpdate ? 'required' : 'nullable', 'image', 'max:' . (config('cms-kit.images.successful-journeys.image_1.max_size') ?? 1024)],
-            'image_2' => [in_array('image_2', config('cms-kit.database.successful-journeys.items.required', []), true) && !$isUpdate ? 'required' : 'nullable', 'image', 'max:' . (config('cms-kit.images.successful-journeys.image_2.max_size') ?? 1024)],
+            'image_1' => [in_array('image_1', config('cms-kit.database.successful-journeys.items.required', []), true) && ! $isUpdate ? 'required' : 'nullable', 'image', 'max:'.(config('cms-kit.images.successful-journeys.image_1.max_size') ?? 1024)],
+            'image_2' => [in_array('image_2', config('cms-kit.database.successful-journeys.items.required', []), true) && ! $isUpdate ? 'required' : 'nullable', 'image', 'max:'.(config('cms-kit.images.successful-journeys.image_2.max_size') ?? 1024)],
             'image_1_alt' => ['nullable', 'string', 'max:255'],
             'image_2_alt' => ['nullable', 'string', 'max:255'],
         ];
@@ -41,22 +41,22 @@ class SuccessfulJourneyController extends Controller
 
             return DataTables::of($data)
                 ->addIndexColumn()
-                ->addColumn('select_all', fn ($row) => '<input type="checkbox" class="row-checkbox form-check-input" value="' . $row->id . '">')
-                ->addColumn('image', fn ($row) => $row->image_1 ? '<img src="' . asset('storage/' . $row->image_1) . '" class="img-thumbnail" style="height: 40px;">' : '-')
+                ->addColumn('select_all', fn ($row) => '<input type="checkbox" class="row-checkbox form-check-input" value="'.$row->id.'">')
+                ->addColumn('image', fn ($row) => $row->image_1 ? '<img src="'.e(media_url($row->image_1)).'" class="img-thumbnail" style="height: 40px;">' : '-')
                 ->addColumn('year', fn ($row) => e($row->year))
                 ->addColumn('status', function ($row) {
                     $checked = $row->status ? 'checked' : '';
 
-                    return '<div class="form-check form-switch"><input class="form-check-input toggle-status" type="checkbox" data-id="' . $row->id . '" ' . $checked . '></div>';
+                    return '<div class="form-check form-switch"><input class="form-check-input toggle-status" type="checkbox" data-id="'.$row->id.'" '.$checked.'></div>';
                 })
-                ->addColumn('order', fn ($row) => '<input type="number" min="1" class="form-control form-control-sm reorder-input" data-id="' . $row->id . '" value="' . $row->order_index . '" style="width: 80px;">')
+                ->addColumn('order', fn ($row) => '<input type="number" min="1" class="form-control form-control-sm reorder-input" data-id="'.$row->id.'" value="'.$row->order_index.'" style="width: 80px;">')
                 ->addColumn('action', function ($row) use ($cmsUser) {
                     $buttons = '<div class="btn-group">';
                     if ($cmsUser?->can('successful-journeys.edit')) {
-                        $buttons .= '<a href="' . route('cms.successful-journeys.edit', $row->id) . '" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>';
+                        $buttons .= '<a href="'.route('cms.successful-journeys.edit', $row->id).'" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>';
                     }
                     if ($cmsUser?->can('successful-journeys.delete')) {
-                        $buttons .= '<button type="button" class="btn btn-sm btn-outline-danger delete-item" data-id="' . $row->id . '"><i class="fas fa-trash"></i></button>';
+                        $buttons .= '<button type="button" class="btn btn-sm btn-outline-danger delete-item" data-id="'.$row->id.'"><i class="fas fa-trash"></i></button>';
                     }
                     $buttons .= '</div>';
 
@@ -95,7 +95,7 @@ class SuccessfulJourneyController extends Controller
 
         foreach (['image_1', 'image_2'] as $field) {
             if ($request->hasFile($field)) {
-                $data[$field] = $request->file($field)->store('successful-journeys', 'public');
+                $data[$field] = MediaStorage::store($request->file($field), 'successful-journeys');
             }
         }
 
@@ -121,8 +121,22 @@ class SuccessfulJourneyController extends Controller
     public function update(Request $request, $id)
     {
         $item = SuccessfulJourney::findOrFail($id);
+        $required = config('cms-kit.database.successful-journeys.items.required', []);
+        $rules = $this->rules(true);
 
-        $request->validate($this->rules(true));
+        foreach (['image_1', 'image_2'] as $field) {
+            $rules["remove_{$field}"] = ['nullable', 'boolean'];
+
+            if (
+                in_array($field, $required, true)
+                && $request->boolean("remove_{$field}")
+                && ! $request->hasFile($field)
+            ) {
+                $rules[$field][0] = 'required';
+            }
+        }
+
+        $request->validate($rules);
         $this->validateImageWithinLimits($request, 'image_1', config('cms-kit.images.successful-journeys.image_1', []), 'Image 1');
         $this->validateImageWithinLimits($request, 'image_2', config('cms-kit.images.successful-journeys.image_2', []), 'Image 2');
 
@@ -137,9 +151,12 @@ class SuccessfulJourneyController extends Controller
         foreach (['image_1', 'image_2'] as $field) {
             if ($request->hasFile($field)) {
                 if ($item->{$field}) {
-                    Storage::disk('public')->delete($item->{$field});
+                    MediaStorage::delete($item->{$field});
                 }
-                $data[$field] = $request->file($field)->store('successful-journeys', 'public');
+                $data[$field] = MediaStorage::store($request->file($field), 'successful-journeys');
+            } elseif ($request->boolean("remove_{$field}") && $item->{$field}) {
+                MediaStorage::delete($item->{$field});
+                $data[$field] = null;
             }
         }
 
@@ -155,7 +172,7 @@ class SuccessfulJourneyController extends Controller
 
         foreach (['image_1', 'image_2'] as $field) {
             if ($item->{$field}) {
-                Storage::disk('public')->delete($item->{$field});
+                MediaStorage::delete($item->{$field});
             }
         }
 
@@ -169,7 +186,7 @@ class SuccessfulJourneyController extends Controller
     public function toggleStatus($id)
     {
         $item = SuccessfulJourney::findOrFail($id);
-        $item->update(['status' => !$item->status]);
+        $item->update(['status' => ! $item->status]);
 
         return response()->json(['success' => true]);
     }
@@ -205,7 +222,7 @@ class SuccessfulJourneyController extends Controller
         $ids = array_filter((array) $request->input('ids', []));
         $action = $request->input('action');
 
-        if (!$ids || !$action) {
+        if (! $ids || ! $action) {
             return response()->json(['success' => false], 422);
         }
 
@@ -214,7 +231,7 @@ class SuccessfulJourneyController extends Controller
             foreach ($items as $item) {
                 foreach (['image_1', 'image_2'] as $field) {
                     if ($item->{$field}) {
-                        Storage::disk('public')->delete($item->{$field});
+                        MediaStorage::delete($item->{$field});
                     }
                 }
                 $item->delete();

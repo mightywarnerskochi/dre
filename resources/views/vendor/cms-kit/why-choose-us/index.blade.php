@@ -74,7 +74,11 @@
                             @error('section_image')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             @if($section->section_image)
                             <div class="mt-2">
-                                <img src="{{ asset('storage/' . $section->section_image) }}" alt="" class="img-thumbnail" style="max-height: 100px;">
+                                <img src="{{ media_url($section->section_image) }}" alt="" class="img-thumbnail" style="max-height: 100px;">
+                            </div>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="remove_section_image" id="removeWhyChooseUsSectionImage" value="1" {{ old('remove_section_image') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="removeWhyChooseUsSectionImage">Remove current image</label>
                             </div>
                             @endif
                         </div>

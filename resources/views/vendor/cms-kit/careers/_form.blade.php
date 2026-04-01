@@ -292,7 +292,11 @@
                             <label class="form-label fw-bold">OG Image</label>
                             @if(!empty($item->metadata['og_image'] ?? null))
                                 <div class="mb-2">
-                                    <img src="{{ asset('storage/' . $item->metadata['og_image']) }}" class="rounded border" style="height: 100px;">
+                                    <img src="{{ media_url($item->metadata['og_image']) }}" class="rounded border" style="height: 100px;">
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="remove_metadata_og_image" id="removeCareerOgImage" value="1" {{ old('remove_metadata_og_image') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="removeCareerOgImage">Remove current OG image</label>
                                 </div>
                             @endif
                             <input type="file" name="metadata[og_image]" class="form-control @error('metadata.og_image') is-invalid @enderror" accept="image/*">

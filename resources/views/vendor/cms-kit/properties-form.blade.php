@@ -151,7 +151,12 @@
                                             <div class="row g-4 mb-4">
                                                 <div class="col-md-6">
                                                     <label class="form-label fw-bold">Reference ID <span class="text-danger">*</span></label>
-                                                    <input type="text" name="prop_id" class="form-control @error('prop_id') is-invalid @enderror" value="{{ old('prop_id', $item->prop_id ?? '') }}" placeholder="Optional unique property code" required>
+                                                    @if($item)
+                                                        <input type="text" name="prop_id" class="form-control bg-light @error('prop_id') is-invalid @enderror" value="{{ old('prop_id', $item->prop_id ?? '') }}" readonly autocomplete="off" aria-readonly="true">
+                                                        <div class="form-text">Reference ID is fixed after creation so gallery filenames stay stable.</div>
+                                                    @else
+                                                        <input type="text" name="prop_id" class="form-control @error('prop_id') is-invalid @enderror" value="{{ old('prop_id', '') }}" placeholder="Unique property code" required>
+                                                    @endif
                                                     @error('prop_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                                 </div>
                                                 <div class="col-md-6">
@@ -261,7 +266,7 @@
                                                             <div class="col-md-3">
                                                                 <div class="section-icon-preview-wrap">
                                                                     @if(!empty($row['icon']))
-                                                                        <img src="{{ Str::startsWith($row['icon'], ['http://', 'https://', '/storage/']) ? $row['icon'] : asset('storage/' . $row['icon']) }}" class="section-icon-preview">
+                                                                        <img src="{{ media_url($row['icon']) }}" class="section-icon-preview">
                                                                     @else
                                                                         <div class="section-icon-placeholder">No Icon</div>
                                                                     @endif
@@ -405,7 +410,7 @@
                                                 <div class="image-row existing-image-row" draggable="false" data-image-kind="existing">
                                                     <div class="property-image-card property-image-card-existing h-100">
                                                         <div class="property-image-card-preview">
-                                                            <img src="{{ asset('storage/' . $image->image) }}" alt="" class="property-image-card-thumb">
+                                                            <img src="{{ media_url($image->image) }}" alt="" class="property-image-card-thumb">
                                                             <span class="property-image-rank-badge">{{ $loop->iteration }}</span>
                                                             <span class="property-image-feature-badge {{ $loop->first ? '' : 'd-none' }}">Featured</span>
                                                         </div>

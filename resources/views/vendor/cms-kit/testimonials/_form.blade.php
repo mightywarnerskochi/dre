@@ -75,8 +75,12 @@
         <small class="text-muted d-block mt-2">Recommended: {{ config('cms-kit.images.testimonials.item_image.width') }}x{{ config('cms-kit.images.testimonials.item_image.height') }}px</small>
         @if($item?->image)
             <div class="mt-2 position-relative d-inline-block">
-                <img src="{{ asset('storage/'.$item->image) }}" class="rounded shadow-sm" style="height: 60px; width: 60px; object-fit: cover;">
+                <img src="{{ media_url($item->image) }}" class="rounded shadow-sm" style="height: 60px; width: 60px; object-fit: cover;">
                 <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary border border-light">Current</span>
+            </div>
+            <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" name="remove_image" id="removeTestimonialImage" value="1" {{ old('remove_image') ? 'checked' : '' }}>
+                <label class="form-check-label" for="removeTestimonialImage">Remove current image</label>
             </div>
         @endif
     </div>
@@ -113,3 +117,4 @@
         </div>
     </div>
 </div>
+

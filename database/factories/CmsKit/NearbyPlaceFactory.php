@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\CmsKit;
 
 use App\Models\CmsKit\NearbyPlace;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -18,7 +18,7 @@ class NearbyPlaceFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->company() . ' ' . $this->faker->randomElement(['School', 'Hospital', 'Park', 'Mall']),
+            'name' => $this->faker->company().' '.$this->faker->randomElement(['School', 'Hospital', 'Park', 'Mall']),
             'type' => $this->faker->randomElement(['school', 'hospital', 'restaurant', 'attraction']),
             'latitude' => $this->faker->latitude(24.0, 26.0),
             'longitude' => $this->faker->longitude(54.0, 56.0),

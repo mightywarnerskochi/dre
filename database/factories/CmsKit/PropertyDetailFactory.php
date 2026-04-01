@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\CmsKit;
 
 use App\Models\CmsKit\PropertyDetail;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -18,8 +18,8 @@ class PropertyDetailFactory extends Factory
     public function definition(): array
     {
         return [
-            'property_id' => \App\Models\CmsKit\Property::factory(),
-            'description' => '<div>' . $this->faker->paragraphs(3, true) . '</div>',
+            'property_id' => null,
+            'description' => '<div>'.$this->faker->paragraphs(3, true).'</div>',
             'year_built' => $this->faker->numberBetween(2000, 2025),
             'security_deposit' => $this->faker->randomFloat(2, 1000, 50000),
             'direct_from_owner' => $this->faker->randomElement(['Yes, Owner Listed', 'No', 'Exclusive Owner Unit']),
@@ -40,5 +40,12 @@ class PropertyDetailFactory extends Factory
                 ['icon' => 'fas fa-parking', 'name' => 'Covered Parking'],
             ],
         ];
+    }
+
+    public function forProperty(int $propertyId): static
+    {
+        return $this->state(fn () => [
+            'property_id' => $propertyId,
+        ]);
     }
 }

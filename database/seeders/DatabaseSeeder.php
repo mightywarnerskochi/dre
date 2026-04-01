@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use CMS\SiteManager\Database\Seeders\CmsRolesPermissionsSeeder;
 use CMS\SiteManager\Database\Seeders\MetadataSeeder;
 use Database\Seeders\CmsAboutPermissionsSeeder;
+use Database\Seeders\HomeBannerFiltersSeeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -21,6 +22,7 @@ class DatabaseSeeder extends Seeder
             CmsRolesPermissionsSeeder::class,
             CmsAboutPermissionsSeeder::class,
             MetadataSeeder::class,
+            HomeBannerFiltersSeeder::class,
         ]);
     }
 }

@@ -82,7 +82,11 @@
                     @enderror
                     @if($about->{"image_{$index}"})
                     <div class="mt-2">
-                        <img src="{{ asset('storage/' . $about->{"image_{$index}"}) }}" alt="" class="img-thumbnail" style="max-height: 100px;">
+                        <img src="{{ media_url($about->{"image_{$index}"}) }}" alt="" class="img-thumbnail" style="max-height: 100px;">
+                    </div>
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" name="remove_image_{{ $index }}" id="removeImage{{ $index }}" value="1" {{ old("remove_image_{$index}") ? 'checked' : '' }}>
+                        <label class="form-check-label" for="removeImage{{ $index }}">Remove current image</label>
                     </div>
                     @endif
                     @if(!empty($imagesConfig["image_{$index}"]))
@@ -137,3 +141,4 @@ document.addEventListener('invalid', function(e) {
 }, true);
 </script>
 @endpush
+

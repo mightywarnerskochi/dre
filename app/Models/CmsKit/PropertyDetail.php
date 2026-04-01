@@ -2,6 +2,7 @@
 
 namespace App\Models\CmsKit;
 
+use Database\Factories\CmsKit\PropertyDetailFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,6 +10,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PropertyDetail extends Model
 {
     use HasFactory;
+
+    protected static function newFactory()
+    {
+        return PropertyDetailFactory::new();
+    }
+
     protected $fillable = [
         'property_id',
         'description',

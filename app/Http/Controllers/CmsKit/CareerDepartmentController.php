@@ -1,9 +1,9 @@
 <?php
 
-namespace CMS\SiteManager\Http\Controllers\CmsKit;
+namespace App\Http\Controllers\CmsKit;
 
-use CMS\SiteManager\Models\CmsKit\CareerDepartment;
-use CMS\SiteManager\Models\CmsKit\Language;
+use App\Models\CmsKit\CareerDepartment;
+use App\Models\CmsKit\Language;
 use CMS\SiteManager\Support\ManagesOrderIndex;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;

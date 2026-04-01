@@ -4,16 +4,15 @@ namespace App\Http\Controllers\CmsKit;
 
 use App\Http\Controllers\Controller;
 use App\Models\CmsKit\Agent;
+use App\Models\CmsKit\Language;
 use App\Models\CmsKit\NearbyPlace;
 use App\Models\CmsKit\Property;
-use App\Models\CmsKit\PropertyImage;
-use CMS\SiteManager\Models\CmsKit\Language;
+use App\Support\MediaStorage;
 use CMS\SiteManager\Support\ValidatesImageDimensions;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Yajra\DataTables\Facades\DataTables;
@@ -75,7 +74,7 @@ class PropertyController extends Controller
 
     protected function optionLabel(array $options, ?string $key): string
     {
-        if (!$key) {
+        if (! $key) {
             return '-';
         }
 
@@ -114,6 +113,22 @@ class PropertyController extends Controller
         return $propertyType;
     }
 
+    protected function sanitizePropId(?string $propId, int $propertyId): string
+    {
+        $sanitized = preg_replace('/[^A-Za-z0-9\-]/', '-', (string) ($propId ?? ''));
+
+        return trim((string) $sanitized, '-') ?: "PROP-{$propertyId}";
+    }
+
+    protected function safeMediaUrl(?string $path): ?string
+    {
+        try {
+            return media_url($path);
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
     protected function rules(?Property $property = null): array
     {
         $propertyId = $property?->id;
@@ -121,7 +136,9 @@ class PropertyController extends Controller
         $imageConfig = config('cms-kit.images.properties.image', []);
         $fallbackLocale = config('app.fallback_locale', 'en');
         $rules = [
-            'prop_id' => ['nullable', 'string', 'max:255', Rule::unique('properties', 'prop_id')->ignore($propertyId)],
+            'prop_id' => $property !== null
+                ? ['required', 'string', 'max:255', Rule::in([(string) ($property->getOriginal('prop_id') ?? '')])]
+                : ['required', 'string', 'max:255', Rule::unique('properties', 'prop_id')],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('properties', 'slug')->ignore($propertyId)],
             'property_type' => ['required', 'string', 'max:255'],
             'custom_property_type' => ['nullable', 'string', 'max:255', 'required_if:property_type,custom'],
@@ -142,7 +159,7 @@ class PropertyController extends Controller
             'status' => ['nullable', 'boolean'],
             'order' => ['nullable', 'integer', 'min:1'],
             'published_at' => ['nullable', 'date'],
-            'year_built' => ['nullable', 'integer', 'min:1800', 'max:' . (now()->year + 1)],
+            'year_built' => ['nullable', 'integer', 'min:1800', 'max:'.(now()->year + 1)],
             'security_deposit' => ['nullable', 'numeric', 'min:0'],
             'direct_from_owner' => ['nullable', 'string', 'max:255'],
             'nearby_places' => ['nullable', 'array'],
@@ -152,7 +169,7 @@ class PropertyController extends Controller
             'existing_images.*.order' => ['nullable', 'integer', 'min:1'],
             'existing_images.*.delete' => ['nullable', 'boolean'],
             'new_images' => ['nullable', 'array'],
-            'new_images.*.file' => ['nullable', 'image', 'max:' . ($imageConfig['max_size'] ?? 4096)],
+            'new_images.*.file' => ['nullable', 'image', 'max:'.($imageConfig['max_size'] ?? 4096)],
             'new_images.*.order' => ['nullable', 'integer', 'min:1'],
         ];
 
@@ -167,16 +184,16 @@ class PropertyController extends Controller
             $rules["translations.{$language->code}.easy_to_access"] = ['nullable', 'array'];
             $rules["translations.{$language->code}.key_features_text"] = ['nullable', 'string', 'max:2000'];
             $rules["translations.{$language->code}.easy_to_access.*.current_icon"] = ['nullable', 'string', 'max:255'];
-            $rules["translations.{$language->code}.easy_to_access.*.icon_file"] = ['nullable', 'image', 'max:' . ($this->propertySectionIconConfig()['max_size'] ?? 512)];
+            $rules["translations.{$language->code}.easy_to_access.*.icon_file"] = ['nullable', 'image', 'max:'.($this->propertySectionIconConfig()['max_size'] ?? 512)];
             $rules["translations.{$language->code}.easy_to_access.*.label"] = ['nullable', 'string', 'max:255'];
             $rules["translations.{$language->code}.key_features_text"] = ['nullable', 'string', 'max:2000'];
             $rules["translations.{$language->code}.amenities"] = ['nullable', 'array'];
             $rules["translations.{$language->code}.amenities.*.current_icon"] = ['nullable', 'string', 'max:255'];
-            $rules["translations.{$language->code}.amenities.*.icon_file"] = ['nullable', 'image', 'max:' . ($this->propertySectionIconConfig()['max_size'] ?? 512)];
+            $rules["translations.{$language->code}.amenities.*.icon_file"] = ['nullable', 'image', 'max:'.($this->propertySectionIconConfig()['max_size'] ?? 512)];
             $rules["translations.{$language->code}.amenities.*.name"] = ['nullable', 'string', 'max:255'];
             $rules["translations.{$language->code}.property_attributes"] = ['nullable', 'array'];
             $rules["translations.{$language->code}.property_attributes.*.current_icon"] = ['nullable', 'string', 'max:255'];
-            $rules["translations.{$language->code}.property_attributes.*.icon_file"] = ['nullable', 'image', 'max:' . ($this->propertySectionIconConfig()['max_size'] ?? 512)];
+            $rules["translations.{$language->code}.property_attributes.*.icon_file"] = ['nullable', 'image', 'max:'.($this->propertySectionIconConfig()['max_size'] ?? 512)];
             $rules["translations.{$language->code}.property_attributes.*.name"] = ['nullable', 'string', 'max:255'];
         }
 
@@ -235,7 +252,7 @@ class PropertyController extends Controller
                 /** @var UploadedFile|null $uploadedIcon */
                 $uploadedIcon = $request->file("translations.{$languageCode}.{$section}.{$index}.icon_file");
                 if ($uploadedIcon) {
-                    $normalized['icon'] = $uploadedIcon->store('properties/section-icons', 'public');
+                    $normalized['icon'] = MediaStorage::store($uploadedIcon, 'properties/section-icons');
                 }
 
                 return $normalized;
@@ -302,10 +319,10 @@ class PropertyController extends Controller
                     || $translation['description'] !== ''
                     || $translation['address'] !== ''
                     || $translation['full_address'] !== ''
-                    || !empty($translation['easy_to_access'])
-                    || !empty($translation['key_features'])
-                    || !empty($translation['amenities'])
-                    || !empty($translation['property_attributes']);
+                    || ! empty($translation['easy_to_access'])
+                    || ! empty($translation['key_features'])
+                    || ! empty($translation['amenities'])
+                    || ! empty($translation['property_attributes']);
             })
             ->values()
             ->all();
@@ -320,7 +337,7 @@ class PropertyController extends Controller
                 foreach (array_keys((array) $request->input("translations.{$language->code}.{$section}", [])) as $index) {
                     $field = "translations.{$language->code}.{$section}.{$index}.icon_file";
                     if ($request->hasFile($field)) {
-                        $this->validateImageWithinLimits($request, $field, $iconConfig, ucfirst(str_replace('_', ' ', $section)) . ' icon');
+                        $this->validateImageWithinLimits($request, $field, $iconConfig, ucfirst(str_replace('_', ' ', $section)).' icon');
                     }
                 }
             }
@@ -367,9 +384,7 @@ class PropertyController extends Controller
 
     protected function deleteManagedSectionIcons(array $paths): void
     {
-        foreach (collect($paths)->filter()->unique() as $path) {
-            Storage::disk('public')->delete($path);
-        }
+        MediaStorage::deleteMany(collect($paths)->filter()->unique());
     }
 
     protected function resolveSlug(Request $request, array $translations, ?int $ignoreId = null): string
@@ -396,7 +411,7 @@ class PropertyController extends Controller
                 ->where('slug', $slug)
                 ->exists()
         ) {
-            $slug = $baseSlug . '-' . $suffix;
+            $slug = $baseSlug.'-'.$suffix;
             $suffix++;
         }
 
@@ -478,14 +493,48 @@ class PropertyController extends Controller
         $property->nearbyPlaces()->sync($syncData);
     }
 
-    protected function syncImages(Property $property, Request $request): void
+    /**
+     * Property updates should not touch storage unless the gallery section actually changed.
+     * Otherwise every save would hit Cloudinary (download + re-upload of all images).
+     */
+    protected function propertyImageGalleryRequiresSync(Request $request, Property $property): bool
     {
-        $storage = Storage::disk('public');
+        foreach (array_keys((array) $request->input('new_images', [])) as $index) {
+            if ($request->file("new_images.{$index}.file")) {
+                return true;
+            }
+        }
+
+        foreach ((array) $request->input('existing_images', []) as $payload) {
+            if (! empty($payload['delete'])) {
+                return true;
+            }
+        }
+
+        $existing = (array) $request->input('existing_images', []);
+        $suffixesOrdered = collect($existing)
+            ->filter(fn ($p) => empty($p['delete']))
+            ->sortBy(fn ($p) => (int) ($p['order'] ?? 0))
+            ->keys()
+            ->map(fn ($k) => (string) $k)
+            ->values()
+            ->all();
+
+        $rawImages = (string) ($property->getAttributes()['images'] ?? '');
+        $current = array_values(array_filter(array_map('trim', explode(',', $rawImages)), fn ($s) => $s !== ''));
+
+        return $suffixesOrdered !== $current;
+    }
+
+    protected function syncImages(Property $property, Request $request, ?string $oldSanitizedPropId = null): void
+    {
+        $storage = MediaStorage::disk();
+        $isCloudinaryDisk = MediaStorage::diskName() === 'cloudinary';
         $propertyId = $property->id;
         $sanitizedPropId = $property->sanitized_prop_id;
         $dir = "properties/property_{$propertyId}";
-        
-        if (!$storage->exists($dir)) {
+
+        if (! $storage->exists($dir)) {
             $storage->makeDirectory($dir);
         }
 
@@ -493,16 +542,17 @@ class PropertyController extends Controller
 
         // 1. Process Existing Images
         foreach ((array) $request->input('existing_images', []) as $suffix => $payload) {
-            $currentPath = "{$dir}/property_" . ($property->old_sanitized_prop_id ?? $sanitizedPropId) . "_{$suffix}.jpg";
+            $currentPath = "{$dir}/property_".($oldSanitizedPropId ?? $sanitizedPropId)."_{$suffix}.jpg";
             // Fallback to ID-based path if prop_id path doesn't exist (for migration period or if prop_id changed)
-            if (!$storage->exists($currentPath)) {
+            if (! $storage->exists($currentPath)) {
                 $currentPath = "{$dir}/property_{$propertyId}_{$suffix}.jpg";
             }
-            
-            if (!empty($payload['delete'])) {
+
+            if (! empty($payload['delete'])) {
                 if ($storage->exists($currentPath)) {
                     $storage->delete($currentPath);
                 }
+
                 continue;
             }
 
@@ -510,7 +560,7 @@ class PropertyController extends Controller
                 $allProcessedImages[] = [
                     'source' => $currentPath,
                     'order' => (int) ($payload['order'] ?? $suffix),
-                    'is_new' => false
+                    'is_new' => false,
                 ];
             }
         }
@@ -518,24 +568,76 @@ class PropertyController extends Controller
         // 2. Process New Images
         foreach ((array) $request->input('new_images', []) as $index => $payload) {
             $file = $request->file("new_images.{$index}.file");
-            if (!$file) continue;
+            if (! $file) {
+                continue;
+            }
 
-            // Save to a temporary name first
-            $tempName = "temp_" . uniqid() . ".jpg";
-            $tempPath = "{$dir}/{$tempName}";
-            
-            // Convert to JPEG during upload
-            $this->storeAsJpeg($file, $tempPath);
+            if ($isCloudinaryDisk) {
+                $allProcessedImages[] = [
+                    'source' => null,
+                    'binary' => $this->jpegData($file),
+                    'order' => (int) ($payload['order'] ?? 999),
+                    'is_new' => true,
+                ];
+            } else {
+                // Save to a temporary name first
+                $tempName = 'temp_'.uniqid().'.jpg';
+                $tempPath = "{$dir}/{$tempName}";
 
-            $allProcessedImages[] = [
-                'source' => $tempPath,
-                'order' => (int) ($payload['order'] ?? 999),
-                'is_new' => true
-            ];
+                // Convert to JPEG during upload
+                $this->storeAsJpeg($file, $tempPath);
+
+                $allProcessedImages[] = [
+                    'source' => $tempPath,
+                    'order' => (int) ($payload['order'] ?? 999),
+                    'is_new' => true,
+                ];
+            }
         }
 
         // 3. Sort by intended order
-        usort($allProcessedImages, fn($a, $b) => $a['order'] <=> $b['order']);
+        usort($allProcessedImages, fn ($a, $b) => $a['order'] <=> $b['order']);
+
+        if ($isCloudinaryDisk) {
+            // Snapshot existing binaries first to avoid in-place overwrite cascade during reorder.
+            foreach ($allProcessedImages as $idx => $img) {
+                if (! empty($img['is_new'])) {
+                    continue;
+                }
+
+                $sourcePath = (string) ($img['source'] ?? '');
+                if ($sourcePath !== '' && $storage->exists($sourcePath)) {
+                    $allProcessedImages[$idx]['binary'] = $storage->get($sourcePath);
+                }
+            }
+
+            $keepPaths = [];
+            foreach ($allProcessedImages as $index => $img) {
+                $finalIdx = $index + 1;
+                $finalPath = "{$dir}/property_{$sanitizedPropId}_{$finalIdx}.jpg";
+                $binary = $img['binary'] ?? null;
+
+                if (is_string($binary) && $binary !== '') {
+                    MediaStorage::put($finalPath, $binary);
+                }
+
+                $keepPaths[] = $finalPath;
+            }
+
+            foreach ($storage->files($dir) as $existingPath) {
+                if (! in_array($existingPath, $keepPaths, true)) {
+                    MediaStorage::delete($existingPath);
+                }
+            }
+
+            $newSuffixes = range(1, count($allProcessedImages));
+            $property->update([
+                'images_directory' => $dir,
+                'images' => implode(',', $newSuffixes),
+            ]);
+
+            return;
+        }
 
         // 4. Sequential Renaming
         $newSuffixes = [];
@@ -565,18 +667,23 @@ class PropertyController extends Controller
 
     protected function storeAsJpeg($file, $targetPath): void
     {
-        $image = @imagecreatefromstring(file_get_contents($file->getRealPath()));
-        if (!$image) {
-            Storage::disk('public')->put($targetPath, file_get_contents($file->getRealPath()));
-            return;
+        MediaStorage::put($targetPath, $this->jpegData($file));
+    }
+
+    protected function jpegData(UploadedFile $file): string
+    {
+        $raw = (string) file_get_contents($file->getRealPath());
+        $image = @imagecreatefromstring($raw);
+        if (! $image) {
+            return $raw;
         }
 
         ob_start();
         imagejpeg($image, null, 90);
-        $jpgData = ob_get_clean();
+        $jpgData = (string) ob_get_clean();
         imagedestroy($image);
 
-        Storage::disk('public')->put($targetPath, $jpgData);
+        return $jpgData !== '' ? $jpgData : $raw;
     }
 
     public function index(Request $request)
@@ -585,42 +692,50 @@ class PropertyController extends Controller
             $cmsUser = auth('cms')->user();
             $propertyTypes = $this->propertyTypes();
             $listingTypes = $this->listingTypes();
-            $data = Property::query()->with(['agent'])->ordered();
+            $data = Property::query()
+                ->select([
+                    'id',
+                    'title',
+                    'city',
+                    'community',
+                    'property_type',
+                    'listing_type',
+                    'price',
+                    'currency',
+                    'status',
+                    'order',
+                ])
+                ->ordered();
 
             return DataTables::of($data)
                 ->addIndexColumn()
-                ->addColumn('select_all', fn ($row) => '<input type="checkbox" class="row-checkbox form-check-input" value="' . $row->id . '">')
+                ->addColumn('select_all', fn ($row) => '<input type="checkbox" class="row-checkbox form-check-input" value="'.$row->id.'">')
                 ->addColumn('property', function ($row) {
-                    $image = $row->featuredImage
-                        ? '<img src="' . asset('storage/' . $row->featuredImage->image) . '" class="rounded border me-2" style="height:40px;width:60px;object-fit:cover;">'
-                        : '';
-
-                    return '<div class="d-flex align-items-center">' . $image . '<div><div class="fw-semibold">' . e($row->title) . '</div><small class="text-muted">' . e(trim(($row->city ?: '-') . ($row->community ? ' / ' . $row->community : ''))) . '</small></div></div>';
+                    return '<div><div class="fw-semibold">'.e($row->title).'</div><small class="text-muted">'.e(trim(($row->city ?: '-').($row->community ? ' / '.$row->community : ''))).'</small></div>';
                 })
-                ->addColumn('type', fn ($row) => e($this->optionLabel($propertyTypes, $row->property_type) . ' / ' . $this->optionLabel($listingTypes, $row->listing_type)))
+                ->addColumn('type', fn ($row) => e($this->optionLabel($propertyTypes, $row->property_type).' / '.$this->optionLabel($listingTypes, $row->listing_type)))
                 ->addColumn('price_label', function ($row) {
-                    return e(trim(($row->currency ?: '') . ' ' . ($row->price ? number_format((float) $row->price, 2) : '-')));
+                    return e(trim(($row->currency ?: '').' '.($row->price ? number_format((float) $row->price, 2) : '-')));
                 })
-                ->addColumn('agent_name', fn ($row) => e($row->agent?->name ?? '-'))
                 ->addColumn('status', function ($row) {
                     $checked = $row->status ? 'checked' : '';
 
                     return '<div class="form-check form-switch">
-                                <input class="form-check-input toggle-status" type="checkbox" data-id="' . $row->id . '" ' . $checked . '>
+                                <input class="form-check-input toggle-status" type="checkbox" data-id="'.$row->id.'" '.$checked.'>
                             </div>';
                 })
                 ->addColumn('order_input', function ($row) {
-                    return '<input type="number" min="1" class="form-control form-control-sm reorder-input" data-id="' . $row->id . '" value="' . $row->order . '" style="width: 80px;">';
+                    return '<input type="number" min="1" class="form-control form-control-sm reorder-input" data-id="'.$row->id.'" value="'.$row->order.'" style="width: 80px;">';
                 })
                 ->addColumn('action', function ($row) use ($cmsUser) {
                     $buttons = '<div class="btn-group">';
 
                     if ($cmsUser?->can('property.edit')) {
-                        $buttons .= '<a href="' . route('cms.properties.edit', $row->id) . '" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>';
+                        $buttons .= '<a href="'.route('cms.properties.edit', $row->id).'" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>';
                     }
 
                     if ($cmsUser?->can('property.delete')) {
-                        $buttons .= '<button type="button" class="btn btn-sm btn-outline-danger delete-item" data-id="' . $row->id . '"><i class="fas fa-trash"></i></button>';
+                        $buttons .= '<button type="button" class="btn btn-sm btn-outline-danger delete-item" data-id="'.$row->id.'"><i class="fas fa-trash"></i></button>';
                     }
 
                     $buttons .= '</div>';
@@ -763,7 +878,9 @@ class PropertyController extends Controller
         $fallbackTranslation = collect($translations)->firstWhere('language_code', $fallbackLocale) ?? ($translations[0] ?? []);
         $existingIconPaths = $this->managedIconPathsForProperty($property);
 
-        DB::transaction(function () use ($request, $property, $translations, $fallbackTranslation, $existingIconPaths) {
+        $galleryRequiresSync = $this->propertyImageGalleryRequiresSync($request, $property);
+
+        DB::transaction(function () use ($request, $property, $translations, $fallbackTranslation, $existingIconPaths, $galleryRequiresSync) {
             $newOrder = $this->resolveOrderForReorder((int) $request->input('order', $property->order));
             $oldOrder = $property->order;
 
@@ -776,7 +893,7 @@ class PropertyController extends Controller
             }
 
             $property->update([
-                'prop_id' => trim((string) $request->input('prop_id')),
+                'prop_id' => trim((string) ($property->getOriginal('prop_id') ?? '')),
                 'title' => $fallbackTranslation['title'] ?? $property->title,
                 'slug' => $this->resolveSlug($request, $translations, $property->id),
                 'property_type' => $this->resolvedPropertyType($request),
@@ -817,7 +934,10 @@ class PropertyController extends Controller
 
             $this->syncTranslations($property, $translations);
             $this->syncNearbyPlaces($property, (array) $request->input('nearby_places', []));
-            $this->syncImages($property, $request);
+            if ($galleryRequiresSync) {
+                $oldSanitizedPropId = $this->sanitizePropId((string) $property->getOriginal('prop_id'), (int) $property->id);
+                $this->syncImages($property, $request, $oldSanitizedPropId);
+            }
             $this->normalizePropertyOrder();
 
             $newIconPaths = $this->managedIconPathsFromTranslations($translations);
@@ -833,7 +953,7 @@ class PropertyController extends Controller
         $order = $property->order;
 
         if ($property->images_directory) {
-            Storage::disk('public')->deleteDirectory($property->images_directory);
+            MediaStorage::deleteDirectory($property->images_directory);
         }
 
         $this->deleteManagedSectionIcons($this->managedIconPathsForProperty($property));
@@ -852,7 +972,7 @@ class PropertyController extends Controller
     public function toggleStatus($id)
     {
         $property = Property::findOrFail($id);
-        $property->update(['status' => !$property->status]);
+        $property->update(['status' => ! $property->status]);
 
         if (request()->ajax()) {
             return response()->json(['success' => true]);
@@ -894,15 +1014,15 @@ class PropertyController extends Controller
         $ids = array_filter((array) $request->input('ids', []));
         $action = $request->input('action');
 
-        if (!$ids || !$action) {
+        if (! $ids || ! $action) {
             return response()->json(['success' => false], 422);
         }
 
         if ($action === 'delete') {
-            $properties = Property::query()->with('images')->whereIn('id', $ids)->get();
+            $properties = Property::query()->whereIn('id', $ids)->get();
             foreach ($properties as $property) {
-                foreach ($property->images as $image) {
-                    Storage::disk('public')->delete($image->image);
+                if ($property->images_directory) {
+                    MediaStorage::deleteDirectory($property->images_directory);
                 }
 
                 $this->deleteManagedSectionIcons($this->managedIconPathsForProperty($property));

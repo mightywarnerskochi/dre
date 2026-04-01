@@ -1,13 +1,13 @@
 <?php
 
-namespace CMS\SiteManager\Http\Controllers\CmsKit;
+namespace App\Http\Controllers\CmsKit;
 
 use Illuminate\Http\Request;
-use CMS\SiteManager\Models\CmsKit\Blog;
-use CMS\SiteManager\Models\CmsKit\Language;
-use CMS\SiteManager\Models\CmsKit\SectionLabel;
+use App\Models\CmsKit\Blog;
+use App\Models\CmsKit\Language;
+use App\Models\CmsKit\SectionLabel;
 use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Facades\Storage;
+use App\Support\MediaStorage;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
 use CMS\SiteManager\Support\ManagesOrderIndex;
@@ -17,7 +17,7 @@ class BlogController extends Controller
 {
     use ValidatesImageDimensions, ManagesOrderIndex;
 
-    protected function getBlogValidationRules(bool $isUpdate = false): array
+    protected function getBlogValidationRules(bool $isUpdate = false, ?Blog $blog = null): array
     {
         $imagesConfig = config('cms-kit.images.blogs');
         $blogConfig = config('cms-kit.database.blogs.items', []);
@@ -45,9 +45,14 @@ class BlogController extends Controller
                 continue;
             }
 
-            $presence = in_array($field, $requiredFields) && !$isUpdate ? 'required' : 'nullable';
-            $rules[$field] = $presence . '|image|max:' . ($imagesConfig[$field]['max_size'] ?? 1024);
+            $requiresImage = in_array($field, $requiredFields)
+                && (!$isUpdate || !$blog?->{$field} || request()->boolean("remove_{$field}"));
+
+            $rules[$field] = ($requiresImage ? 'required' : 'nullable') . '|image|max:' . ($imagesConfig[$field]['max_size'] ?? 1024);
+            $rules["remove_{$field}"] = 'nullable|boolean';
         }
+
+        $rules['remove_metadata_og_image'] = 'nullable|boolean';
 
         return $rules;
     }
@@ -116,7 +121,7 @@ class BlogController extends Controller
                 })
                 ->addColumn('image', function ($row) {
                     if ($row->feature_image) {
-                        return '<img src="' . asset('storage/' . $row->feature_image) . '" class="img-thumbnail" style="height: 40px;">';
+                        return '<img src="' . e(media_url($row->feature_image)) . '" class="img-thumbnail" style="height: 40px;">';
                     }
                     return '-';
                 })
@@ -180,7 +185,7 @@ class BlogController extends Controller
         $imageFields = ['feature_image', 'detail_image', 'banner_image', 'image_3', 'image_4'];
         foreach ($imageFields as $field) {
             if ($request->hasFile($field)) {
-                $data[$field] = $request->file($field)->store('blogs', 'public');
+                $data[$field] = MediaStorage::store($request->file($field), 'blogs');
             }
         }
 
@@ -192,7 +197,7 @@ class BlogController extends Controller
         if ($request->has('metadata')) {
             $metadata = $request->metadata;
             if ($request->hasFile('metadata.og_image')) {
-                $metadata['og_image'] = $request->file('metadata.og_image')->store('blogs/metadata', 'public');
+                $metadata['og_image'] = MediaStorage::store($request->file('metadata.og_image'), 'blogs/metadata');
             }
             $data['metadata'] = $metadata;
         }
@@ -215,7 +220,7 @@ class BlogController extends Controller
         $blog = Blog::findOrFail($id);
         $imagesConfig = config('cms-kit.images.blogs');
 
-        $request->validate($this->getBlogValidationRules(true));
+        $request->validate($this->getBlogValidationRules(true, $blog));
         foreach (['feature_image', 'detail_image', 'banner_image', 'image_3', 'image_4'] as $field) {
             $this->validateImageWithinLimits($request, $field, $imagesConfig[$field] ?? [], str_replace('_', ' ', ucfirst($field)));
         }
@@ -232,8 +237,16 @@ class BlogController extends Controller
         $imageFields = ['feature_image', 'detail_image', 'banner_image', 'image_3', 'image_4'];
         foreach ($imageFields as $field) {
             if ($request->hasFile($field)) {
-                if ($blog->$field) Storage::disk('public')->delete($blog->$field);
-                $data[$field] = $request->file($field)->store('blogs', 'public');
+                if ($blog->$field) MediaStorage::delete($blog->$field);
+                $data[$field] = MediaStorage::store($request->file($field), 'blogs');
+            } elseif ($request->boolean("remove_{$field}") && $blog->$field) {
+                MediaStorage::delete($blog->$field);
+                $data[$field] = null;
+            }
+
+            if ($request->boolean("remove_{$field}")) {
+                $altField = $field === 'banner_image' ? 'banner_alt' : $field . '_alt';
+                $data[$altField] = null;
             }
         }
 
@@ -244,9 +257,12 @@ class BlogController extends Controller
             
             if ($request->hasFile('metadata.og_image')) {
                 if (!empty($existingMetadata['og_image'])) {
-                    Storage::disk('public')->delete($existingMetadata['og_image']);
+                    MediaStorage::delete($existingMetadata['og_image']);
                 }
-                $metadata['og_image'] = $request->file('metadata.og_image')->store('blogs/metadata', 'public');
+                $metadata['og_image'] = MediaStorage::store($request->file('metadata.og_image'), 'blogs/metadata');
+            } elseif ($request->boolean('remove_metadata_og_image') && !empty($existingMetadata['og_image'])) {
+                MediaStorage::delete($existingMetadata['og_image']);
+                $metadata['og_image'] = null;
             } else {
                 // Preserve existing og_image if no new file is uploaded
                 $metadata['og_image'] = $existingMetadata['og_image'] ?? null;
@@ -270,7 +286,7 @@ class BlogController extends Controller
         
         // Delete Metadata OG Image
         if (!empty($blog->metadata['og_image'])) {
-            Storage::disk('public')->delete($blog->metadata['og_image']);
+            MediaStorage::delete($blog->metadata['og_image']);
         }
 
         $blog->delete();
@@ -355,12 +371,12 @@ class BlogController extends Controller
                 $imageFields = ['feature_image', 'detail_image', 'banner_image', 'image_3', 'image_4'];
                 foreach ($imageFields as $field) {
                     if ($blog->$field) {
-                        Storage::disk('public')->delete($blog->$field);
+                        MediaStorage::delete($blog->$field);
                     }
                 }
 
                 if (!empty($blog->metadata['og_image'])) {
-                    Storage::disk('public')->delete($blog->metadata['og_image']);
+                    MediaStorage::delete($blog->metadata['og_image']);
                 }
 
                 $blog->delete();

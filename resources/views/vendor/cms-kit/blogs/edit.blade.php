@@ -111,7 +111,11 @@
                             <label class="form-label">{{ $label }}</label>
                             @if($blog->$field)
                             <div class="mb-2">
-                                <img src="{{ asset('storage/' . $blog->$field) }}" class="rounded border" style="height: 100px;">
+                                <img src="{{ media_url($blog->$field) }}" class="rounded border" style="height: 100px;">
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="remove_{{ $field }}" id="remove_{{ $field }}" value="1" {{ old("remove_{$field}") ? 'checked' : '' }}>
+                                <label class="form-check-label" for="remove_{{ $field }}">Remove current image</label>
                             </div>
                             @endif
                             <input type="file" name="{{ $field }}" class="form-control">
@@ -162,7 +166,11 @@
                             <label class="form-label fw-bold">OG Image</label>
                             @if(!empty($blog->metadata['og_image']))
                                 <div class="mb-2">
-                                    <img src="{{ asset('storage/' . $blog->metadata['og_image']) }}" class="rounded border" style="height: 100px;">
+                                    <img src="{{ media_url($blog->metadata['og_image']) }}" class="rounded border" style="height: 100px;">
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="remove_metadata_og_image" id="remove_metadata_og_image" value="1" {{ old('remove_metadata_og_image') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="remove_metadata_og_image">Remove current OG image</label>
                                 </div>
                             @endif
                             <input type="file" name="metadata[og_image]" class="form-control">

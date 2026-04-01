@@ -37,7 +37,6 @@
                         <th>Listing</th>
                         <th>Type</th>
                         <th>Price</th>
-                        <th>Agent</th>
                         <th style="width: 100px;">Order</th>
                         <th style="width: 100px;" class="text-center">Status</th>
                         <th style="width: 100px;" class="text-end">Actions</th>
@@ -63,15 +62,13 @@ $(function () {
         columns: [
             {data:'select_all', orderable:false, searchable:false},
             {data:'DT_RowIndex', orderable:false, searchable:false},
-            {data:'property', orderable:false, searchable:false},
-            {data:'type', orderable:false, searchable:false},
-            {data:'price_label', orderable:false, searchable:false},
-            {data:'agent_name', orderable:false, searchable:false},
+            {data:'property', name:'title', orderable:false, searchable:true},
+            {data:'type', name:'property_type', orderable:false, searchable:false},
+            {data:'price_label', name:'price', orderable:false, searchable:true},
             {data:'order_input', orderable:false, searchable:false},
             {data:'status', orderable:false, searchable:false, className:'text-center'},
             {data:'action', orderable:false, searchable:false, className:'text-end'}
-        ],
-        drawCallback: updateBulkButton
+        ]
     });
 
     $('#selectAll').on('change', function(){ $('.row-checkbox').prop('checked', this.checked); updateBulkButton(); });

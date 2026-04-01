@@ -1,15 +1,16 @@
 <?php
 
-namespace CMS\SiteManager\Http\Controllers\CmsKit;
+namespace App\Http\Controllers\CmsKit;
 
 use Illuminate\Http\Request;
-use CMS\SiteManager\Models\CmsKit\Faq;
-use CMS\SiteManager\Models\CmsKit\Language;
-use CMS\SiteManager\Models\CmsKit\SectionLabel;
+use App\Models\CmsKit\Faq;
+use App\Models\CmsKit\Language;
+use App\Models\CmsKit\SectionLabel;
 use CMS\SiteManager\Http\Requests\FaqRequest;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Routing\Controller;
 use CMS\SiteManager\Support\ManagesOrderIndex;
+use App\Support\MediaStorage;
 
 class FaqController extends Controller
 {
@@ -121,7 +122,7 @@ class FaqController extends Controller
         ];
 
         if (($sectionConfig['section_image'] ?? false) && $request->hasFile('section_image')) {
-            $data['section_image'] = $request->file('section_image')->store('faqs', 'public');
+            $data['section_image'] = MediaStorage::store($request->file('section_image'), 'faqs');
         }
 
         $extra_fields = [];

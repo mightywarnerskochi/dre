@@ -4,10 +4,10 @@ namespace App\Http\Controllers\CmsKit;
 
 use App\Http\Controllers\Controller;
 use App\Models\CmsKit\Agent;
-use CMS\SiteManager\Models\CmsKit\Language;
+use App\Support\MediaStorage;
+use App\Models\CmsKit\Language;
 use CMS\SiteManager\Support\ValidatesImageDimensions;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
 class AgentController extends Controller
@@ -64,7 +64,7 @@ class AgentController extends Controller
                 ->addColumn('select_all', fn ($row) => '<input type="checkbox" class="row-checkbox form-check-input" value="' . $row->id . '">')
                 ->addColumn('image', function ($row) {
                     return $row->image
-                        ? '<img src="' . asset('storage/' . $row->image) . '" class="img-thumbnail" style="height: 40px;">'
+                        ? '<img src="' . e(media_url($row->image)) . '" class="img-thumbnail" style="height: 40px;">'
                         : '-';
                 })
                 ->addColumn('name', function ($row) {
@@ -121,7 +121,7 @@ class AgentController extends Controller
         $validated['translations'] = $translations;
 
         if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('agents', 'public');
+            $validated['image'] = MediaStorage::store($request->file('image'), 'agents');
         }
 
         Agent::create($validated);
@@ -154,10 +154,10 @@ class AgentController extends Controller
 
         if ($request->hasFile('image')) {
             if ($agent->image) {
-                Storage::disk('public')->delete($agent->image);
+                MediaStorage::delete($agent->image);
             }
 
-            $validated['image'] = $request->file('image')->store('agents', 'public');
+            $validated['image'] = MediaStorage::store($request->file('image'), 'agents');
         }
 
         $agent->update($validated);
@@ -170,7 +170,7 @@ class AgentController extends Controller
         $agent = Agent::findOrFail($id);
 
         if ($agent->image) {
-            Storage::disk('public')->delete($agent->image);
+            MediaStorage::delete($agent->image);
         }
 
         $agent->delete();
@@ -207,7 +207,7 @@ class AgentController extends Controller
             $agents = Agent::whereIn('id', $ids)->get();
             foreach ($agents as $agent) {
                 if ($agent->image) {
-                    Storage::disk('public')->delete($agent->image);
+                    MediaStorage::delete($agent->image);
                 }
 
                 $agent->delete();

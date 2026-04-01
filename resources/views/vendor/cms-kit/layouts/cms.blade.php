@@ -6,7 +6,7 @@
     <title>{{ $siteInfo->company_name ?? config('cms-kit.common.name', 'CMS Kit') }} - @yield('title', 'Admin Dashboard')</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @if(!empty($siteInfo->favicon))
-    <link rel="icon" type="image/png" href="{{ asset('storage/' . $siteInfo->favicon) }}">
+    <link rel="icon" type="image/png" href="{{ media_url($siteInfo->favicon) }}">
     @endif
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -109,20 +109,35 @@
                     @endif
                     
                     {{-- Home Group --}}
-                    @if(config('cms-kit.common.modules.banners', true) && $cmsUser->can('banners.view'))
+                    @if(
+                        (config('cms-kit.common.modules.banners', true) && $cmsUser->can('banners.view')) ||
+                        (config('cms-kit.common.modules.neighborhoods', true) && $cmsUser->can('neighborhoods.view'))
+                    )
                     <div class="nav-item sidebar-group">
-                        <a class="nav-link d-flex align-items-center sidebar-group-toggle @if(request()->routeIs('cms.banners.*')) active @endif" 
+                        <a class="nav-link d-flex align-items-center sidebar-group-toggle @if(request()->routeIs('cms.banners.*') || request()->routeIs('cms.neighborhoods.*') || request()->routeIs('cms.home-banner-filters.*')) active @endif" 
                            data-bs-toggle="collapse" href="#homeMenu" role="button" 
-                           aria-expanded="@if(request()->routeIs('cms.banners.*')) true @else false @endif">
+                           aria-expanded="@if(request()->routeIs('cms.banners.*') || request()->routeIs('cms.neighborhoods.*') || request()->routeIs('cms.home-banner-filters.*')) true @else false @endif">
                             <i class="fas fa-home"></i>
                             <span>Home</span>
                             <i class="fas fa-chevron-down ms-auto sidebar-chevron"></i>
                         </a>
-                        <div class="collapse sidebar-submenu @if(request()->routeIs('cms.banners.*')) show @endif" id="homeMenu">
+                        <div class="collapse sidebar-submenu @if(request()->routeIs('cms.banners.*') || request()->routeIs('cms.neighborhoods.*') || request()->routeIs('cms.home-banner-filters.*')) show @endif" id="homeMenu">
                             <nav class="nav flex-column">
                                 <a class="nav-link py-2 @if(request()->routeIs('cms.banners.*')) active @endif" href="{{ route('cms.banners.index') }}">
                                     Banner
                                 </a>
+
+                                @if(config('cms-kit.common.modules.home-banner-filters', true) && $cmsUser->can('home-banner-filters.view'))
+                                    <a class="nav-link py-2 @if(request()->routeIs('cms.home-banner-filters.*')) active @endif" href="{{ route('cms.home-banner-filters.index') }}">
+                                        Filters
+                                    </a>
+                                @endif
+
+                                @if(config('cms-kit.common.modules.neighborhoods', true) && $cmsUser->can('neighborhoods.view'))
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.neighborhoods.*')) active @endif" href="{{ route('cms.neighborhoods.index') }}">
+                                    Neighborhoods
+                                </a>
+                                @endif
                             </nav>
                         </div>
                     </div>
@@ -290,6 +305,7 @@
                                     Nearby Places
                                 </a>
                                 @endif
+
                             </nav>
                         </div>
                     </div>
@@ -408,6 +424,34 @@
                 branding: false,
                 promotion: false
             });
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Global form submission handler to prevent double-clicks and show loading state
+            document.addEventListener('submit', function(e) {
+                const form = e.target;
+                if (form.tagName === 'FORM' && !form.classList.contains('no-loader')) {
+                    const btn = form.querySelector('button[type="submit"]:not(.no-loader)');
+                    if (btn) {
+                        if (btn.disabled) {
+                            e.preventDefault();
+                            return;
+                        }
+                        
+                        const hasFiles = form.querySelector('input[type="file"]');
+                        const loadingText = hasFiles ? 'Uploading... Please wait' : 'Saving...';
+                        
+                        // We use setTimeout to let the browser's native validation run first
+                        setTimeout(() => {
+                            if (!e.defaultPrevented) {
+                                btn.disabled = true;
+                                btn.innerHTML = `<i class="fas fa-spinner fa-spin me-2"></i> ${loadingText}`;
+                            }
+                        }, 0);
+                    }
+                }
+            }, true);
         });
     </script>
     @stack('scripts')

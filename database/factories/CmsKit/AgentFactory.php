@@ -1,6 +1,6 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\CmsKit;
 
 use App\Models\CmsKit\Agent;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -23,7 +23,7 @@ class AgentFactory extends Factory
             'phone' => $this->faker->phoneNumber(),
             'whatsapp_number' => $this->faker->phoneNumber(),
             'designation' => $this->faker->jobTitle(),
-            'experience' => $this->faker->numberBetween(1, 20) . ' years',
+            'experience' => $this->faker->numberBetween(1, 20).' years',
             'description' => $this->faker->paragraph(),
             'status' => true,
         ];

@@ -1,13 +1,13 @@
 <?php
 
-namespace CMS\SiteManager\Http\Controllers\CmsKit;
+namespace App\Http\Controllers\CmsKit;
 
 use Illuminate\Http\Request;
-use CMS\SiteManager\Models\CmsKit\Location;
-use CMS\SiteManager\Models\CmsKit\Language;
-use CMS\SiteManager\Models\CmsKit\SectionLabel;
+use App\Models\CmsKit\Location;
+use App\Models\CmsKit\Language;
+use App\Models\CmsKit\SectionLabel;
 use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Facades\Storage;
+use App\Support\MediaStorage;
 use Illuminate\Routing\Controller;
 use CMS\SiteManager\Support\ManagesOrderIndex;
 use CMS\SiteManager\Support\ValidatesImageDimensions;
@@ -28,7 +28,7 @@ class LocationController extends Controller
         )));
     }
 
-    protected function getLocationItemValidationRules(bool $isUpdate = false): array
+    protected function getLocationItemValidationRules(bool $isUpdate = false, ?Location $location = null): array
     {
         $imageConfig = config('cms-kit.images.locations.main_image');
         $flagConfig = config('cms-kit.images.locations.flag');
@@ -54,11 +54,15 @@ class LocationController extends Controller
         }
 
         if ($itemConfig['image'] ?? true) {
-            $rules['image'] = (in_array('image', $requiredFields) && !$isUpdate ? 'required' : 'nullable') . '|image|max:' . ($imageConfig['max_size'] ?? 2048);
+            $requiresImage = in_array('image', $requiredFields) && (!$isUpdate || !$location?->image || request()->boolean('remove_image'));
+            $rules['image'] = ($requiresImage ? 'required' : 'nullable') . '|image|max:' . ($imageConfig['max_size'] ?? 2048);
+            $rules['remove_image'] = 'nullable|boolean';
         }
 
         if ($itemConfig['flag'] ?? true) {
-            $rules['flag'] = (in_array('flag', $requiredFields) && !$isUpdate ? 'required' : 'nullable') . '|image|max:' . ($flagConfig['max_size'] ?? 1024);
+            $requiresFlag = in_array('flag', $requiredFields) && (!$isUpdate || !$location?->flag || request()->boolean('remove_flag'));
+            $rules['flag'] = ($requiresFlag ? 'required' : 'nullable') . '|image|max:' . ($flagConfig['max_size'] ?? 1024);
+            $rules['remove_flag'] = 'nullable|boolean';
         }
 
         return $rules;
@@ -126,7 +130,7 @@ class LocationController extends Controller
                 })
                 ->addColumn('image', function ($row) {
                     if ($row->image) {
-                        return '<img src="' . asset('storage/' . $row->image) . '" class="img-thumbnail" style="height: 40px;">';
+                        return '<img src="' . e(media_url($row->image)) . '" class="img-thumbnail" style="height: 40px;">';
                     }
                     return '-';
                 })
@@ -192,12 +196,12 @@ class LocationController extends Controller
         $data['extra_fields'] = $extra_fields;
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('locations', 'public');
+            $data['image'] = MediaStorage::store($request->file('image'), 'locations');
         }
 
 
         if ($request->hasFile('flag')) {
-            $data['flag'] = $request->file('flag')->store('locations/flags', 'public');
+            $data['flag'] = MediaStorage::store($request->file('flag'), 'locations/flags');
         }
 
         $order = $this->resolveOrderForCreate(Location::class, $request->order_index ? (int) $request->order_index : null);
@@ -243,14 +247,23 @@ class LocationController extends Controller
 
 
         if ($request->hasFile('image')) {
-            if ($location->image) Storage::disk('public')->delete($location->image);
-            $data['image'] = $request->file('image')->store('locations', 'public');
+            if ($location->image) MediaStorage::delete($location->image);
+            $data['image'] = MediaStorage::store($request->file('image'), 'locations');
+        } elseif ($request->boolean('remove_image') && $location->image) {
+            MediaStorage::delete($location->image);
+            $data['image'] = null;
         }
 
         if ($request->hasFile('flag')) {
-            if ($location->flag) Storage::disk('public')->delete($location->flag);
-            $data['flag'] = $request->file('flag')->store('locations/flags', 'public');
+            if ($location->flag) MediaStorage::delete($location->flag);
+            $data['flag'] = MediaStorage::store($request->file('flag'), 'locations/flags');
+        } elseif ($request->boolean('remove_flag') && $location->flag) {
+            MediaStorage::delete($location->flag);
+            $data['flag'] = null;
         }
+
+        $data['image_alt'] = $request->boolean('remove_image') ? null : $request->input('image_alt');
+        $data['flag_alt'] = $request->boolean('remove_flag') ? null : $request->input('flag_alt');
 
         $location->update($data);
 
@@ -261,8 +274,8 @@ class LocationController extends Controller
     {
         $location = Location::findOrFail($id);
         $order = $location->order_index;
-        if ($location->image) Storage::disk('public')->delete($location->image);
-        if ($location->flag) Storage::disk('public')->delete($location->flag);
+        if ($location->image) MediaStorage::delete($location->image);
+        if ($location->flag) MediaStorage::delete($location->flag);
         $location->delete();
 
         Location::where('order_index', '>', $order)->decrement('order_index');
@@ -348,8 +361,8 @@ class LocationController extends Controller
         if ($action === 'delete') {
             $locations = Location::whereIn('id', $ids)->get();
             foreach ($locations as $loc) {
-                if ($loc->image) Storage::disk('public')->delete($loc->image);
-                if ($loc->flag) Storage::disk('public')->delete($loc->flag);
+                if ($loc->image) MediaStorage::delete($loc->image);
+                if ($loc->flag) MediaStorage::delete($loc->flag);
                 $loc->delete();
             }
             $this->normalizeOrderIndex(Location::class);

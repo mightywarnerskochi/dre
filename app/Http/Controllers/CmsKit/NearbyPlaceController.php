@@ -4,7 +4,7 @@ namespace App\Http\Controllers\CmsKit;
 
 use App\Http\Controllers\Controller;
 use App\Models\CmsKit\NearbyPlace;
-use CMS\SiteManager\Models\CmsKit\Language;
+use App\Models\CmsKit\Language;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;

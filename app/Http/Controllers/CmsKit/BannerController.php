@@ -1,17 +1,18 @@
 <?php
 
-namespace CMS\SiteManager\Http\Controllers\CmsKit;
+namespace App\Http\Controllers\CmsKit;
 
 use Illuminate\Http\Request;
-use CMS\SiteManager\Models\CmsKit\Banner;
-use CMS\SiteManager\Models\CmsKit\Language;
+use App\Models\CmsKit\Banner;
+use App\Models\CmsKit\Language;
 use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use CMS\SiteManager\Support\ManagesOrderIndex;
 use CMS\SiteManager\Support\ValidatesImageDimensions;
+use App\Support\MediaStorage;
+
 
 class BannerController extends Controller
 {
@@ -31,7 +32,7 @@ class BannerController extends Controller
                     $videoText = $row->video_file ? basename($row->video_file) : $row->video_url;
                     return '<i class="fas fa-video fa-2x text-muted"></i><br><small>' . Str::limit($videoText, 20) . '</small>';
                 }
-                $url = $row->image ? asset('storage/' . $row->image) : asset('vendor/cms-kit/img/placeholder.png');
+                $url = $row->image ? (media_url($row->image) ?? asset('vendor/cms-kit/img/placeholder.png')) : asset('vendor/cms-kit/img/placeholder.png');
                 return '<img src="' . $url . '" class="img-thumbnail" style="width: 100px; height: 50px; object-fit: cover;">';
             })
                 ->addColumn('localized_title', function ($row) {
@@ -156,13 +157,13 @@ class BannerController extends Controller
 
         // Handle Image
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('banners', 'public');
+            $data['image'] = MediaStorage::store($request->file('image'), 'banners');
             $data['image_alt'] = $request->input('image_alt');
         }
 
         // Handle Video File
         if ($resolvedBannerType === 'video' && $request->hasFile('video_file')) {
-            $data['video_file'] = $request->file('video_file')->store('banners/videos', 'public');
+            $data['video_file'] = MediaStorage::store($request->file('video_file'), 'banners/videos');
             $data['video_url'] = null; // Clear URL if file is uploaded
         } elseif ($resolvedBannerType !== 'video') {
             $data['video_file'] = null;
@@ -181,7 +182,7 @@ class BannerController extends Controller
         if ($request->hasFile('google_avatars')) {
             $avatars = [];
             foreach ($request->file('google_avatars') as $file) {
-                $avatars[] = $file->store('banners/avatars', 'public');
+                $avatars[] = MediaStorage::store($file, 'banners/avatars');
             }
             $extraFields['google_avatars'] = $avatars;
         }
@@ -223,9 +224,16 @@ class BannerController extends Controller
         $typeRule = 'required|in:' . implode(',', $allowedTypes);
         $mainImageConfig = config('cms-kit.images.banners.main_image', ['max_size' => 2048, 'width' => 1920, 'height' => 800]);
         $avatarConfig = config('cms-kit.images.banners.client_avatar', ['max_size' => 512, 'width' => 100, 'height' => 100]);
+        $removeImage = $request->boolean('remove_image');
         $request->validate([
             'banner_type' => $typeRule,
-            'image' => 'nullable|image|max:' . $mainImageConfig['max_size'],
+            'image' => [
+                Rule::requiredIf(fn () => $resolvedBannerType === 'image' && (!$banner->image || $removeImage)),
+                'nullable',
+                'image',
+                'max:' . $mainImageConfig['max_size'],
+            ],
+            'remove_image' => 'nullable|boolean',
             'google_avatars.*' => 'nullable|image|max:' . $avatarConfig['max_size'],
             'video_source' => [
                 Rule::requiredIf(fn () => $resolvedBannerType === 'video'),
@@ -280,30 +288,33 @@ class BannerController extends Controller
 
         if ($request->hasFile('image')) {
             if ($banner->image)
-                Storage::disk('public')->delete($banner->image);
-            $data['image'] = $request->file('image')->store('banners', 'public');
+                MediaStorage::delete($banner->image);
+            $data['image'] = MediaStorage::store($request->file('image'), 'banners');
+        } elseif ($removeImage && $banner->image) {
+            MediaStorage::delete($banner->image);
+            $data['image'] = null;
         }
 
         // Handle Video File
         if ($resolvedBannerType === 'video' && $request->hasFile('video_file')) {
             if ($banner->video_file)
-                Storage::disk('public')->delete($banner->video_file);
-            $data['video_file'] = $request->file('video_file')->store('banners/videos', 'public');
+                MediaStorage::delete($banner->video_file);
+            $data['video_file'] = MediaStorage::store($request->file('video_file'), 'banners/videos');
             $data['video_url'] = null; // Clear URL if file is uploaded
         } elseif ($resolvedBannerType === 'video' && $request->input('video_url')) {
             if ($banner->video_file) {
-                Storage::disk('public')->delete($banner->video_file);
+                MediaStorage::delete($banner->video_file);
                 $data['video_file'] = null;
             }
         } else {
             if ($banner->video_file) {
-                Storage::disk('public')->delete($banner->video_file);
+                MediaStorage::delete($banner->video_file);
             }
             $data['video_file'] = null;
             $data['video_url'] = null;
         }
 
-        $data['image_alt'] = $request->input('image_alt');
+        $data['image_alt'] = $removeImage ? null : $request->input('image_alt');
 
         // Social Proof Extra Fields + Config Extra Fields
         $extraFields = $request->only(['google_rating', 'google_review_count', 'google_avatars_alt']);
@@ -319,7 +330,7 @@ class BannerController extends Controller
             // Delete old avatars? Optional, but keeping simple for now
             $avatars = [];
             foreach ($request->file('google_avatars') as $file) {
-                $avatars[] = $file->store('banners/avatars', 'public');
+                $avatars[] = MediaStorage::store($file, 'banners/avatars');
             }
             $extraFields['google_avatars'] = $avatars;
         }
@@ -338,9 +349,9 @@ class BannerController extends Controller
         $banner = Banner::findOrFail($id);
         $order = $banner->order_index;
         if ($banner->image)
-            Storage::disk('public')->delete($banner->image);
+            MediaStorage::delete($banner->image);
         if ($banner->video_file)
-            Storage::disk('public')->delete($banner->video_file);
+            MediaStorage::delete($banner->video_file);
         $banner->delete();
 
         Banner::where('order_index', '>', $order)->decrement('order_index');
@@ -396,9 +407,9 @@ class BannerController extends Controller
             $banners = Banner::whereIn('id', $ids)->get();
             foreach ($banners as $banner) {
                 if ($banner->image)
-                    Storage::disk('public')->delete($banner->image);
+                    MediaStorage::delete($banner->image);
                 if ($banner->video_file)
-                    Storage::disk('public')->delete($banner->video_file);
+                    MediaStorage::delete($banner->video_file);
                 $banner->delete();
             }
             $this->normalizeOrderIndex(Banner::class);

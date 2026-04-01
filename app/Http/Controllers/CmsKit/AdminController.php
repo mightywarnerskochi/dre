@@ -1,10 +1,10 @@
 <?php
 
-namespace CMS\SiteManager\Http\Controllers\CmsKit;
+namespace App\Http\Controllers\CmsKit;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use CMS\SiteManager\Models\CmsKit\Admin;
+use App\Models\CmsKit\Admin;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
 

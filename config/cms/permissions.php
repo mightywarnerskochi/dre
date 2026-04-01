@@ -14,7 +14,7 @@ return [
     'roles' => [
         'superadmin' => [
             'name' => 'Super Admin',
-            'permissions' => '*' // Special flag for all permissions
+            'permissions' => '*', // Special flag for all permissions
         ],
         'client' => [
             'name' => 'Client',
@@ -58,7 +58,15 @@ return [
                 'nearby-places.create',
                 'nearby-places.edit',
                 'nearby-places.delete',
-            ]
+                'neighborhoods.view',
+                'neighborhoods.create',
+                'neighborhoods.edit',
+                'neighborhoods.delete',
+                'home-banner-filters.view',
+                'home-banner-filters.create',
+                'home-banner-filters.edit',
+                'home-banner-filters.delete',
+            ],
         ],
     ],
 
@@ -86,21 +94,21 @@ return [
     | Default Users
     |--------------------------------------------------------------------------
     |
-    | Seed these users automatically. 
+    | Seed these users automatically.
     |
     */
     'users' => [
         [
-            'name'     => 'Super Admin',
-            'email'    => 'admin@example.com',
+            'name' => 'Super Admin',
+            'email' => 'admin@example.com',
             'password' => 'password',
-            'role'     => 'superadmin',
+            'role' => 'superadmin',
         ],
         [
-            'name'     => 'Client User',
-            'email'    => 'client@example.com',
+            'name' => 'Client User',
+            'email' => 'client@example.com',
             'password' => 'password',
-            'role'     => 'client',
+            'role' => 'client',
         ],
     ],
 
@@ -108,6 +116,6 @@ return [
         'view',
         'edit',
         'create',
-        'delete'
-    ]
+        'delete',
+    ],
 ];

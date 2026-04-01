@@ -1,24 +1,26 @@
 <?php
 
-namespace CMS\SiteManager\Http\Controllers\CmsKit;
+namespace App\Http\Controllers\CmsKit;
 
+use App\Models\CmsKit\Career;
+use App\Models\CmsKit\Enquiry;
+use App\Models\CmsKit\Faq;
+use App\Models\CmsKit\Property;
+use App\Models\CmsKit\Testimonial;
+use App\Models\CmsKit\WhyChooseUs;
 use Illuminate\Routing\Controller;
-use CMS\SiteManager\Models\CmsKit\Banner;
-use CMS\SiteManager\Models\CmsKit\Faq;
-use CMS\SiteManager\Models\CmsKit\Enquiry;
-use CMS\SiteManager\Models\CmsKit\Testimonial;
-use CMS\SiteManager\Models\CmsKit\Career;
 
 class DashboardController extends Controller
 {
     public function index()
     {
         $stats = [
-            'banners' => Banner::count(),
             'faqs' => Faq::count(),
             'enquiries' => Enquiry::count(),
             'testimonials' => Testimonial::count(),
             'careers' => class_exists(Career::class) ? Career::count() : 0,
+            'properties' => class_exists(Property::class) ? Property::count() : 0,
+            'why_choose_us' => class_exists(WhyChooseUs::class) ? WhyChooseUs::count() : 0,
         ];
 
         $recentEnquiries = Enquiry::latest()->take(5)->get();
@@ -26,5 +28,3 @@ class DashboardController extends Controller
         return view('cms-kit::dashboard', compact('stats', 'recentEnquiries'));
     }
 }
-
-

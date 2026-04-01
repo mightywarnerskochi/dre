@@ -3,49 +3,49 @@
 return [
     'about' => [
         'image_1' => [
-            'width' => 800,
-            'height' => 800,
+            'width' => 370,
+            'height' => 490,
             'max_size' => 1024,
         ],
         'image_2' => [
-            'width' => 800,
-            'height' => 800,
+            'width' => 370,
+            'height' => 490,
             'max_size' => 1024,
         ],
         'image_3' => [
-            'width' => 800,
-            'height' => 800,
+            'width' => 370,
+            'height' => 490,
             'max_size' => 1024,
         ],
         'image_4' => [
-            'width' => 800,
-            'height' => 800,
+            'width' => 370,
+            'height' => 490,
             'max_size' => 1024,
         ],
     ],
     'mission-vision' => [
         'image' => [
-            'width' => 800,
-            'height' => 800,
+            'width' => 528,
+            'height' => 428,
             'max_size' => 1024,
         ],
     ],
     'why-choose-us' => [
         'section_image' => [
-            'width' => 1200,
-            'height' => 900,
-            'max_size' => 2048,
+            'width' => 671,
+            'height' => 628,
+            'max_size' => 1024,
         ],
     ],
     'successful-journeys' => [
         'image_1' => [
-            'width' => 800,
-            'height' => 800,
+            'width' => 140,
+            'height' => 100,
             'max_size' => 1024,
         ],
         'image_2' => [
-            'width' => 800,
-            'height' => 800,
+            'width' => 140,
+            'height' => 100,
             'max_size' => 1024,
         ],
     ],
@@ -69,8 +69,8 @@ return [
     'banners' => [
         'main_image' => [
             'max_size' => 2048,
-            'width' => 1920,
-            'height' => 800,
+            'width' => 4096,
+            'height' => 2731,
         ],
         'client_avatar' => [
             'width' => 100,

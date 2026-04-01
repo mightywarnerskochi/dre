@@ -1,11 +1,11 @@
 <?php
 
-namespace CMS\SiteManager\Http\Controllers\CmsKit;
+namespace App\Http\Controllers\CmsKit;
 
-use CMS\SiteManager\Models\CmsKit\Metadata;
+use App\Models\CmsKit\Metadata;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Facades\Storage;
+use App\Support\MediaStorage;
 use Illuminate\Routing\Controller;
 
 
@@ -68,6 +68,8 @@ class MetadataController extends Controller
             $rules["{$field}.en"] = 'required';
         }
 
+        $rules['remove_og_image'] = 'nullable|boolean';
+
         $request->validate($rules);
 
         $data = $request->only([
@@ -81,11 +83,13 @@ class MetadataController extends Controller
         ]);
 
         if ($request->hasFile('og_image')) {
-            // Delete old image if exists
             if ($metadata->og_image) {
-                Storage::disk('public')->delete($metadata->og_image);
+                MediaStorage::delete($metadata->og_image);
             }
-            $data['og_image'] = $request->file('og_image')->store('metadata', 'public');
+            $data['og_image'] = MediaStorage::store($request->file('og_image'), 'metadata');
+        } elseif ($request->boolean('remove_og_image') && $metadata->og_image) {
+            MediaStorage::delete($metadata->og_image);
+            $data['og_image'] = null;
         }
 
         $metadata->update($data);
@@ -93,5 +97,4 @@ class MetadataController extends Controller
         return redirect()->route('cms.metadata.index')->with('success', 'Metadata updated successfully.');
     }
 }
-
 

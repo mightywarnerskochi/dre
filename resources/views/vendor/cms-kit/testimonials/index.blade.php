@@ -109,7 +109,11 @@
                         @endif
                         <small class="text-muted d-block mt-1">Recommended: {{ config('cms-kit.images.testimonials.section_image.width') }}x{{ config('cms-kit.images.testimonials.section_image.height') }}px</small>
                         @if($section->section_image)
-                            <img src="{{ asset('storage/'.$section->section_image) }}" class="mt-2" style="height: 50px;">
+                            <img src="{{ media_url($section->section_image) }}" class="mt-2" style="height: 50px;">
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="remove_section_image" id="remove_section_image" value="1" {{ old('remove_section_image') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="remove_section_image">Remove current section image</label>
+                            </div>
                         @endif
                     </div>
                     @endif
@@ -126,7 +130,11 @@
                         @endif
                         <small class="text-muted d-block mt-1">Recommended: {{ config('cms-kit.images.testimonials.banner.width') }}x{{ config('cms-kit.images.testimonials.banner.height') }}px</small>
                         @if($section->banner)
-                            <img src="{{ asset('storage/'.$section->banner) }}" class="mt-2" style="height: 50px;">
+                            <img src="{{ media_url($section->banner) }}" class="mt-2" style="height: 50px;">
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="remove_banner" id="remove_testimonial_banner" value="1" {{ old('remove_banner') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="remove_testimonial_banner">Remove current banner</label>
+                            </div>
                         @endif
                     </div>
                     @endif
@@ -294,3 +302,4 @@
     });
 </script>
 @endpush
+

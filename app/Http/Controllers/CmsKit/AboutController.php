@@ -4,10 +4,10 @@ namespace App\Http\Controllers\CmsKit;
 
 use App\Http\Controllers\Controller;
 use App\Models\CmsKit\About;
-use CMS\SiteManager\Models\CmsKit\Language;
+use App\Support\MediaStorage;
+use App\Models\CmsKit\Language;
 use CMS\SiteManager\Support\ValidatesImageDimensions;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 
 class AboutController extends Controller
 {
@@ -60,8 +60,22 @@ class AboutController extends Controller
     {
         $about = $this->getRecord();
         $imagesConfig = config('cms-kit.images.about', []);
+        $required = config('cms-kit.database.about.items.required', []);
+        $rules = $this->rules(true);
 
-        $request->validate($this->rules(true));
+        foreach (['image_1', 'image_2', 'image_3', 'image_4'] as $field) {
+            $rules["remove_{$field}"] = ['nullable', 'boolean'];
+
+            if (
+                in_array($field, $required, true)
+                && $request->boolean("remove_{$field}")
+                && ! $request->hasFile($field)
+            ) {
+                $rules[$field][0] = 'required';
+            }
+        }
+
+        $request->validate($rules);
 
         foreach (['image_1', 'image_2', 'image_3', 'image_4'] as $field) {
             $this->validateImageWithinLimits($request, $field, $imagesConfig[$field] ?? [], str_replace('_', ' ', ucfirst($field)));
@@ -87,10 +101,13 @@ class AboutController extends Controller
         foreach (['image_1', 'image_2', 'image_3', 'image_4'] as $field) {
             if ($request->hasFile($field)) {
                 if ($about->{$field}) {
-                    Storage::disk('public')->delete($about->{$field});
+                    MediaStorage::delete($about->{$field});
                 }
 
-                $data[$field] = $request->file($field)->store('about', 'public');
+                $data[$field] = MediaStorage::store($request->file($field), 'about');
+            } elseif ($request->boolean("remove_{$field}") && $about->{$field}) {
+                MediaStorage::delete($about->{$field});
+                $data[$field] = null;
             }
         }
 
@@ -99,4 +116,3 @@ class AboutController extends Controller
         return redirect()->route('cms.about.edit')->with('success', 'About section updated successfully.');
     }
 }
-

@@ -254,7 +254,11 @@
                             <small class="text-muted d-block mb-1">Recommended size: 200x60px (PNG/SVG)</small>
                             @if($siteInfo->logo)
                             <div class="mb-2">
-                                <img src="{{ asset('storage/' . $siteInfo->logo) }}" class="img-thumbnail rounded" style="max-height: 80px;">
+                                <img src="{{ media_url($siteInfo->logo) }}" class="img-thumbnail rounded" style="max-height: 80px;">
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="remove_logo" id="removeSiteLogo" value="1" {{ old('remove_logo') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="removeSiteLogo">Remove current logo</label>
                             </div>
                             @endif
                             <input type="file" name="logo" class="form-control mb-2 @error('logo') is-invalid @enderror" {{ in_array('logo', $siteInfoRequired) && !$siteInfo->logo ? 'required' : '' }}>
@@ -276,7 +280,11 @@
                             <small class="text-muted d-block mb-1">Recommended size: 32x32px (ICO/PNG)</small>
                             @if($siteInfo->favicon)
                             <div class="mb-2">
-                                <img src="{{ asset('storage/' . $siteInfo->favicon) }}" class="img-thumbnail rounded" style="max-height: 32px;">
+                                <img src="{{ media_url($siteInfo->favicon) }}" class="img-thumbnail rounded" style="max-height: 32px;">
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="remove_favicon" id="removeSiteFavicon" value="1" {{ old('remove_favicon') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="removeSiteFavicon">Remove current favicon</label>
                             </div>
                             @endif
                             <input type="file" name="favicon" class="form-control @error('favicon') is-invalid @enderror" {{ in_array('favicon', $siteInfoRequired) && !$siteInfo->favicon ? 'required' : '' }}>
@@ -292,7 +300,11 @@
                             <small class="text-muted d-block mb-1">Recommended size: 150x50px (PNG/SVG)</small>
                             @if($siteInfo->footer_logo)
                             <div class="mb-2">
-                                <img src="{{ asset('storage/' . $siteInfo->footer_logo) }}" class="img-thumbnail rounded" style="max-height: 80px;">
+                                <img src="{{ media_url($siteInfo->footer_logo) }}" class="img-thumbnail rounded" style="max-height: 80px;">
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="remove_footer_logo" id="removeSiteFooterLogo" value="1" {{ old('remove_footer_logo') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="removeSiteFooterLogo">Remove current footer logo</label>
                             </div>
                             @endif
                             <input type="file" name="footer_logo" class="form-control mb-2 @error('footer_logo') is-invalid @enderror">

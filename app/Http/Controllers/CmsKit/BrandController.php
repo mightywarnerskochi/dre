@@ -1,14 +1,13 @@
 <?php
 
-namespace CMS\SiteManager\Http\Controllers\CmsKit;
+namespace App\Http\Controllers\CmsKit;
 
 use Illuminate\Http\Request;
-use CMS\SiteManager\Models\CmsKit\Brand;
-use CMS\SiteManager\Models\CmsKit\Language;
+use App\Models\CmsKit\Brand;
+use App\Models\CmsKit\Language;
 use Yajra\DataTables\Facades\DataTables;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Routing\Controller;
-use Illuminate\Validation\ValidationException;
+use App\Support\MediaStorage;
 use CMS\SiteManager\Support\ManagesOrderIndex;
 use CMS\SiteManager\Support\ValidatesImageDimensions;
 
@@ -21,10 +20,14 @@ class BrandController extends Controller
         $imageConfig = config('cms-kit.images.brands.logo');
         $brandConfig = config('cms-kit.database.brands.items', []);
         $requiredFields = $brandConfig['required'] ?? [];
+        $brand = $isUpdate ? Brand::find(request()->route('id')) : null;
+        $requiresImage = in_array('image', $requiredFields)
+            && (!$isUpdate || !$brand?->image || request()->boolean('remove_image'));
 
         return [
-            'image' => (in_array('image', $requiredFields) && !$isUpdate ? 'required' : 'nullable') . '|image|max:' . ($imageConfig['max_size'] ?? 512),
+            'image' => ($requiresImage ? 'required' : 'nullable') . '|image|max:' . ($imageConfig['max_size'] ?? 512),
             'image_alt' => in_array('image_alt', $requiredFields) ? 'required|string|max:255' : 'nullable|string|max:255',
+            'remove_image' => 'nullable|boolean',
             'order_index' => 'nullable|integer|min:1',
         ];
     }
@@ -60,7 +63,7 @@ class BrandController extends Controller
                     if (!$row->image) {
                         return '<span class="text-muted">No Image</span>';
                     }
-                    return '<img src="' . asset('storage/' . $row->image) . '" class="img-thumbnail" style="height: 40px;">';
+                    return '<img src="' . e(media_url($row->image)) . '" class="img-thumbnail" style="height: 40px;">';
                 })
                 ->addColumn('status', function ($row) {
                     $checked = $row->status ? 'checked' : '';
@@ -107,7 +110,7 @@ class BrandController extends Controller
         $data['translations'] = $this->buildBrandTranslations($request);
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('brands', 'public');
+            $data['image'] = MediaStorage::store($request->file('image'), 'brands');
         }
 
         $order = $this->resolveOrderForCreate(Brand::class, $request->order_index ? (int) $request->order_index : null);
@@ -138,8 +141,15 @@ class BrandController extends Controller
         $data['translations'] = $this->buildBrandTranslations($request);
 
         if ($request->hasFile('image')) {
-            if ($brand->image) Storage::disk('public')->delete($brand->image);
-            $data['image'] = $request->file('image')->store('brands', 'public');
+            if ($brand->image) {
+                MediaStorage::delete($brand->image);
+            }
+
+            $data['image'] = MediaStorage::store($request->file('image'), 'brands');
+        } elseif ($request->boolean('remove_image') && $brand->image) {
+            MediaStorage::delete($brand->image);
+            $data['image'] = null;
+            $data['image_alt'] = null;
         }
 
         $brand->update($data);
@@ -151,7 +161,9 @@ class BrandController extends Controller
     {
         $brand = Brand::findOrFail($id);
         $order = $brand->order_index;
-        if ($brand->image) Storage::disk('public')->delete($brand->image);
+        if ($brand->image) {
+            MediaStorage::delete($brand->image);
+        }
         $brand->delete();
 
         Brand::where('order_index', '>', $order)->decrement('order_index');
@@ -211,7 +223,7 @@ class BrandController extends Controller
             $brands = Brand::whereIn('id', $ids)->get();
             foreach ($brands as $brand) {
                 if ($brand->image) {
-                    Storage::disk('public')->delete($brand->image);
+                    MediaStorage::delete($brand->image);
                 }
                 $brand->delete();
             }

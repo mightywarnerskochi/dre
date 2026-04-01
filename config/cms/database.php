@@ -119,7 +119,7 @@ return [
         ],
     ],
     'banners' => [
-        'max_items' => 5, // Dynamic limit for banners
+        'max_items' => 4, // Dynamic limit for banners
         'allowed_types' => ['image'], // Available banner types
         'items' => [
             'banner_type' => true, // New: image, video toggle
@@ -395,6 +395,14 @@ return [
             'villa' => ['en' => 'Villa', 'ar' => 'فيلا'],
             'townhouse' => ['en' => 'Townhouse', 'ar' => 'منزل تاون'],
             'penthouse' => ['en' => 'Penthouse', 'ar' => 'بيت على الطابق العلوي'],
+            'Compound' => ['en' => 'Compound', 'ar' => 'مجمع'],
+            'Duplex' => ['en' => 'Duplex', 'ar' => 'دوبلكس'],
+            'Full Floor' => ['en' => 'Full Floor', 'ar' => 'طابق كامل'],
+            'Half Floor' => ['en' => 'Half Floor', 'ar' => 'نصف طابق'],
+            'Whole Building' => ['en' => 'Whole Building', 'ar' => 'مبنى كامل'],
+            'Bulk Rent Unit' => ['en' => 'Bulk Rent Unit', 'ar' => 'وحدة إيجار بالجملة'],
+            'Bungalow' => ['en' => 'Bungalow', 'ar' => 'بنغل'],
+            'Hotel & Hotel Apartment' => ['en' => 'Hotel & Hotel Apartment', 'ar' => 'فندق وشقق فندقية'],
             'office' => ['en' => 'Office', 'ar' => 'مكتب'],
             'warehouse' => ['en' => 'Warehouse', 'ar' => 'مستودع'],
         ],
@@ -402,10 +410,7 @@ return [
             'rent' => ['en' => 'Rent', 'ar' => 'إيجار'],
             'sale' => ['en' => 'Sale', 'ar' => 'بيع'],
         ],
-        'source_types' => [
-            'manual' => ['en' => 'Manual', 'ar' => 'Manual'],
-            'sync' => ['en' => 'Sync', 'ar' => 'Sync'],
-        ],
+
         'currencies' => [
             'AED' => 'AED',
             'USD' => 'USD',

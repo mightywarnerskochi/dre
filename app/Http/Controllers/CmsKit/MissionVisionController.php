@@ -4,11 +4,11 @@ namespace App\Http\Controllers\CmsKit;
 
 use App\Http\Controllers\Controller;
 use App\Models\CmsKit\MissionVision;
-use CMS\SiteManager\Models\CmsKit\Language;
+use App\Support\MediaStorage;
+use App\Models\CmsKit\Language;
 use CMS\SiteManager\Support\ManagesOrderIndex;
 use CMS\SiteManager\Support\ValidatesImageDimensions;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
 class MissionVisionController extends Controller
@@ -45,7 +45,7 @@ class MissionVisionController extends Controller
             return DataTables::of($data)
                 ->addIndexColumn()
                 ->addColumn('select_all', fn ($row) => '<input type="checkbox" class="row-checkbox form-check-input" value="' . $row->id . '">')
-                ->addColumn('image', fn ($row) => $row->image ? '<img src="' . asset('storage/' . $row->image) . '" class="img-thumbnail" style="height: 40px;">' : '-')
+                ->addColumn('image', fn ($row) => $row->image ? '<img src="' . e(media_url($row->image)) . '" class="img-thumbnail" style="height: 40px;">' : '-')
                 ->addColumn('title', fn ($row) => e($row->getTranslation('title')))
                 ->addColumn('status', function ($row) {
                     $checked = $row->status ? 'checked' : '';
@@ -104,7 +104,7 @@ class MissionVisionController extends Controller
         ];
 
         if ($request->hasFile('image')) {
-            $data['image'] = $request->file('image')->store('mission-vision', 'public');
+            $data['image'] = MediaStorage::store($request->file('image'), 'mission-vision');
         }
 
         $order = $this->resolveOrderForCreate(MissionVision::class, $request->integer('order_index'));
@@ -128,8 +128,18 @@ class MissionVisionController extends Controller
     public function update(Request $request, $id)
     {
         $item = MissionVision::findOrFail($id);
+        $rules = $this->rules(true);
+        $rules['remove_image'] = ['nullable', 'boolean'];
 
-        $request->validate($this->rules(true));
+        if (
+            in_array('image', config('cms-kit.database.mission-vision.items.required', []), true)
+            && $request->boolean('remove_image')
+            && ! $request->hasFile('image')
+        ) {
+            $rules['image'][0] = 'required';
+        }
+
+        $request->validate($rules);
         $this->validateImageWithinLimits($request, 'image', config('cms-kit.images.mission-vision.image', []), 'Image');
 
         $data = [
@@ -140,9 +150,12 @@ class MissionVisionController extends Controller
 
         if ($request->hasFile('image')) {
             if ($item->image) {
-                Storage::disk('public')->delete($item->image);
+                MediaStorage::delete($item->image);
             }
-            $data['image'] = $request->file('image')->store('mission-vision', 'public');
+            $data['image'] = MediaStorage::store($request->file('image'), 'mission-vision');
+        } elseif ($request->boolean('remove_image') && $item->image) {
+            MediaStorage::delete($item->image);
+            $data['image'] = null;
         }
 
         $item->update($data);
@@ -156,7 +169,7 @@ class MissionVisionController extends Controller
         $order = $item->order_index;
 
         if ($item->image) {
-            Storage::disk('public')->delete($item->image);
+            MediaStorage::delete($item->image);
         }
 
         $item->delete();
@@ -213,7 +226,7 @@ class MissionVisionController extends Controller
             $items = MissionVision::whereIn('id', $ids)->get();
             foreach ($items as $item) {
                 if ($item->image) {
-                    Storage::disk('public')->delete($item->image);
+                    MediaStorage::delete($item->image);
                 }
                 $item->delete();
             }

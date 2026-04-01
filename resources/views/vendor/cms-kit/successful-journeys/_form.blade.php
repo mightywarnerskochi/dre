@@ -46,9 +46,17 @@
     <div class="col-md-6">
         <label class="form-label fw-bold">Image 1</label>
         <input type="file" name="image_1" class="form-control @error('image_1') is-invalid @enderror" accept="image/*">
+        <div class="form-text small text-muted">
+            Recommended: {{ $image1Config['width'] ?? '-' }}x{{ $image1Config['height'] ?? '-' }}px 
+            (Max: {{ ($image1Config['max_size'] ?? 1024) / 1024 }}MB)
+        </div>
         @error('image_1')<div class="invalid-feedback">{{ $message }}</div>@enderror
         @if(!empty($item->image_1))
-        <div class="mt-2"><img src="{{ asset('storage/' . $item->image_1) }}" alt="" class="img-thumbnail" style="max-height: 100px;"></div>
+        <div class="mt-2"><img src="{{ media_url($item->image_1) }}" alt="" class="img-thumbnail" style="max-height: 100px;"></div>
+        <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" name="remove_image_1" id="removeJourneyImage1" value="1" {{ old('remove_image_1') ? 'checked' : '' }}>
+            <label class="form-check-label" for="removeJourneyImage1">Remove current image</label>
+        </div>
         @endif
     </div>
     <div class="col-md-6">
@@ -59,9 +67,17 @@
     <div class="col-md-6">
         <label class="form-label fw-bold">Image 2</label>
         <input type="file" name="image_2" class="form-control @error('image_2') is-invalid @enderror" accept="image/*">
+        <div class="form-text small text-muted">
+            Recommended: {{ $image2Config['width'] ?? '-' }}x{{ $image2Config['height'] ?? '-' }}px 
+            (Max: {{ ($image2Config['max_size'] ?? 1024) / 1024 }}MB)
+        </div>
         @error('image_2')<div class="invalid-feedback">{{ $message }}</div>@enderror
         @if(!empty($item->image_2))
-        <div class="mt-2"><img src="{{ asset('storage/' . $item->image_2) }}" alt="" class="img-thumbnail" style="max-height: 100px;"></div>
+        <div class="mt-2"><img src="{{ media_url($item->image_2) }}" alt="" class="img-thumbnail" style="max-height: 100px;"></div>
+        <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" name="remove_image_2" id="removeJourneyImage2" value="1" {{ old('remove_image_2') ? 'checked' : '' }}>
+            <label class="form-check-label" for="removeJourneyImage2">Remove current image</label>
+        </div>
         @endif
     </div>
     <div class="col-md-6">
@@ -90,3 +106,4 @@ document.addEventListener('invalid', function(e) {
 }, true);
 </script>
 @endpush
+

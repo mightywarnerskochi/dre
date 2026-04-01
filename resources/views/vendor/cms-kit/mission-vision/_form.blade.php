@@ -38,7 +38,11 @@
         @error('image')<div class="invalid-feedback">{{ $message }}</div>@enderror
         @if(!empty($item->image))
         <div class="mt-2">
-            <img src="{{ asset('storage/' . $item->image) }}" alt="" class="img-thumbnail" style="max-height: 100px;">
+            <img src="{{ media_url($item->image) }}" alt="" class="img-thumbnail" style="max-height: 100px;">
+        </div>
+        <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" name="remove_image" id="removeMissionVisionImage" value="1" {{ old('remove_image') ? 'checked' : '' }}>
+            <label class="form-check-label" for="removeMissionVisionImage">Remove current image</label>
         </div>
         @endif
         @if(!empty($imageConfig))
@@ -82,3 +86,4 @@ document.addEventListener('invalid', function(e) {
 }, true);
 </script>
 @endpush
+

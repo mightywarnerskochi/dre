@@ -1,12 +1,12 @@
 <?php
 
-namespace CMS\SiteManager\Http\Controllers\CmsKit;
+namespace App\Http\Controllers\CmsKit;
 
-use CMS\SiteManager\Models\CmsKit\Language;
+use App\Models\CmsKit\Language;
 use CMS\SiteManager\Support\ValidatesImageDimensions;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Storage;
+use App\Support\MediaStorage;
 
 class LanguageController extends Controller
 {
@@ -34,7 +34,7 @@ class LanguageController extends Controller
             return \Yajra\DataTables\Facades\DataTables::of($languages)
                 ->addColumn('flag_thumb', function ($row) {
                     if ($row->flag_image) {
-                        return '<img src="' . e(asset('storage/' . $row->flag_image)) . '" alt="' . e($row->flag_alt ?? '') . '" class="rounded border" style="height: 28px; width: auto;">';
+                        return '<img src="' . e(media_url($row->flag_image)) . '" alt="' . e($row->flag_alt ?? '') . '" class="rounded border" style="height: 28px; width: auto;">';
                     }
 
                     return '<span class="text-muted">—</span>';
@@ -55,7 +55,7 @@ class LanguageController extends Controller
                     return '<span class="text-muted">-</span>';
                 })
                 ->addColumn('actions', function ($row) {
-                    $flagUrl = $row->flag_image ? asset('storage/' . $row->flag_image) : '';
+                    $flagUrl = $row->flag_image ? (media_url($row->flag_image) ?? '') : '';
                     $editBtn = '<button class="btn btn-sm btn-light border me-1 edit-language" data-id="' . $row->id . '" data-name="' . e($row->name) . '" data-code="' . e($row->code) . '" data-flag-url="' . e($flagUrl) . '" data-flag-alt="' . e($row->flag_alt ?? '') . '"><i class="fas fa-edit text-primary"></i></button>';
                     $deleteBtn = '';
                     if (!$row->is_default && !$this->isEnglishLanguage($row)) {
@@ -89,7 +89,7 @@ class LanguageController extends Controller
 
         $data = $request->only(['name', 'code', 'flag_alt']);
         if ($request->hasFile('flag_image')) {
-            $data['flag_image'] = $request->file('flag_image')->store('languages/flags', 'public');
+            $data['flag_image'] = MediaStorage::store($request->file('flag_image'), 'languages/flags');
         }
 
         Language::create($data);
@@ -123,9 +123,9 @@ class LanguageController extends Controller
         $data = $request->only(['name', 'code', 'flag_alt']);
         if ($request->hasFile('flag_image')) {
             if ($language->flag_image) {
-                Storage::disk('public')->delete($language->flag_image);
+                MediaStorage::delete($language->flag_image);
             }
-            $data['flag_image'] = $request->file('flag_image')->store('languages/flags', 'public');
+            $data['flag_image'] = MediaStorage::store($request->file('flag_image'), 'languages/flags');
         }
 
         $language->update($data);
@@ -175,7 +175,7 @@ class LanguageController extends Controller
             return redirect()->back()->with('error', 'Cannot delete default language.');
         }
         if ($language->flag_image) {
-            Storage::disk('public')->delete($language->flag_image);
+            MediaStorage::delete($language->flag_image);
         }
         $language->delete();
         return redirect()->back()->with('success', 'Language deleted.');

@@ -5,12 +5,13 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class CmsAboutPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
-        app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
         $permissions = [
             'about.view',
@@ -43,6 +44,14 @@ class CmsAboutPermissionsSeeder extends Seeder
             'nearby-places.create',
             'nearby-places.edit',
             'nearby-places.delete',
+            'neighborhoods.view',
+            'neighborhoods.create',
+            'neighborhoods.edit',
+            'neighborhoods.delete',
+            'home-banner-filters.view',
+            'home-banner-filters.create',
+            'home-banner-filters.edit',
+            'home-banner-filters.delete',
         ];
 
         foreach ($permissions as $permission) {

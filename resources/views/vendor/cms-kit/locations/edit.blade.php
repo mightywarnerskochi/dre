@@ -97,10 +97,14 @@
                     <small class="text-muted d-block mb-1">Recommended size: {{ $imageConfig['width'] }}x{{ $imageConfig['height'] }}px, Max: {{ $imageConfig['max_size'] }}KB</small>
                     @if($location->image)
                         <div class="mb-2">
-                            <img src="{{ asset('storage/' . $location->image) }}" class="img-thumbnail" style="height: 100px;">
+                            <img src="{{ media_url($location->image) }}" class="img-thumbnail" style="height: 100px;">
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="remove_image" id="removeLocationImage" value="1" {{ old('remove_image') ? 'checked' : '' }}>
+                            <label class="form-check-label" for="removeLocationImage">Remove current image</label>
                         </div>
                     @endif
-                    <input type="file" name="image" class="form-control" {{ in_array('image', $locationRequired) ? 'required' : '' }}>
+                    <input type="file" name="image" class="form-control">
                     <input type="text" name="image_alt" class="form-control mt-2" value="{{ old('image_alt', $location->image_alt) }}" placeholder="Image ALT text">
                 </div>
                 @endif
@@ -110,10 +114,14 @@
                     <small class="text-muted d-block mb-1">Recommended size: {{ $flagConfig['width'] }}x{{ $flagConfig['height'] }}px, Max: {{ $flagConfig['max_size'] }}KB</small>
                     @if($location->flag)
                         <div class="mb-2">
-                            <img src="{{ asset('storage/' . $location->flag) }}" class="img-thumbnail" style="height: 100px;">
+                            <img src="{{ media_url($location->flag) }}" class="img-thumbnail" style="height: 100px;">
+                        </div>
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="remove_flag" id="removeLocationFlag" value="1" {{ old('remove_flag') ? 'checked' : '' }}>
+                            <label class="form-check-label" for="removeLocationFlag">Remove current flag</label>
                         </div>
                     @endif
-                    <input type="file" name="flag" class="form-control" {{ in_array('flag', $locationRequired) ? 'required' : '' }}>
+                    <input type="file" name="flag" class="form-control">
                     <input type="text" name="flag_alt" class="form-control mt-2" value="{{ old('flag_alt', $location->flag_alt) }}" placeholder="Flag ALT text">
                 </div>
                 @endif

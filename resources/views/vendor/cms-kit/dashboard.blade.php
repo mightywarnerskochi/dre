@@ -10,18 +10,37 @@
 <div class="container-fluid">
     <div class="row">
         <!-- Stat Cards -->
-        @if(config('cms-kit.common.modules.banners', true) && $cmsUser->can('banners.view'))
+        @if(config('cms-kit.common.modules.properties', true) && $cmsUser->can('property.view'))
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-0 shadow-sm h-100 py-2" style="border-left: 4px solid #4e73df !important;">
+            <div class="card border-0 shadow-sm h-100 py-2" style="border-left: 4px solid #198754 !important;">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total Banners</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['banners'] }}</div>
+                            <div class="text-xs font-weight-bold text-uppercase mb-1" style="color: #198754;">
+                                Properties</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['properties'] }}</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-image fa-2x text-gray-300"></i>
+                            <i class="fas fa-building fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+        
+        @if(config('cms-kit.common.modules.careers', true) && $cmsUser->can('careers.view'))
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100 py-2" style="border-left: 4px solid #e76f51 !important;">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-uppercase mb-1" style="color: #e76f51;">
+                                Careers</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['careers'] }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-briefcase fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -90,18 +109,19 @@
         </div>
         @endif
 
-        @if(config('cms-kit.common.modules.careers', true) && $cmsUser->can('careers.view'))
+       
+        @if(config('cms-kit.common.modules.why-choose-us', true) && $cmsUser->can('why-choose-us.view'))
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-0 shadow-sm h-100 py-2" style="border-left: 4px solid #e76f51 !important;">
+            <div class="card border-0 shadow-sm h-100 py-2" style="border-left: 4px solid #6f42c1 !important;">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-uppercase mb-1" style="color: #e76f51;">
-                                Careers</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['careers'] }}</div>
+                            <div class="text-xs font-weight-bold text-uppercase mb-1" style="color: #6f42c1;">
+                                Why Choose Us</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['why_choose_us'] }}</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-briefcase fa-2x text-gray-300"></i>
+                            <i class="fas fa-star fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -177,6 +197,16 @@
                         @if(config('cms-kit.common.modules.careers', true) && $cmsUser->can('careers.create'))
                         <a href="{{ route('cms.careers.create') }}" class="btn text-white text-start" style="background-color: #e76f51;">
                             <i class="fas fa-plus-circle me-2"></i> Add New Vacancy
+                        </a>
+                        @endif
+                        @if(config('cms-kit.common.modules.properties', true) && $cmsUser->can('property.create'))
+                        <a href="{{ route('cms.properties.create') }}" class="btn text-white text-start" style="background-color: #198754;">
+                            <i class="fas fa-plus-circle me-2"></i> Add New Property
+                        </a>
+                        @endif
+                        @if(config('cms-kit.common.modules.why-choose-us', true) && $cmsUser->can('why-choose-us.create'))
+                        <a href="{{ route('cms.why-choose-us.create') }}" class="btn text-white text-start" style="background-color: #6f42c1;">
+                            <i class="fas fa-plus-circle me-2"></i> Add Why Choose Us Item
                         </a>
                         @endif
                     </div>

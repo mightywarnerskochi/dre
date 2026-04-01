@@ -2,9 +2,11 @@
 
 namespace App\Models\CmsKit;
 
+use App\Support\MediaStorage;
+use Database\Factories\CmsKit\PropertyFactory;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,6 +15,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Property extends Model
 {
     use HasFactory;
+
+    protected static function newFactory()
+    {
+        return PropertyFactory::new();
+    }
+
     protected $fillable = [
         'prop_id',
         'title',
@@ -75,12 +83,13 @@ class Property extends Model
     {
         // Replace everything that's not a letter, digit or hyphen with a hyphen
         $sanitized = preg_replace('/[^A-Za-z0-9\-]/', '-', $this->prop_id ?? '');
+
         return trim($sanitized, '-') ?: "PROP-{$this->id}";
     }
 
     public function getImagesAttribute(): array
     {
-        if (!$this->images_directory || !($this->attributes['images'] ?? null)) {
+        if (! $this->images_directory || ! ($this->attributes['images'] ?? null)) {
             return [];
         }
 
@@ -90,11 +99,19 @@ class Property extends Model
 
         foreach ($suffixes as $suffix) {
             $index = trim($suffix);
-            if ($index === '') continue;
+            if ($index === '') {
+                continue;
+            }
+
+            $primaryPath = "{$this->images_directory}/property_{$sanitizedPropId}_{$index}.jpg";
+            $fallbackPath = "{$this->images_directory}/property_{$this->id}_{$index}.jpg";
+            $resolvedPath = MediaStorage::exists($primaryPath)
+                ? $primaryPath
+                : (MediaStorage::exists($fallbackPath) ? $fallbackPath : $primaryPath);
 
             $images[] = (object) [
                 'id' => $index,
-                'image' => "{$this->images_directory}/property_{$sanitizedPropId}_{$index}.jpg",
+                'image' => $resolvedPath,
                 'order' => (int) $index,
                 'is_featured' => $index == '1',
             ];
@@ -106,6 +123,7 @@ class Property extends Model
     public function getFeaturedImageAttribute(): ?object
     {
         $images = $this->images;
+
         return collect($images)->firstWhere('is_featured', true);
     }
 

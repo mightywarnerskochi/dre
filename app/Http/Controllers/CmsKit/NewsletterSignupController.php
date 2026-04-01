@@ -1,9 +1,9 @@
 <?php
 
-namespace CMS\SiteManager\Http\Controllers\CmsKit;
+namespace App\Http\Controllers\CmsKit;
 
 use Illuminate\Http\Request;
-use CMS\SiteManager\Models\CmsKit\NewsletterSignup;
+use App\Models\CmsKit\NewsletterSignup;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Routing\Controller;
 

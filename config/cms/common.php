@@ -3,7 +3,7 @@
 return [
     'name' => 'Distinguished Real Estate',
     'theme' => [
-        'primary_color' => '#0861c5',
+        'primary_color' => '#2A559C',
         'secondary_color' => '#212529',
         'background_color' => '#f8f9fa',
         'sidebar_color' => '#343a40',
@@ -38,6 +38,8 @@ return [
         'properties' => true,
         'agents' => true,
         'nearby-places' => true,
+        'neighborhoods' => true,
+        'home-banner-filters' => true,
     ],
 
     'careers' => [

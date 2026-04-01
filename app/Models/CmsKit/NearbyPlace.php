@@ -2,14 +2,21 @@
 
 namespace App\Models\CmsKit;
 
-use Illuminate\Database\Eloquent\Model;
+use Database\Factories\CmsKit\NearbyPlaceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class NearbyPlace extends Model
 {
     use HasFactory;
+
     public $timestamps = false;
+
+    protected static function newFactory()
+    {
+        return NearbyPlaceFactory::new();
+    }
 
     protected $fillable = [
         'name',
