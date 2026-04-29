@@ -1218,3 +1218,262 @@ initializePhoneInput("#careerApplyModal");
 initializePhoneInput("#siteEnquiryForm");
 initializePhoneInput(".contact-form");
 
+
+(function attachSpaRouteReinitializer() {
+  if (window.__dreSpaRouteReinitializerBound) return;
+  window.__dreSpaRouteReinitializerBound = true;
+
+  function initBannerSearchDropdownsForSpa() {
+    if (typeof bootstrap === "undefined" || !bootstrap.Dropdown) return;
+    document
+      .querySelectorAll(
+        ".banner-search .search-form > .search-field > .dropdown-trigger[data-bs-toggle=\"dropdown\"]"
+      )
+      .forEach((toggle) => {
+        const existing = bootstrap.Dropdown.getInstance(toggle);
+        if (existing) existing.dispose();
+        new bootstrap.Dropdown(toggle, {
+          popperConfig: {
+            placement: "bottom-start",
+            modifiers: [{ name: "flip", enabled: false }],
+          },
+        });
+      });
+  }
+
+  function initHeaderStateForSpa() {
+    const header = document.querySelector("header");
+    if (!header) return;
+    header.classList.toggle("header-white", !!document.querySelector(".banner--page"));
+
+    if (window.__dreHeaderScrollBound) return;
+    window.__dreHeaderScrollBound = true;
+    window.addEventListener("scroll", () => {
+      if (window.scrollY > 50) {
+        header.classList.add("scrolled");
+      } else {
+        header.classList.remove("scrolled");
+      }
+    });
+  }
+
+  function initBannerSliderForSpa() {
+    if (typeof jQuery === "undefined" || !jQuery.fn.slick) return;
+    const $bannerSlider = jQuery(".banner-slider");
+    if (!$bannerSlider.length || $bannerSlider.hasClass("slick-initialized")) return;
+
+    const BANNER_AUTOPLAY_MS = 5000;
+
+    function syncBannerSlideState($slider, activeIndex) {
+      $slider.find(".banner-slide").removeClass("is-active is-incoming is-outgoing");
+      $slider
+        .find(".banner-slide[data-slick-index='" + activeIndex + "']")
+        .addClass("is-active");
+    }
+
+    function restartBannerDotProgress($slider) {
+      $slider.find("li.slick-active .banner-dot__progress").each(function () {
+        this.style.animation = "none";
+        void this.offsetWidth;
+        this.style.removeProperty("animation");
+      });
+    }
+
+    $bannerSlider.on("init.dreSpa", function (event, slick) {
+      const el = this;
+      if (el && el.style) el.style.setProperty("--banner-autoplay-ms", BANNER_AUTOPLAY_MS + "ms");
+      jQuery(el).find(".slick-dots button").each(function (i) {
+        this.setAttribute("aria-label", "Go to slide " + (i + 1));
+      });
+      syncBannerSlideState(jQuery(el), slick.currentSlide || 0);
+      restartBannerDotProgress(jQuery(el));
+    });
+
+    $bannerSlider.on("afterChange.dreSpa", function (event, slick, currentSlide) {
+      const $slider = jQuery(this);
+      syncBannerSlideState($slider, currentSlide || 0);
+      restartBannerDotProgress($slider);
+    });
+
+    $bannerSlider.slick({
+      slidesToShow: 1,
+      slidesToScroll: 1,
+      dots: true,
+      arrows: false,
+      autoplay: true,
+      autoplaySpeed: BANNER_AUTOPLAY_MS,
+      fade: true,
+      cssEase: "linear",
+      speed: 1000,
+      infinite: true,
+      customPaging: function () {
+        return (
+          '<span class="banner-dot" role="presentation">' +
+          '<svg class="banner-dot__svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="24" height="24" fill="none" focusable="false" aria-hidden="true" shape-rendering="geometricPrecision">' +
+          '<circle class="banner-dot__track" cx="20" cy="20" r="14" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="1.25"/>' +
+          '<circle class="banner-dot__progress" cx="20" cy="20" r="14" fill="none" stroke="#2A559C" stroke-width="2" stroke-linecap="round" transform="rotate(-90 20 20)" stroke-dasharray="87.965" stroke-dashoffset="87.965"/>' +
+          '<circle class="banner-dot__center" cx="20" cy="20" r="5" fill="rgba(255,255,255,0.45)"/>' +
+          "</svg>" +
+          "</span>"
+        );
+      },
+    });
+  }
+
+  function initPropertyCardMediaForSpa() {
+    if (typeof jQuery === "undefined" || !jQuery.fn.slick) return;
+
+    jQuery(".property-card__media").each(function () {
+      const $this = jQuery(this);
+      if ($this.hasClass("slick-initialized")) return;
+
+      let $slides = $this.children(".property-card__media-slide");
+      let slideSelector = ".property-card__media-slide";
+      if ($slides.length === 0) {
+        $slides = $this.children("picture");
+        slideSelector = "picture";
+      }
+      if ($slides.length <= 1) return;
+
+      const $dots = $this.find(".property-card__dots").empty();
+      $this.slick({
+        infinite: true,
+        slidesToShow: 1,
+        slidesToScroll: 1,
+        arrows: false,
+        dots: true,
+        autoplay: true,
+        autoplaySpeed: 3500,
+        fade: true,
+        cssEase: "linear",
+        speed: 300,
+        appendDots: $dots,
+        customPaging: function () {
+          return "<span></span>";
+        },
+        slide: slideSelector,
+      });
+    });
+  }
+
+  function initPropertyRowSliderForSpa() {
+    if (typeof jQuery === "undefined" || !jQuery.fn.slick) return;
+    const $propertySlider = jQuery(".property-slider");
+    if (!$propertySlider.length || $propertySlider.hasClass("slick-initialized")) return;
+
+    const $wrap = $propertySlider.closest(".rental-properties");
+    const $fill = $wrap.find(".property-slider__progress-fill");
+    const $bar = $wrap.find(".property-slider__progress");
+
+    function updatePropertyProgress(currentSlide, slideCount) {
+      const n = slideCount || 1;
+      const i = typeof currentSlide === "number" ? currentSlide : 0;
+      const pct = n <= 1 ? 100 : ((i + 1) / n) * 100;
+      $fill.css("width", pct + "%");
+      if ($bar.length) $bar.attr("aria-valuenow", Math.round(pct));
+    }
+
+    $propertySlider.on("init.dreSpa", function (event, slick) {
+      updatePropertyProgress(slick.currentSlide, slick.slideCount);
+    });
+    $propertySlider.on("afterChange.dreSpa", function (event, slick, currentSlide) {
+      updatePropertyProgress(currentSlide, slick.slideCount);
+    });
+
+    $propertySlider.slick({
+      slidesToShow: 3,
+      slidesToScroll: 1,
+      infinite: true,
+      variableWidth: true,
+      arrows: false,
+      dots: false,
+      autoplay: true,
+      autoplaySpeed: 4000,
+      speed: 450,
+      centerMode: true,
+      centerPadding: "0",
+      responsive: [
+        {
+          breakpoint: 575,
+          settings: {
+            slidesToShow: 1,
+            slidesToScroll: 1,
+            variableWidth: false,
+          },
+        },
+      ],
+    });
+
+    $wrap.find(".property-slider__arrow--prev").off("click.dreSpa").on("click.dreSpa", function () {
+      $propertySlider.slick("slickPrev");
+    });
+    $wrap.find(".property-slider__arrow--next").off("click.dreSpa").on("click.dreSpa", function () {
+      $propertySlider.slick("slickNext");
+    });
+  }
+
+  function initNewsSliderForSpa() {
+    if (typeof jQuery === "undefined" || !jQuery.fn.slick) return;
+    const $newsSlider = jQuery(".news-card-slider");
+    if (!$newsSlider.length || $newsSlider.hasClass("slick-initialized")) return;
+
+    const $newsWrap = $newsSlider.closest(".news-slider-wrap");
+    const $newsFill = $newsWrap.find(".property-slider__progress-fill");
+    const $newsBar = $newsWrap.find(".property-slider__progress");
+
+    function updateNewsProgress(currentSlide, slideCount) {
+      const n = slideCount || 1;
+      const i = typeof currentSlide === "number" ? currentSlide : 0;
+      const pct = n <= 1 ? 100 : ((i + 1) / n) * 100;
+      $newsFill.css("width", Math.max(0, Math.min(100, pct)) + "%");
+      if ($newsBar.length) $newsBar.attr("aria-valuenow", Math.round(pct));
+    }
+
+    $newsSlider.on("init.dreSpa", function (event, slick) {
+      updateNewsProgress(slick.currentSlide, slick.slideCount);
+    });
+    $newsSlider.on("afterChange.dreSpa", function (event, slick, currentSlide) {
+      updateNewsProgress(currentSlide, slick.slideCount);
+    });
+
+    $newsSlider.slick({
+      slidesToShow: 2,
+      slidesToScroll: 1,
+      infinite: true,
+      arrows: false,
+      dots: false,
+      autoplay: true,
+      autoplaySpeed: 4000,
+      speed: 500,
+      responsive: [
+        {
+          breakpoint: 992,
+          settings: {
+            slidesToShow: 1,
+            slidesToScroll: 1,
+          },
+        },
+      ],
+    });
+
+    $newsWrap.find(".property-slider__arrow--prev").off("click.dreSpa").on("click.dreSpa", function () {
+      $newsSlider.slick("slickPrev");
+    });
+    $newsWrap.find(".property-slider__arrow--next").off("click.dreSpa").on("click.dreSpa", function () {
+      $newsSlider.slick("slickNext");
+    });
+  }
+
+  function reinitializeSpaPageUi() {
+    initHeaderStateForSpa();
+    initBannerSearchDropdownsForSpa();
+    initBannerSliderForSpa();
+    initPropertyCardMediaForSpa();
+    initPropertyRowSliderForSpa();
+    initNewsSliderForSpa();
+  }
+
+  window.addEventListener("dre:page-mounted", function () {
+    setTimeout(reinitializeSpaPageUi, 0);
+  });
+})();

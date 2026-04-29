@@ -13,7 +13,13 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PropertyPageController;
 use Illuminate\Support\Facades\Route;
 
-Route::view('/{any?}', 'app', ['styleVersion' => '14'])->where('any', '(?!api|sanctum).*$');
+Route::get('/{any?}', function () {
+    return response()
+        ->view('app', ['styleVersion' => '14'])
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        ->header('Pragma', 'no-cache')
+        ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+})->where('any', '(?!api|sanctum).*$');
 
 Route::middleware(['web'])->group(function () {
     Route::prefix(config('cms-kit.common.auth.prefix', 'admin'))->middleware(['cms.auth'])->group(function () {

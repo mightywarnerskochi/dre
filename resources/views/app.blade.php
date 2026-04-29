@@ -32,6 +32,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.min.css">
     <link rel="stylesheet" href="{{ url('/scss/style.css') }}?v={{ $styleVersion }}" />
 
+    @php(\Illuminate\Support\Facades\Vite::useHotFile(storage_path('vite.hot')))
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>

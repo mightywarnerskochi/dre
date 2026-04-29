@@ -179,6 +179,12 @@ router.beforeEach((to) => {
 router.afterEach((to) => {
     const cls = typeof to.meta.bodyClass === 'string' ? to.meta.bodyClass : '';
     document.body.className = cls;
+
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            window.dispatchEvent(new CustomEvent('dre:page-mounted', { detail: { path: to.fullPath } }));
+        });
+    });
 });
 
 export default router;

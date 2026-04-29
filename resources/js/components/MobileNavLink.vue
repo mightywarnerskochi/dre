@@ -1,9 +1,9 @@
 <template>
-    <RouterLink v-slot="{ href, navigate, isActive }" :to="to" custom>
+    <RouterLink v-slot="{ href, navigate, isActive, isExactActive }" :to="to" custom>
         <a
             :href="href"
-            :class="combinedClass(isActive)"
-            :aria-current="isActive ? 'page' : undefined"
+            :class="combinedClass(exact ? isExactActive : isActive)"
+            :aria-current="(exact ? isExactActive : isActive) ? 'page' : undefined"
             @click.prevent="handleClick(navigate)"
         >
             <slot />
