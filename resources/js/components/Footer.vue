@@ -10,7 +10,7 @@
                         <ul class="site-footer__links">
                             <li><RouterLink :to="{ name: 'home' }">Home</RouterLink></li>
                             <li><RouterLink :to="{ name: 'about' }">About Us</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'properties' }">Our Properties</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'our-property' }">Our Properties</RouterLink></li>
                             <li><RouterLink :to="{ name: 'map' }">Map View</RouterLink></li>
                             <li><RouterLink :to="{ name: 'insights' }">Insights</RouterLink></li>
                             <li><RouterLink :to="{ name: 'career' }">Careers</RouterLink></li>
@@ -21,10 +21,10 @@
                     <div class="site-footer__col">
                         <p class="site-footer__heading">Our Company</p>
                         <ul class="site-footer__links">
-                            <li><RouterLink :to="{ name: 'properties' }">Property for Sale</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'properties' }">Property for Rent</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'our-property' }">Property for Sale</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'our-property' }">Property for Rent</RouterLink></li>
                             <li><RouterLink :to="{ name: 'book-a-viewing' }">Book a Viewing</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'properties' }">All Properties</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'our-property' }">All Properties</RouterLink></li>
                         </ul>
                     </div>
 

@@ -19,24 +19,30 @@
             <nav class="mobile-menu__nav" aria-label="Mobile primary navigation">
                 <ul class="mobile-menu__list">
                     <li>
-                        <MobileNavLink :to="{ name: 'home' }" active-class-extra="mobile-menu__link" match="exact">Home</MobileNavLink>
+                        <MobileNavLink :to="{ name: 'home' }" active-class-extra="mobile-menu__link" :exact="true">Home</MobileNavLink>
                     </li>
                     <li>
                         <MobileNavLink :to="{ name: 'about' }" active-class-extra="mobile-menu__link">About Us</MobileNavLink>
                     </li>
                     <li class="mobile-menu__item has-sub">
-                        <button class="mobile-menu__link mobile-menu__link--toggle" type="button" data-bs-toggle="collapse" data-bs-target="#mobileMenuProperties" aria-expanded="false" aria-controls="mobileMenuProperties">
+                        <button
+                            class="mobile-menu__link mobile-menu__link--toggle"
+                            type="button"
+                            :aria-expanded="isPropertiesMenuOpen ? 'true' : 'false'"
+                            aria-controls="mobileMenuProperties"
+                            @click="isPropertiesMenuOpen = !isPropertiesMenuOpen"
+                        >
                             Our Properties
                             <svg class="mobile-menu__chevron" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                                 <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </button>
-                        <ul class="collapse mobile-menu__sub" id="mobileMenuProperties">
+                        <ul v-show="isPropertiesMenuOpen" class="mobile-menu__sub" id="mobileMenuProperties">
                             <li>
-                                <MobileNavLink :to="{ name: 'properties' }" link-class="">All listings</MobileNavLink>
+                                <MobileNavLink :to="{ name: 'our-property' }">All listings</MobileNavLink>
                             </li>
                             <li>
-                                <MobileNavLink :to="{ name: 'map' }" link-class="">Map view</MobileNavLink>
+                                <MobileNavLink :to="{ name: 'map' }">Map view</MobileNavLink>
                             </li>
                         </ul>
                     </li>
@@ -145,7 +151,10 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { asset } from '@/utils/asset';
 import MobileNavLink from '@/components/MobileNavLink.vue';
+
+const isPropertiesMenuOpen = ref(false);
 </script>

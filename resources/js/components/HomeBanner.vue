@@ -25,7 +25,7 @@
                         <span>Discover Your</span>
                         Perfect Living Spot
                     </h1>
-                    <RouterLink :to="{ name: 'properties' }" class="banner-btn">Explore Rentals</RouterLink>
+                    <RouterLink :to="{ name: 'our-property' }" class="banner-btn">Explore Rentals</RouterLink>
 
                     <div class="banner-search">
                         <form action="#" class="search-form">
