@@ -1,0 +1,117 @@
+.enquiry-section {
+    position: relative !important;
+    background: linear-gradient(to bottom, #F0F0F0 29%, #FFE6DD 30%) !important;
+    padding: clamp(60px, 8vw, 100px) 0 !important;
+    display: block !important;
+
+    .enquiry-card {
+        background: #fff !important;
+        border-radius: 20px !important;
+        padding: clamp(30px, 5vw, 64px) clamp(20px, 4vw, 80px) !important;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
+        max-width: 1040px !important;
+        margin: 0 auto !important;
+        position: relative !important;
+        z-index: 2 !important;
+    }
+
+
+    .enquiry-form {
+        display: block !important;
+
+        .form-grid {
+            display: grid !important;
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 32px 30px !important;
+
+            @include max(767) {
+                grid-template-columns: 1fr !important;
+                gap: 24px !important;
+            }
+        }
+
+        .form-group {
+            position: relative !important;
+            display: block !important;
+
+            &.full-width {
+                grid-column: span 2 !important;
+
+                @include max(767) {
+                    grid-column: span 1 !important;
+                }
+            }
+
+            label {
+                position: absolute !important;
+                top: -10px !important;
+                left: 20px !important;
+                background: #fff !important;
+                padding: 0 10px !important;
+                font-size: 13px !important;
+                font-weight: 500 !important;
+                color: #666 !important;
+                z-index: 10 !important;
+                pointer-events: none !important;
+                transition: color 0.3s ease !important;
+                display: inline-block !important;
+                width: auto !important;
+                height: auto !important;
+                line-height: 1.2 !important;
+            }
+
+            input,
+            select,
+            textarea {
+                width: 100% !important;
+                border: 1px solid #C4C4C4 !important;
+                border-radius: 4px !important;
+                padding: 14px 20px !important;
+                font-size: 15px !important;
+                color: #1a1a1a !important;
+                background: #fff !important;
+                transition: all 0.3s ease !important;
+                display: block !important;
+                height: auto !important;
+                box-shadow: none !important;
+                box-sizing: border-box !important;
+
+                &::placeholder {
+                    color: #999 !important;
+                    font-size: 14px !important;
+                }
+
+                &:focus {
+                    outline: none !important;
+                    border-color: #9a1014 !important;
+
+                    +label {
+                        color: #9a1014 !important;
+                    }
+                }
+            }
+
+            select {
+                appearance: none !important;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23666' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E") !important;
+                background-repeat: no-repeat !important;
+                background-position: right 20px center !important;
+                padding-right: 45px !important;
+                cursor: pointer !important;
+            }
+
+            textarea {
+                resize: none !important;
+                padding-top: 18px !important;
+                min-height: 120px !important;
+            }
+        }
+
+        .form-footer {
+            margin-top: 48px !important;
+            text-align: center !important;
+
+        
+        }
+    }
+}

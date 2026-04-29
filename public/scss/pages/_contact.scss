@@ -1,0 +1,203 @@
+// Contact page — form + office locations (two columns; single column below 768px)
+
+.contact-form {
+  background: #fff;
+
+
+  .contact-form__heading {
+    font-size: clamp(34px, 5vw, 86px);
+
+  }
+  .form-wrapper {
+    background: #F8F8F7;
+    padding: clamp(20px, 2.82vw, 54px);
+  }
+
+  .form-wrapper h3 {
+    font-size: clamp(20px, 1.8vw, 40px);
+    color: #0a1119;
+    margin: 0 0 clamp(10px, 1.2vw, 36px);
+  }
+
+  .form-wrapper > p {
+    color: $bodyText;
+    font-weight: 500;
+
+    font-size: clamp(13px, 1.1vw, 16px);
+    line-height: 1.55;
+    margin: 0 0 clamp(20px, 2.5vw, 28px);
+  }
+
+  .information-request-form {
+    input{
+        height: clamp(36px, 2.71vw, 52px);
+
+    }
+    textarea{
+        height: clamp(100px, 6.67vw, 138px);
+        padding-top: clamp(11px, 1.1vw, 17px);
+        
+    }
+    .form-control {
+        width: 100%;
+      background: #fff;
+      border: 1px solid #d8d8d8;
+      line-height: 100%;
+      border-radius: 5px;
+      padding-left: clamp(8px, 1.1vw, 17px);
+      padding-right: clamp(8px, 1.1vw, 17px);
+      font-size: clamp(12px, 1.1vw, 18px);
+      color: $bodyText;
+      
+      &::placeholder {
+          font-size: clamp(12px, 1.1vw, 18px);
+        color: $bodyText;
+      }
+
+      &:focus {
+
+        outline: none;
+      }
+    }
+
+    textarea.form-control {
+      resize: none;
+    }
+
+    .btn-theme {
+        border-radius: 5px;
+        line-height: 100%;
+        padding: clamp(10px, 1.1vw, 20px) clamp(20px, 2.2vw, 40px);
+
+      font-weight: 500;
+      background: $primaryColor;
+      color: #fff;
+      font-size: clamp(14px, 1.1vw, 18px);
+
+      &:hover,
+      &:focus-visible {
+        background: darken($primaryColor, 5%);
+        border-color: darken($primaryColor, 5%);
+        color: #fff;
+      }
+    }
+  }
+
+  .contact-offices__title {
+    font-size: clamp(20px, 1.7vw, 40px);
+    line-height: 100%;
+    color: #000;
+    margin: 0 0 clamp(20px, 2.2vw, 35px);
+
+  }
+
+  .contact-offices {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .contact-office {
+    padding-bottom: clamp(22px, 2.5vw, 32px);
+    margin-bottom: clamp(22px, 2.5vw, 32px);
+    border-bottom: 1px solid #e8e8e8;
+
+    &:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+  }
+
+  .contact-office__map {
+    overflow: hidden;
+    margin-bottom: clamp(20px, 2.084vw, 40px);
+    background: #e5e5e5;
+
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 220px;
+      object-fit: cover;
+    }
+  }
+
+  .contact-office__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .contact-office__row {
+    display: flex;
+    align-items: flex-start;
+    gap: clamp(10px, 1.1vw, 21px);
+    margin-bottom: 14px;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .contact-office__icon {
+    width: clamp(20px, 1.3vw, 24px);
+    height: clamp(20px, 1.3vw, 24px);
+    color: #8a9099;
+
+    svg {
+      display: block;
+      width: clamp(20px, 1.3vw, 24px);
+      height: clamp(20px, 1.3vw, 24px);
+    }
+  }
+
+  .contact-office__text {
+    color: $bodyText;
+
+    @include min(1200) {
+        width: 60%;
+    }
+    a {
+      color: $bodyText;
+      text-decoration: none;
+
+      &:hover,
+      &:focus-visible {
+       
+      }
+    }
+  }
+
+  .contact-office__sep {
+    color: #b0b6bf;
+    margin: 0 4px;
+  }
+
+  @include max(767) {
+    .contact-offices__title {
+      margin-top: clamp(8px, 2vw, 16px);
+    }
+  }
+  .col--6, .col--12{
+    margin-bottom:clamp(10px, 1.1vw, 18px);
+  }
+}
+
+.contact-form__left{
+    width: 100%;
+    @include min(768){
+        width: 52.959%;
+
+    }
+}
+.contact-form__right {
+    width: 100%;
+    @include max(767){
+        margin-top: 20px;
+    }
+    @include min(768){
+        width: 43.694%;
+
+    }
+}
