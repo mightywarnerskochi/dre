@@ -1,0 +1,378 @@
+/**
+ * Inner pages — Figma-aligned hero + filter overlap (properties, about, detail).
+ * Hero gradient: #2A559C → #666666 at ~33% opacity over blurred photography.
+ */
+
+.dre-page-hero {
+    position: relative;
+    margin-top: var(--dre-header-h);
+    min-height: 220px;
+    max-height: 403px;
+    display: flex;
+    align-items: center;
+    padding: 2.75rem 0 3.25rem;
+    color: #fff;
+    overflow: hidden;
+}
+
+@media (min-width: 768px) {
+    .dre-page-hero {
+        min-height: 280px;
+        padding: 3.25rem 0 3.75rem;
+    }
+}
+
+@media (min-width: 1024px) {
+    .dre-page-hero {
+        min-height: 320px;
+    }
+}
+
+.dre-page-hero__media {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    transform: scale(1.1);
+    /* Figma “background blur 120” — clamped for browser performance */
+    filter: blur(56px);
+}
+
+.dre-page-hero__gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        125deg,
+        rgba(42, 85, 156, 0.55) 0%,
+        rgba(102, 102, 102, 0.42) 52%,
+        rgba(42, 85, 156, 0.38) 100%
+    );
+    pointer-events: none;
+}
+
+.dre-page-hero__vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 90% 70% at 50% 40%, transparent 0%, rgba(15, 23, 42, 0.35) 100%);
+    pointer-events: none;
+}
+
+.dre-page-hero__inner {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: var(--dre-container);
+    margin: 0 auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+    .dre-page-hero__inner {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+}
+
+.dre-page-hero--center .dre-page-hero__inner {
+    text-align: center;
+}
+
+.dre-page-hero--left .dre-page-hero__inner {
+    text-align: left;
+}
+
+.dre-page-hero__title {
+    margin: 0;
+    font-size: clamp(1.85rem, 4.2vw, 3rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    text-shadow: 0 2px 24px rgba(15, 23, 42, 0.25);
+}
+
+.dre-page-hero__crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: inherit;
+    gap: 0.35rem 0.5rem;
+    margin-top: 0.85rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.92;
+}
+
+.dre-page-hero--center .dre-page-hero__crumbs {
+    justify-content: center;
+}
+
+.dre-page-hero__crumbs a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.dre-page-hero__crumbs a:hover {
+    text-decoration: underline;
+}
+
+.dre-page-hero__sep {
+    opacity: 0.65;
+    user-select: none;
+}
+
+.dre-page-hero__home {
+    display: inline-flex;
+    align-items: center;
+    color: inherit;
+}
+
+.dre-page-hero__arrows {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 0.5rem;
+}
+
+.dre-page-hero__arrow {
+    pointer-events: auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition:
+        background 0.2s,
+        border-color 0.2s;
+}
+
+.dre-page-hero__arrow:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.55);
+}
+
+@media (max-width: 767px) {
+    .dre-page-hero__arrows {
+        display: none;
+    }
+}
+
+/* Filter bar overlaps hero bottom */
+.dre-filter-overlap {
+    position: relative;
+    z-index: 15;
+    margin-top: -2.75rem;
+    margin-bottom: 0;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+    .dre-filter-overlap {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+}
+
+/* Listing section heading + view toggles */
+.dre-listing-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.dre-listing-toolbar__title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--dre-text);
+}
+
+.dre-listing-toolbar__views {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem;
+    border-radius: var(--dre-radius-lg);
+    background: var(--dre-bg-soft);
+    border: 1px solid var(--dre-border);
+}
+
+.dre-listing-toolbar__view-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 36px;
+    border: none;
+    border-radius: var(--dre-radius-sm);
+    background: transparent;
+    color: var(--dre-text-muted);
+    cursor: pointer;
+    transition:
+        background 0.2s,
+        color 0.2s;
+}
+
+.dre-listing-toolbar__view-btn:hover {
+    color: var(--dre-primary);
+}
+
+.dre-listing-toolbar__view-btn.is-active {
+    background: var(--dre-white);
+    color: var(--dre-primary);
+    box-shadow: var(--dre-shadow-sm);
+}
+
+a.dre-listing-toolbar__map-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.dre-properties-main {
+    max-width: var(--dre-container);
+    margin: 0 auto;
+    padding: 0 1rem 4rem;
+}
+
+@media (min-width: 640px) {
+    .dre-properties-main {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+}
+
+.dre-property-grid-figma {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.75rem;
+}
+
+@media (min-width: 768px) {
+    .dre-property-grid-figma {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (min-width: 1100px) {
+    .dre-property-grid-figma {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.dre-pagination-figma {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 2.5rem;
+}
+
+.dre-pagination-figma__btn {
+    min-width: 2.5rem;
+    height: 2.5rem;
+    padding: 0 0.65rem;
+    border-radius: var(--dre-radius-sm);
+    border: 1px solid var(--dre-border);
+    background: var(--dre-white);
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--dre-text);
+    cursor: pointer;
+    transition:
+        background 0.2s,
+        border-color 0.2s,
+        color 0.2s;
+}
+
+.dre-pagination-figma__btn:hover {
+    background: var(--dre-bg-soft);
+}
+
+.dre-pagination-figma__btn.is-current {
+    background: var(--dre-primary);
+    border-color: var(--dre-primary);
+    color: var(--dre-white);
+}
+
+.dre-pagination-figma__ellipsis {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.25rem;
+    color: var(--dre-text-muted);
+    font-size: 0.9rem;
+}
+
+.dre-page-hero__home-icon {
+    display: block;
+    opacity: 0.95;
+}
+
+.dre-page-hero--center .dre-page-hero__home {
+    display: inline-flex;
+    justify-content: center;
+}
+
+.dre-properties-main--detail {
+    padding-top: 2rem;
+}
+
+.dre-chat-fab,
+.dre-chat-fab--properties {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    z-index: 60;
+    padding: 0.65rem 1.1rem;
+    border-radius: var(--dre-radius-pill);
+    border: none;
+    font-family: var(--dre-font);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #fff;
+    background: var(--dre-primary);
+    box-shadow: 0 10px 28px rgba(30, 58, 138, 0.35);
+    cursor: pointer;
+}
+
+.dre-chat-fab:hover {
+    background: var(--dre-primary-hover);
+}
+
+.dre-loading-spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 280px;
+}
+
+.dre-loading-spinner__ring {
+    width: 2.75rem;
+    height: 2.75rem;
+    border: 3px solid var(--dre-border);
+    border-top-color: var(--dre-primary);
+    border-radius: 50%;
+    animation: dre-spin 0.75s linear infinite;
+}
+
+@keyframes dre-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

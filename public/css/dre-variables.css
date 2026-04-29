@@ -1,0 +1,31 @@
+/**
+ * Distinguished Real Estate — design tokens (reference mockup).
+ */
+:root {
+    /* Figma hero gradient anchors */
+    --dre-figma-hero-blue: #2a559c;
+    --dre-figma-hero-grey: #666666;
+    --dre-primary: #1e3a8a;
+    --dre-primary-hover: #1d4ed8;
+    --dre-primary-soft: rgba(30, 58, 138, 0.1);
+    --dre-white: #ffffff;
+    --dre-black: #0a0a0a;
+    --dre-bg-page: #ffffff;
+    --dre-bg-soft: #f0f4f8;
+    --dre-text: #1e293b;
+    --dre-text-muted: #64748b;
+    --dre-border: #e2e8f0;
+    --dre-footer: #0f172a;
+    --dre-footer-muted: rgba(255, 255, 255, 0.65);
+    --dre-radius: 10px;
+    --dre-radius-sm: 8px;
+    --dre-radius-lg: 12px;
+    --dre-radius-xl: 20px;
+    --dre-radius-pill: 999px;
+    --dre-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+    --dre-shadow-md: 0 4px 20px rgba(30, 58, 138, 0.08);
+    --dre-shadow-search: 0 8px 32px rgba(15, 23, 42, 0.12);
+    --dre-font: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --dre-container: 1200px;
+    --dre-header-h: 72px;
+}

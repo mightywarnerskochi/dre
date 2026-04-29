@@ -16,5 +16,8 @@
         "vite": "^7.0.7",
         "vue": "^3.5.33",
         "vue-router": "^5.0.6"
+    },
+    "dependencies": {
+        "leaflet": "^1.9.4"
     }
 }
