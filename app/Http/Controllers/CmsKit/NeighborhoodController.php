@@ -13,6 +13,7 @@ use Yajra\DataTables\Facades\DataTables;
 class NeighborhoodController extends Controller
 {
     use ManagesOrderIndex;
+    private const MAX_NEIGHBORHOODS = 3;
 
     protected function activeLanguages()
     {
@@ -59,6 +60,7 @@ class NeighborhoodController extends Controller
     {
         $rules = [
             'status' => ['required', 'boolean'],
+            'display_home' => ['nullable', 'boolean'],
         ];
 
         foreach ($this->activeLanguages() as $language) {
@@ -146,12 +148,20 @@ class NeighborhoodController extends Controller
 
         $section = $this->getSection();
         $languages = $this->activeLanguages();
+        $neighborhoodCount = Neighborhood::count();
+        $canCreateMore = $neighborhoodCount < self::MAX_NEIGHBORHOODS;
 
-        return view('cms-kit::neighborhoods.index', compact('section', 'languages'));
+        return view('cms-kit::neighborhoods.index', compact('section', 'languages', 'neighborhoodCount', 'canCreateMore'));
     }
 
     public function create()
     {
+        if (Neighborhood::count() >= self::MAX_NEIGHBORHOODS) {
+            return redirect()
+                ->route('cms.neighborhoods.index')
+                ->with('error', 'Maximum 3 neighborhoods are allowed.');
+        }
+
         $languages = $this->activeLanguages();
         $nextOrder = Neighborhood::count() + 1;
 
@@ -160,6 +170,12 @@ class NeighborhoodController extends Controller
 
     public function store(Request $request)
     {
+        if (Neighborhood::count() >= self::MAX_NEIGHBORHOODS) {
+            return redirect()
+                ->route('cms.neighborhoods.index')
+                ->with('error', 'Maximum 3 neighborhoods are allowed.');
+        }
+
         $validated = $request->validate($this->rules());
 
         $translations = $this->normalizedTranslations($request->input('translations', []));
@@ -309,10 +325,14 @@ class NeighborhoodController extends Controller
     {
         $section = $this->getSection();
         $request->validate($this->sectionRules());
+        $existingExtra = is_array($section->extra_fields) ? $section->extra_fields : [];
 
         $data = [
             'translations' => $request->input('translations', []),
             'status' => $request->boolean('status', false),
+            'extra_fields' => array_merge($existingExtra, [
+                'display_home' => $request->boolean('display_home', true),
+            ]),
         ];
 
         $section->forceFill($data)->save();

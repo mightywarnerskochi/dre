@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CmsKit\Banner;
 use App\Models\CmsKit\Property;
 use App\Models\CmsKit\SiteInformation;
+use App\Support\PublicSiteViewData;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -437,29 +438,7 @@ class PropertyPageController extends Controller
 
     protected function socialData(?SiteInformation $siteInfo): array
     {
-        $links = collect([
-            ['network' => 'facebook', 'href' => $siteInfo?->facebook, 'label' => 'Facebook'],
-            ['network' => 'twitter', 'href' => $siteInfo?->twitter, 'label' => 'X'],
-            ['network' => 'linkedin', 'href' => $siteInfo?->linkedin, 'label' => 'LinkedIn'],
-            ['network' => 'instagram', 'href' => $siteInfo?->instagram, 'label' => 'Instagram'],
-            ['network' => 'youtube', 'href' => $siteInfo?->youtube, 'label' => 'YouTube'],
-        ])
-            ->filter(fn ($link) => filled($link['href']))
-            ->values()
-            ->all();
-
-        if (empty($links)) {
-            $links = [
-                ['network' => 'facebook', 'href' => '#', 'label' => 'Facebook'],
-                ['network' => 'instagram', 'href' => '#', 'label' => 'Instagram'],
-                ['network' => 'linkedin', 'href' => '#', 'label' => 'LinkedIn'],
-            ];
-        }
-
-        return [
-            'title' => 'Follow Us',
-            'links' => $links,
-        ];
+        return PublicSiteViewData::followUsHybridPayload($siteInfo);
     }
 
     protected function footerData(?SiteInformation $siteInfo): array
@@ -495,11 +474,7 @@ class PropertyPageController extends Controller
                     ],
                 ],
             ],
-            'contact' => [
-                'phone' => $siteInfo?->phone_1 ?: '+971 4 343 8302',
-                'phoneAlt' => $siteInfo?->phone_2 ?: ($siteInfo?->whatsapp_number ?: ''),
-                'email' => $siteInfo?->email_1 ?: 'info@dreuae.ae',
-            ],
+            'contact' => PublicSiteViewData::footerContactBlock($siteInfo),
             'copyright' => '© '.date('Y').' '.($siteInfo?->company_name ?: 'Distinguished Real Estate').'. All rights reserved.',
         ];
     }

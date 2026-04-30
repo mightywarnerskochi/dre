@@ -1,12 +1,10 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
 import DrePageHero from '../components/layout/DrePageHero.vue';
-import FollowSocial from '../components/home/FollowSocial.vue';
 import MortgageCalculator from '../components/properties/MortgageCalculator.vue';
 import PropertyDetailMap from '../components/properties/PropertyDetailMap.vue';
-import PropertyCard from '../components/home/PropertyCard.vue';
-import SiteFooter from '../components/home/SiteFooter.vue';
-import SiteHeader from '../components/home/SiteHeader.vue';
+import Footer from '../components/Footer.vue';
+import Header from '../components/Header.vue';
 import {
     dreNormalizePropertyImages,
     dreOnPropertyImgError,
@@ -214,6 +212,19 @@ function formatPrice(num) {
     return `${formatNumber(num)} ${property.value?.currency || 'AED'}`;
 }
 
+function similarUrl(item) {
+    if (typeof item?.url === 'string' && item.url.trim() !== '') return item.url;
+    if (item?.slug) return `/property-details/${item.slug}`;
+    if (item?.id) return `/property-details/${item.id}`;
+    return '#';
+}
+
+function similarImage(item) {
+    const list = Array.isArray(item?.images) ? item.images : [];
+    const first = list.find((img) => typeof img === 'string' && img.trim() !== '');
+    return first || item?.image || DRE_PROPERTY_PLACEHOLDER_IMAGE;
+}
+
 onMounted(() => {
     fetchProperty();
 });
@@ -221,12 +232,7 @@ onMounted(() => {
 
 <template>
     <div class="dre-page dre-property-detail-page">
-        <SiteHeader
-            v-if="d.site && d.header"
-            variant="solid"
-            :site="d.site"
-            :header="d.header"
-        />
+        <Header />
 
         <DrePageHero
             v-if="d.hero"
@@ -430,14 +436,24 @@ onMounted(() => {
                         <a href="/properties">View All</a>
                     </div>
                     <div class="dre-similar__grid">
-                        <PropertyCard v-for="p in similar" :key="p.id" :property="p" />
+                        <article v-for="p in similar" :key="p.id" class="property-card">
+                            <div class="property-card__inner">
+                                <div class="property-card__media">
+                                    <img :src="similarImage(p)" :alt="p.title || 'Property'" @error="dreOnPropertyImgError">
+                                </div>
+                                <div class="property-card__body">
+                                    <h3 class="property-card__title">{{ p.title || 'Property' }}</h3>
+                                    <p class="property-card__location">{{ p.location || 'Dubai, UAE' }}</p>
+                                    <a class="property-btn property-btn--primary" :href="similarUrl(p)">View Details</a>
+                                </div>
+                            </div>
+                        </article>
                     </div>
                 </section>
             </template>
         </main>
 
-        <FollowSocial v-if="d.social" :social="d.social" />
-        <SiteFooter v-if="d.footer" :footer="d.footer" />
+        <Footer />
         <button type="button" class="dre-chat-fab dre-chat-fab--properties">Chat with us</button>
     </div>
 </template>

@@ -22,6 +22,11 @@ return [
             'height' => 490,
             'max_size' => 1024,
         ],
+        'home_image' => [
+            'width' => 692,
+            'height' => 462,
+            'max_size' => 1024,
+        ],
     ],
     'mission-vision' => [
         'image' => [
@@ -109,13 +114,13 @@ return [
     ],
     'blogs' => [
         'feature_image' => [
-            'width' => 370,
-            'height' => 450,
-            'max_size' => 512,
+            'width' => 247,
+            'height' => 453,
+            'max_size' => 1024,
         ],
         'detail_image' => [
-            'width' => 840,
-            'height' => 450,
+            'width' => 1547,
+            'height' => 1032,
             'max_size' => 1024,
         ],
         'banner_image' => [
@@ -124,20 +129,20 @@ return [
             'max_size' => 1024,
         ],
         'image_3' => [
-            'width' => 410,
-            'height' => 324,
-            'max_size' => 512,
+            'width' => 469,
+            'height' => 313,
+            'max_size' => 1024,
         ],
         'image_4' => [
-            'width' => 410,
-            'height' => 324,
-            'max_size' => 512,
+            'width' => 469,
+            'height' => 313,
+            'max_size' => 1024,
         ],
     ],
     'properties' => [
         'image' => [
-            'width' => 1400,
-            'height' => 900,
+            'width' => 551,
+            'height' => 548,
             'max_size' => 4096,
         ],
         'section_icon' => [

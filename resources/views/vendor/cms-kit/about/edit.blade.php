@@ -101,7 +101,46 @@
                     @enderror
                 </div>
                 @endforeach
+
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Home About Image</label>
+                    <input type="file" name="home_image" class="form-control @error('home_image') is-invalid @enderror" accept="image/*">
+                    @error('home_image')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                    @if($about->home_image)
+                    <div class="mt-2">
+                        <img src="{{ media_url($about->home_image) }}" alt="" class="img-thumbnail" style="max-height: 100px;">
+                    </div>
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" type="checkbox" name="remove_home_image" id="removeHomeImage" value="1" {{ old('remove_home_image') ? 'checked' : '' }}>
+                        <label class="form-check-label" for="removeHomeImage">Remove current image</label>
+                    </div>
+                    @endif
+                    @if(!empty($imagesConfig['home_image']))
+                    <div class="form-text">Recommended: {{ $imagesConfig['home_image']['width'] ?? '-' }} x {{ $imagesConfig['home_image']['height'] ?? '-' }} px</div>
+                    @endif
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Home About Image Alt</label>
+                    <input type="text" name="home_image_alt" class="form-control @error('home_image_alt') is-invalid @enderror" value="{{ old('home_image_alt', $about->home_image_alt ?? '') }}">
+                    @error('home_image_alt')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
                 <div class="col-12">
+                    <div class="form-check form-switch mb-2">
+                        <input type="hidden" name="display_home" value="0">
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            name="display_home"
+                            id="aboutDisplayHome"
+                            value="1"
+                            {{ old('display_home', data_get($about->translations, '_meta.display_home', true)) ? 'checked' : '' }}
+                        >
+                        <label class="form-check-label fw-bold" for="aboutDisplayHome">Display on Home</label>
+                    </div>
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" name="status" id="aboutStatus" {{ old('status', $about->status) ? 'checked' : '' }}>
                         <label class="form-check-label fw-bold" for="aboutStatus">Status</label>

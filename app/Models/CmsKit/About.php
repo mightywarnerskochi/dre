@@ -15,6 +15,8 @@ class About extends Model
         'image_3_alt',
         'image_4',
         'image_4_alt',
+        'home_image',
+        'home_image_alt',
         'status',
         'translations',
     ];

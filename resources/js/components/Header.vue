@@ -16,25 +16,43 @@
                             id="langSwitcherMenu"
                             data-bs-toggle="dropdown"
                             aria-expanded="false"
-                            aria-label="Language switcher"
+                            :aria-label="t('lang.switcherAria')"
                         >
-                            <img :src="asset('public/images/flag.png')" alt="English flag" class="lang-switcher__flag" data-lang-flag width="22" height="16" />
-                            <span class="lang-switcher__label" data-lang-label>ENG</span>
+                            <img
+                                :src="flagSrc"
+                                :alt="locale === 'ar' ? t('lang.arFlagAlt') : t('lang.enFlagAlt')"
+                                class="lang-switcher__flag"
+                                width="22"
+                                height="16"
+                            />
+                            <span class="lang-switcher__label">{{ displayCode }}</span>
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
                                 <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </button>
                         <ul class="dropdown-menu lang-switcher__menu" aria-labelledby="langSwitcherMenu">
                             <li>
-                                <button class="dropdown-item" type="button" data-lang-choice="en">
+                                <button
+                                    class="dropdown-item"
+                                    type="button"
+                                    :class="{ active: locale === 'en' }"
+                                    :aria-pressed="locale === 'en' ? 'true' : 'false'"
+                                    @click="setLang('en')"
+                                >
                                     <img :src="asset('public/images/english.jpg')" alt="" width="22" height="16" />
-                                    <span>English</span>
+                                    <span>{{ t('lang.english') }}</span>
                                 </button>
                             </li>
                             <li>
-                                <button class="dropdown-item" type="button" data-lang-choice="ar">
+                                <button
+                                    class="dropdown-item"
+                                    type="button"
+                                    :class="{ active: locale === 'ar' }"
+                                    :aria-pressed="locale === 'ar' ? 'true' : 'false'"
+                                    @click="setLang('ar')"
+                                >
                                     <img :src="asset('public/images/arabic.jpg')" alt="" width="22" height="16" />
-                                    <span>Arabic</span>
+                                    <span>{{ t('lang.arabic') }}</span>
                                 </button>
                             </li>
                         </ul>
@@ -55,6 +73,26 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
+
+const { locale, t } = useI18n({ useScope: 'global' });
+
+const displayCode = computed(() => (locale.value === 'ar' ? 'AR' : 'ENG'));
+
+const flagSrc = computed(() => asset(locale.value === 'ar' ? 'public/images/arabic.jpg' : 'public/images/english.jpg'));
+
+function setLang(code) {
+    const safe = code === 'ar' ? 'ar' : 'en';
+    locale.value = safe;
+    document.documentElement.setAttribute('lang', safe);
+    document.documentElement.setAttribute('dir', safe === 'ar' ? 'rtl' : 'ltr');
+    try {
+        localStorage.setItem('dre_lang', safe);
+    } catch (_e) {
+        /* ignore */
+    }
+}
 </script>

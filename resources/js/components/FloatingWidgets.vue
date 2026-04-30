@@ -2,14 +2,14 @@
     <!-- Floating Widgets -->
 
     <!-- Share Button -->
-    <div class="sticky-share" id="stickyShare" role="complementary" aria-label="Share this page">
-        <div class="sticky-share__panel" id="stickySharePanel" role="list" aria-label="Share on social media">
+    <div class="sticky-share" id="stickyShare" role="complementary" :aria-label="t('floating.sharePanelAria')">
+        <div class="sticky-share__panel" id="stickySharePanel" role="list" :aria-label="t('floating.shareListAria')">
             <a
                 href="https://www.facebook.com/sharer/sharer.php?u="
                 target="_blank"
                 rel="noopener noreferrer"
                 class="sticky-share__icon"
-                aria-label="Share on Facebook"
+                :aria-label="t('floating.shareFacebook')"
                 role="listitem"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -26,7 +26,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 class="sticky-share__icon"
-                aria-label="Share on Twitter / X"
+                :aria-label="t('floating.shareTwitter')"
                 role="listitem"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -43,7 +43,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 class="sticky-share__icon"
-                aria-label="Share on LinkedIn"
+                :aria-label="t('floating.shareLinkedIn')"
                 role="listitem"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -60,7 +60,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 class="sticky-share__icon"
-                aria-label="Visit Instagram"
+                :aria-label="t('floating.shareInstagram')"
                 role="listitem"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -75,7 +75,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 class="sticky-share__icon"
-                aria-label="YouTube channel"
+                :aria-label="t('floating.youtubeChannel')"
                 role="listitem"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -99,7 +99,7 @@
                 target="_blank"
                 rel="noopener noreferrer"
                 class="sticky-share__icon"
-                aria-label="Share on WhatsApp"
+                :aria-label="t('floating.shareWhatsApp')"
                 role="listitem"
             >
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -113,7 +113,7 @@
                     />
                 </svg>
             </a>
-            <button class="sticky-share__close" id="stickyShareClose" aria-label="Close share panel" type="button">
+            <button class="sticky-share__close" id="stickyShareClose" :aria-label="t('floating.closeShare')" type="button">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                     <path
                         d="M18 6L6 18M6 6L18 18"
@@ -130,7 +130,7 @@
             id="stickyShareTrigger"
             aria-expanded="false"
             aria-controls="stickySharePanel"
-            aria-label="Share this page"
+            :aria-label="t('floating.shareTriggerAria')"
             type="button"
         >
             <svg
@@ -154,18 +154,18 @@
     </div>
 
     <!-- Chat With Us (WhatsApp) -->
-    <div class="sticky-chat" aria-label="Chat with us on WhatsApp">
+    <div class="sticky-chat" :aria-label="t('floating.chatSectionAria')">
         <a
             href="https://wa.me/97143438302"
             target="_blank"
             rel="noopener noreferrer"
             class="sticky-chat__btn"
-            aria-label="Chat with us on WhatsApp"
+            :aria-label="t('floating.chatButtonAria')"
             id="stickyChatBtn"
         >
-            <span class="sticky-chat__label">Chat with us</span>
+            <span class="sticky-chat__label">{{ t('floating.chatLabel') }}</span>
             <span class="sticky-chat__avatar">
-                <img :src="asset('public/images/chat.png')" alt="DRE Support Agent" />
+                <img :src="asset('public/images/chat.png')" :alt="t('floating.chatImgAlt')" />
                 <span class="sticky-chat__online" aria-hidden="true"></span>
             </span>
         </a>
@@ -173,5 +173,8 @@
 </template>
 
 <script setup>
+import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
+
+const { t } = useI18n();
 </script>

@@ -81,6 +81,20 @@
                                 <label class="form-check-label fw-bold" for="sectionStatus">Status</label>
                             </div>
                         </div>
+                        <div class="col-md-auto me-4">
+                            <div class="form-check form-switch">
+                                <input type="hidden" name="display_home" value="0">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    name="display_home"
+                                    id="displayHomeToggle"
+                                    value="1"
+                                    {{ old('display_home', data_get($section->extra_fields, 'display_home', true)) ? 'checked' : '' }}
+                                >
+                                <label class="form-check-label fw-bold" for="displayHomeToggle">Display on Home</label>
+                            </div>
+                        </div>
                     </div>
                        
 

@@ -11,15 +11,9 @@ use App\Http\Controllers\CmsKit\SuccessfulJourneyController;
 use App\Http\Controllers\CmsKit\WhyChooseUsController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PropertyPageController;
+use App\Support\PublicContentViewData;
+use App\Support\PublicSiteViewData;
 use Illuminate\Support\Facades\Route;
-
-Route::get('/{any?}', function () {
-    return response()
-        ->view('app', ['styleVersion' => '14'])
-        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
-        ->header('Pragma', 'no-cache')
-        ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
-})->where('any', '(?!api|sanctum).*$');
 
 Route::middleware(['web'])->group(function () {
     Route::prefix(config('cms-kit.common.auth.prefix', 'admin'))->middleware(['cms.auth'])->group(function () {
@@ -78,6 +72,7 @@ Route::middleware(['web'])->group(function () {
                 Route::get('/properties', [PropertyController::class, 'index'])->name('cms.properties.index');
                 Route::get('/properties/create', [PropertyController::class, 'create'])->name('cms.properties.create')->middleware('cms.permission:property.create');
                 Route::post('/properties', [PropertyController::class, 'store'])->name('cms.properties.store')->middleware('cms.permission:property.create');
+                Route::post('/properties/section', [PropertyController::class, 'updateSection'])->name('cms.properties.update-section')->middleware('cms.permission:property.edit');
                 Route::get('/properties/{id}/edit', [PropertyController::class, 'edit'])->name('cms.properties.edit')->middleware('cms.permission:property.edit');
                 Route::put('/properties/{id}', [PropertyController::class, 'update'])->name('cms.properties.update')->middleware('cms.permission:property.edit');
                 Route::delete('/properties/{id}', [PropertyController::class, 'destroy'])->name('cms.properties.destroy')->middleware('cms.permission:property.delete');
@@ -166,3 +161,26 @@ Route::middleware(['web'])->group(function () {
         });
     });
 });
+
+Route::get('/home/neighborhoods/{id}/properties', [HomeController::class, 'neighborhoodProperties'])
+    ->whereNumber('id')
+    ->name('home.neighborhood.properties');
+
+Route::get('/{any?}', function () {
+    return response()
+        ->view('app', [
+            'styleVersion' => '14',
+            'sitePublic' => PublicSiteViewData::forSpa(),
+            'contentPublic' => [
+                'rentalSection' => PublicContentViewData::rentalSectionForSpa(),
+                'neighborhoods' => PublicContentViewData::neighborhoodsForSpa(),
+                'newsInsights' => PublicContentViewData::newsAndInsightsForSpa(),
+                'insights' => PublicContentViewData::insightsForSpa(),
+                'homeAbout' => PublicContentViewData::homeAboutForSpa(),
+                'aboutPage' => PublicContentViewData::aboutPageForSpa(),
+            ],
+        ])
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        ->header('Pragma', 'no-cache')
+        ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+})->where('any', '^(?!api(?:/|$)|sanctum(?:/|$)|admin(?:/|$))(?!.*\.[A-Za-z0-9]+$).*$');

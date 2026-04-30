@@ -2,9 +2,8 @@
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { computed, onMounted, reactive, ref } from 'vue';
-import FollowSocial from '../components/home/FollowSocial.vue';
-import SiteFooter from '../components/home/SiteFooter.vue';
-import SiteHeader from '../components/home/SiteHeader.vue';
+import Footer from '../components/Footer.vue';
+import Header from '../components/Header.vue';
 import { dreOnPropertyImgError, DRE_PROPERTY_PLACEHOLDER_IMAGE } from '../utils/propertyImages';
 
 const props = defineProps({
@@ -208,12 +207,7 @@ onMounted(async () => {
 
 <template>
     <div class="dre-page dre-map-page">
-        <SiteHeader
-            v-if="d.site && d.header"
-            variant="solid"
-            :site="d.site"
-            :header="d.header"
-        />
+        <Header />
 
         <section class="dre-map-hero">
             <div class="dre-map-hero__inner dre-container">
@@ -268,7 +262,6 @@ onMounted(async () => {
             </article>
         </section>
 
-        <FollowSocial v-if="d.social" :social="d.social" />
-        <SiteFooter v-if="d.footer" :footer="d.footer" />
+        <Footer />
     </div>
 </template>

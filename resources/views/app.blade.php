@@ -1,5 +1,7 @@
 @php
     $styleVersion = $styleVersion ?? '14';
+    $dreSitePublic = $sitePublic ?? ['phone1' => null, 'phone2' => null, 'email' => null, 'social' => []];
+    $dreContentPublic = $contentPublic ?? [];
 @endphp
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
@@ -13,6 +15,12 @@
                 root.setAttribute("dir", savedLang === "ar" ? "rtl" : "ltr");
             } catch (e) {}
         })();
+    </script>
+    <script>
+        window.__DRE_SITE__ = @json($dreSitePublic);
+    </script>
+    <script>
+        window.__DRE_CONTENT__ = @json($dreContentPublic);
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

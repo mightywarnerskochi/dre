@@ -6,41 +6,41 @@
             <div class="container-footer">
                 <div class="site-footer__grid">
                     <div class="site-footer__col">
-                        <p class="site-footer__heading">Quick Links</p>
+                        <p class="site-footer__heading">{{ t('footer.quickLinks') }}</p>
                         <ul class="site-footer__links">
-                            <li><RouterLink :to="{ name: 'home' }">Home</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'about' }">About Us</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'our-property' }">Our Properties</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'map' }">Map View</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'insights' }">Insights</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'career' }">Careers</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'contact' }">Contact Us</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'home' }">{{ t('footer.navHome') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'about' }">{{ t('footer.navAbout') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'our-property' }">{{ t('footer.navOurProperties') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'map' }">{{ t('footer.navMapView') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'insights' }">{{ t('footer.navInsights') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'career' }">{{ t('footer.navCareers') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'contact' }">{{ t('footer.navContact') }}</RouterLink></li>
                         </ul>
                     </div>
 
                     <div class="site-footer__col">
-                        <p class="site-footer__heading">Our Company</p>
+                        <p class="site-footer__heading">{{ t('footer.ourCompany') }}</p>
                         <ul class="site-footer__links">
-                            <li><RouterLink :to="{ name: 'our-property' }">Property for Sale</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'our-property' }">Property for Rent</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'book-a-viewing' }">Book a Viewing</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'our-property' }">All Properties</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'our-property' }">{{ t('footer.coSale') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'our-property' }">{{ t('footer.coRent') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'book-a-viewing' }">{{ t('footer.coBooking') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'our-property' }">{{ t('footer.coAll') }}</RouterLink></li>
                         </ul>
                     </div>
 
                     <div class="site-footer__col">
                         <ul class="site-footer__links">
-                            <li><RouterLink :to="{ name: 'terms' }">Privacy Policy</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'terms' }">Terms &amp; Conditions</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'terms' }">Disclaimer</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'terms' }">Cookie Policy</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'terms' }">{{ t('footer.legalPrivacy') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'terms' }">{{ t('footer.legalTerms') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'terms' }">{{ t('footer.legalDisclaimer') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'terms' }">{{ t('footer.legalCookies') }}</RouterLink></li>
                         </ul>
                     </div>
 
-                    <div class="site-footer__col">
-                        <p class="site-footer__heading">Who we are</p>
+                    <div v-if="showContactCol" class="site-footer__col">
+                        <p class="site-footer__heading">{{ t('footer.whoWeAre') }}</p>
                         <ul class="site-footer__contact">
-                            <li>
+                            <li v-if="site.phone1 || site.phone2">
                                 <span class="site-footer__contact-icon" aria-hidden="true">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                                         <path
@@ -52,12 +52,16 @@
                                     </svg>
                                 </span>
                                 <div class="d-flex align-items-center site-phone">
-                                    <a href="tel:+97143438302">+971 4 343 8302</a>
-                                    <span class="site-footer__sep">|</span>
-                                    <a href="tel:+97143438511">+971 4 343 8511</a>
+                                    <template v-if="site.phone1">
+                                        <a :href="telHref(site.phone1)">{{ site.phone1 }}</a>
+                                    </template>
+                                    <span v-if="site.phone1 && site.phone2" class="site-footer__sep">|</span>
+                                    <template v-if="site.phone2">
+                                        <a :href="telHref(site.phone2)">{{ site.phone2 }}</a>
+                                    </template>
                                 </div>
                             </li>
-                            <li>
+                            <li v-if="site.email">
                                 <span class="site-footer__contact-icon" aria-hidden="true">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                                         <path
@@ -66,7 +70,7 @@
                                         />
                                     </svg>
                                 </span>
-                                <a href="mailto:info@dreuae.ae">info@dreuae.ae</a>
+                                <a :href="'mailto:' + site.email">{{ site.email }}</a>
                             </li>
                         </ul>
                     </div>
@@ -78,17 +82,19 @@
             <div class="container-footer">
                 <div class="site-footer__bottom-inner">
                     <p class="site-footer__copy">
-                        Copyright &copy;2025 Distinguished Real Estate Powered By
-                        <a href="https://www.mightywarner.ae/" target="_blank">Mighty Warner Technologies</a>
+                        {{ t('footer.copyright', { year: copyrightYear }) }}
+                        <a href="https://www.mightywarner.ae/" target="_blank" rel="noopener noreferrer">{{
+                            t('footer.poweredBrand')
+                        }}</a>
                     </p>
                     <a href="#" class="site-footer__enquire" data-bs-toggle="modal" data-bs-target="#siteEnquiryForm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                             <path
                                 d="M22 6C22 4.9 21.1 4 20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6ZM20 6L12 10.99L4 6H20ZM20 18H4V8L12 13L20 8V18Z"
                                 fill="white"
                             />
                         </svg>
-                        Enquire Now
+                        {{ t('footer.enquireNow') }}
                     </a>
                 </div>
             </div>
@@ -97,6 +103,20 @@
 </template>
 
 <script setup>
+import { computed, inject } from 'vue';
 import { RouterLink } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import FollowUs from '@/components/FollowUs.vue';
+import { getPublicSiteBoot, telHref } from '@/utils/publicSite';
+
+const { t } = useI18n();
+
+const copyrightYear = computed(() => new Date().getFullYear());
+
+const injected = inject('dreSite', null);
+const dreSite = injected ?? computed(() => getPublicSiteBoot());
+
+const site = computed(() => dreSite.value);
+
+const showContactCol = computed(() => Boolean(site.value.phone1 || site.value.phone2 || site.value.email));
 </script>

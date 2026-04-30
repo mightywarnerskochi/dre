@@ -76,6 +76,8 @@ class BlogController extends Controller
             }
         }
 
+        $rules['display_home'] = 'nullable|boolean';
+
         return $rules;
     }
 
@@ -338,6 +340,7 @@ class BlogController extends Controller
     public function updateSection(Request $request)
     {
         $request->validate($this->getBlogSectionValidationRules());
+        $displayHome = $request->boolean('display_home', true);
 
         SectionLabel::updateOrCreate(
             ['section_key' => 'blogs'],
@@ -348,6 +351,7 @@ class BlogController extends Controller
                     $request->input('extra_fields', []),
                     [
                         'status' => $request->has('status'),
+                        'display_home' => $displayHome,
                     ]
                 )
             ]

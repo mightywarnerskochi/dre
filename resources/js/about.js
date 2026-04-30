@@ -1,6 +1,6 @@
 import './bootstrap';
 import { createApp } from 'vue';
-import AboutPage from './pages/AboutPage.vue';
+import About from './pages/About.vue';
 
 const mountEl = document.getElementById('dre-about-app');
 const dataEl = document.getElementById('dre-about-page-data');
@@ -12,5 +12,5 @@ if (mountEl && dataEl) {
     } catch {
         pageData = {};
     }
-    createApp(AboutPage, { pageData }).mount(mountEl);
+    createApp(About, { pageData }).mount(mountEl);
 }

@@ -1,0 +1,105 @@
+{
+  "lang": {
+    "english": "English",
+    "arabic": "Arabic",
+    "switcherAria": "Language switcher",
+    "enFlagAlt": "English flag",
+    "arFlagAlt": "Arabic flag"
+  },
+  "footer": {
+    "quickLinks": "Quick Links",
+    "ourCompany": "Our Company",
+    "whoWeAre": "Who we are",
+    "navHome": "Home",
+    "navAbout": "About Us",
+    "navOurProperties": "Our Properties",
+    "navMapView": "Map View",
+    "navInsights": "Insights",
+    "navCareers": "Careers",
+    "navContact": "Contact Us",
+    "coSale": "Property for Sale",
+    "coRent": "Property for Rent",
+    "coBooking": "Book a Viewing",
+    "coAll": "All Properties",
+    "legalPrivacy": "Privacy Policy",
+    "legalTerms": "Terms & Conditions",
+    "legalDisclaimer": "Disclaimer",
+    "legalCookies": "Cookie Policy",
+    "copyright": "Copyright © {year} Distinguished Real Estate Powered By ",
+    "poweredBrand": "Mighty Warner Technologies",
+    "enquireNow": "Enquire Now"
+  },
+  "followUs": {
+    "title": "Follow Us",
+    "socialAria": "Social media links",
+    "facebook": "Facebook",
+    "twitter": "X (Twitter)",
+    "linkedin": "LinkedIn",
+    "instagram": "Instagram",
+    "youtube": "YouTube"
+  },
+  "floating": {
+    "sharePanelAria": "Share this page",
+    "shareListAria": "Share on social media",
+    "shareFacebook": "Share on Facebook",
+    "shareTwitter": "Share on Twitter / X",
+    "shareLinkedIn": "Share on LinkedIn",
+    "shareInstagram": "Visit Instagram",
+    "youtubeChannel": "YouTube channel",
+    "shareWhatsApp": "Share on WhatsApp",
+    "closeShare": "Close share panel",
+    "shareTriggerAria": "Share this page",
+    "chatSectionAria": "Chat with us on WhatsApp",
+    "chatButtonAria": "Chat with us on WhatsApp",
+    "chatLabel": "Chat with us",
+    "chatImgAlt": "DRE Support Agent"
+  },
+  "appDownload": {
+    "title": "Download the UAE’s most trusted property search app",
+    "description": "Install the Distinguished Real Estate app and start searching smarter.",
+    "googlePlayAlt": "Get it on Google Play",
+    "appleStoreAlt": "Download on the Apple Store",
+    "qrCaption": "Scan to download the app",
+    "qrImgAlt": "QR Code",
+    "phoneAlt": "Mobile app preview"
+  },
+  "common": {
+    "learnMore": "Learn More"
+  },
+  "insightsDetail": {
+    "breadcrumbAria": "Breadcrumb",
+    "insights": "Insights",
+    "general": "General",
+    "shareLabel": "Share",
+    "backToInsights": "Back to Insights",
+    "relatedPosts": "Related Posts",
+    "morePosts": "More Posts",
+    "prev": "Prev",
+    "next": "Next",
+    "share": {
+      "facebook": "Facebook",
+      "twitter": "Twitter",
+      "linkedin": "LinkedIn",
+      "snapchat": "Snapchat",
+      "pinterest": "Pinterest",
+      "whatsapp": "WhatsApp"
+    }
+  },
+  "home": {
+    "rentals": {
+      "title": "Rental Properties",
+      "description": "Explore our latest rental listings tailored for your lifestyle.",
+      "card": {
+        "imageAlt": "Rental property",
+        "photos": "Photos",
+        "propertyType": "Property",
+        "rentals": "Rentals",
+        "bedroom": "Bedroom",
+        "bathroom": "Bathroom",
+        "enquiry": "Enquiry",
+        "callNow": "Call Now",
+        "whatsapp": "Whatsapp"
+      }
+    }
+  }
+}

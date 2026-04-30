@@ -11,6 +11,7 @@ use App\Models\CmsKit\Property;
 use App\Models\CmsKit\SectionLabel;
 use App\Models\CmsKit\SiteInformation;
 use App\Models\CmsKit\SuccessfulJourney;
+use App\Support\PublicSiteViewData;
 use App\Models\CmsKit\WhyChooseUs;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -431,11 +432,7 @@ class HomeController extends Controller
                     ],
                 ],
             ],
-            'contact' => [
-                'phone' => $siteInfo?->phone_1 ?: '+971 4 000 0000',
-                'phoneAlt' => $siteInfo?->phone_2 ?: ($siteInfo?->whatsapp_number ?: ''),
-                'email' => $siteInfo?->email_1 ?: 'hello@distinguishedre.ae',
-            ],
+            'contact' => PublicSiteViewData::footerContactBlock($siteInfo),
             'copyright' => '© '.date('Y').' '.($siteInfo?->company_name ?: 'Distinguished Real Estate').'. All rights reserved.',
         ];
     }
@@ -511,16 +508,36 @@ class HomeController extends Controller
         ];
     }
 
-    protected function rentalSectionData(?SiteInformation $siteInfo): array
+    protected function rentalSectionData(?SiteInformation $siteInfo): ?array
     {
         $fallback = [
             'title' => 'Rental Properties',
             'description' => 'Hand-picked homes in Dubai and Sharjah. Browse featured listings and reach us instantly.',
             'properties' => [],
         ];
+        $locale = app()->getLocale();
+        $fallbackLocale = config('app.fallback_locale', 'en');
+        $section = Schema::hasTable('section_labels')
+            ? SectionLabel::query()->where('section_key', 'properties')->first()
+            : null;
+        $sectionTitle = data_get($section?->translations, $locale.'.title')
+            ?: data_get($section?->translations, $fallbackLocale.'.title')
+            ?: $fallback['title'];
+        $sectionDescription = data_get($section?->translations, $locale.'.description')
+            ?: data_get($section?->translations, $fallbackLocale.'.description')
+            ?: $fallback['description'];
+        $displayOnHome = $section ? (bool) $section->status : true;
+
+        if (! $displayOnHome) {
+            return null;
+        }
 
         if (! Schema::hasTable('properties')) {
-            return $fallback;
+            return [
+                'title' => $sectionTitle,
+                'description' => $sectionDescription,
+                'properties' => [],
+            ];
         }
 
         $properties = Property::query()
@@ -531,12 +548,16 @@ class HomeController extends Controller
             ->get();
 
         if ($properties->isEmpty()) {
-            return $fallback;
+            return [
+                'title' => $sectionTitle,
+                'description' => $sectionDescription,
+                'properties' => [],
+            ];
         }
 
         return [
-            'title' => 'Featured Properties',
-            'description' => 'Fresh listings from the CMS with pricing, location, and direct contact actions.',
+            'title' => $sectionTitle,
+            'description' => $sectionDescription,
             'properties' => $properties->map(function (Property $property) use ($siteInfo) {
                 $title = $property->getTranslation('title') ?: $property->title ?: 'Property';
                 $location = collect([$property->community, $property->city, $property->country])
@@ -588,6 +609,7 @@ class HomeController extends Controller
             'body' => 'For over a decade we have connected discerning clients with exceptional homes and investments across the Emirates.',
             'readMoreUrl' => '#contact',
             'image' => asset('images/dre/about-building.jpg'),
+            'imageAlt' => 'About Distinguished Real Estate',
         ];
 
         if (! Schema::hasTable('abouts')) {
@@ -603,7 +625,11 @@ class HomeController extends Controller
         $title = trim((string) ($about->getTranslation('title') ?? ''));
         $subtitle = trim((string) ($about->getTranslation('subtitle') ?? ''));
         $description = trim(strip_tags((string) ($about->getTranslation('description') ?? '')));
-        $image = $about->image_1 ? (media_url((string) $about->image_1) ?? $fallback['image']) : $fallback['image'];
+        $homeImage = $about->home_image ? media_url((string) $about->home_image) : null;
+        $image = filled($homeImage)
+            ? $homeImage
+            : ($about->image_1 ? (media_url((string) $about->image_1) ?? $fallback['image']) : $fallback['image']);
+        $imageAlt = trim((string) ($about->home_image_alt ?? ''));
 
         return [
             'eyebrow' => $subtitle !== '' ? $subtitle : $fallback['eyebrow'],
@@ -611,34 +637,13 @@ class HomeController extends Controller
             'body' => $description !== '' ? $description : $fallback['body'],
             'readMoreUrl' => '#contact',
             'image' => $image,
+            'imageAlt' => $imageAlt !== '' ? $imageAlt : $fallback['imageAlt'],
         ];
     }
 
     protected function socialData(?SiteInformation $siteInfo): array
     {
-        $links = collect([
-            ['network' => 'facebook', 'href' => $siteInfo?->facebook, 'label' => 'Facebook'],
-            ['network' => 'twitter', 'href' => $siteInfo?->twitter, 'label' => 'X'],
-            ['network' => 'linkedin', 'href' => $siteInfo?->linkedin, 'label' => 'LinkedIn'],
-            ['network' => 'instagram', 'href' => $siteInfo?->instagram, 'label' => 'Instagram'],
-            ['network' => 'youtube', 'href' => $siteInfo?->youtube, 'label' => 'YouTube'],
-        ])
-            ->filter(fn ($link) => filled($link['href']))
-            ->values()
-            ->all();
-
-        if (empty($links)) {
-            $links = [
-                ['network' => 'facebook', 'href' => '#', 'label' => 'Facebook'],
-                ['network' => 'instagram', 'href' => '#', 'label' => 'Instagram'],
-                ['network' => 'linkedin', 'href' => '#', 'label' => 'LinkedIn'],
-            ];
-        }
-
-        return [
-            'title' => 'Follow Us',
-            'links' => $links,
-        ];
+        return PublicSiteViewData::followUsHybridPayload($siteInfo);
     }
 
     protected function footerData(?SiteInformation $siteInfo): array
@@ -672,11 +677,7 @@ class HomeController extends Controller
                     ],
                 ],
             ],
-            'contact' => [
-                'phone' => $siteInfo?->phone_1 ?: '+971 4 000 0000',
-                'phoneAlt' => $siteInfo?->phone_2 ?: ($siteInfo?->whatsapp_number ?: ''),
-                'email' => $siteInfo?->email_1 ?: 'hello@distinguishedre.ae',
-            ],
+            'contact' => PublicSiteViewData::footerContactBlock($siteInfo),
             'copyright' => '© '.date('Y').' '.($siteInfo?->company_name ?: 'Distinguished Real Estate').'. All rights reserved.',
         ];
     }
@@ -889,6 +890,7 @@ class HomeController extends Controller
         if (in_array($requestedLang, ['en', 'ar'], true)) {
             app()->setLocale($requestedLang);
         }
+        $lite = $request->boolean('lite');
 
         if (! Schema::hasTable('neighborhoods') || ! Schema::hasTable('properties')) {
             return response()->json(['neighborhood' => null, 'properties' => []]);
@@ -910,9 +912,14 @@ class HomeController extends Controller
         $west = $request->query('west');
         $hasBounds = is_numeric($north) && is_numeric($south) && is_numeric($east) && is_numeric($west);
 
+        $baseSelect = ['id', 'latitude', 'longitude'];
+        if (! $lite) {
+            $baseSelect = ['id', 'title', 'price', 'currency', 'city', 'community', 'latitude', 'longitude'];
+        }
+
         $query = Property::query()
-            ->with('translations')
-            ->select(['id', 'title', 'price', 'currency', 'city', 'community', 'latitude', 'longitude'])
+            ->with($lite ? [] : ['translations'])
+            ->select($baseSelect)
             ->selectRaw($distanceExpr.' as distance_km', [$lat, $lng, $lat])
             ->where('status', true)
             ->whereNotNull('published_at')
@@ -940,7 +947,15 @@ class HomeController extends Controller
             ->limit(80)
             ->get();
 
-        $properties = $rows->map(function (Property $property) {
+        $properties = $rows->map(function (Property $property) use ($lite) {
+            if ($lite) {
+                return [
+                    'id' => (int) $property->id,
+                    'latitude' => (float) $property->latitude,
+                    'longitude' => (float) $property->longitude,
+                ];
+            }
+
             $title = (string) ($property->getTranslation('title') ?: $property->title ?: 'Property');
             $city = (string) ($property->getTranslation('city') ?: $property->city ?: '');
             $community = (string) ($property->getTranslation('community') ?: $property->community ?: '');

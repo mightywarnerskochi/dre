@@ -12,10 +12,15 @@
 </template>
 
 <script setup>
+import { computed, provide } from 'vue';
 import { RouterView } from 'vue-router';
 import Header from '@/components/Header.vue';
 import Navbar from '@/components/Navbar.vue';
 import Footer from '@/components/Footer.vue';
 import ModalEnquiry from '@/components/ModalEnquiry.vue';
 import FloatingWidgets from '@/components/FloatingWidgets.vue';
+import { getPublicSiteBoot } from '@/utils/publicSite';
+
+const dreSite = computed(() => getPublicSiteBoot());
+provide('dreSite', dreSite);
 </script>

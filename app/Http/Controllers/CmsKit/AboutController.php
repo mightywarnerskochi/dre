@@ -38,11 +38,14 @@ class AboutController extends Controller
         $rules['image_2_alt'] = ['nullable', 'string', 'max:255'];
         $rules['image_3_alt'] = ['nullable', 'string', 'max:255'];
         $rules['image_4_alt'] = ['nullable', 'string', 'max:255'];
+        $rules['home_image_alt'] = ['nullable', 'string', 'max:255'];
 
-        foreach (['image_1', 'image_2', 'image_3', 'image_4'] as $field) {
+        foreach (['image_1', 'image_2', 'image_3', 'image_4', 'home_image'] as $field) {
             $presence = !$isUpdate && in_array($field, $required, true) ? 'required' : 'nullable';
             $rules[$field] = [$presence, 'image', 'max:' . ($imagesConfig[$field]['max_size'] ?? 1024)];
         }
+
+        $rules['display_home'] = ['nullable', 'boolean'];
 
         return $rules;
     }
@@ -63,7 +66,7 @@ class AboutController extends Controller
         $required = config('cms-kit.database.about.items.required', []);
         $rules = $this->rules(true);
 
-        foreach (['image_1', 'image_2', 'image_3', 'image_4'] as $field) {
+        foreach (['image_1', 'image_2', 'image_3', 'image_4', 'home_image'] as $field) {
             $rules["remove_{$field}"] = ['nullable', 'boolean'];
 
             if (
@@ -77,7 +80,7 @@ class AboutController extends Controller
 
         $request->validate($rules);
 
-        foreach (['image_1', 'image_2', 'image_3', 'image_4'] as $field) {
+        foreach (['image_1', 'image_2', 'image_3', 'image_4', 'home_image'] as $field) {
             $this->validateImageWithinLimits($request, $field, $imagesConfig[$field] ?? [], str_replace('_', ' ', ucfirst($field)));
         }
 
@@ -88,6 +91,10 @@ class AboutController extends Controller
             }
             unset($translations[$code]['short_description']);
         }
+        $existingTranslations = is_array($about->translations) ? $about->translations : [];
+        $meta = is_array(data_get($existingTranslations, '_meta')) ? data_get($existingTranslations, '_meta') : [];
+        $meta['display_home'] = $request->boolean('display_home', true);
+        $translations['_meta'] = $meta;
 
         $data = [
             'status' => $request->boolean('status'),
@@ -95,10 +102,11 @@ class AboutController extends Controller
             'image_2_alt' => $request->input('image_2_alt'),
             'image_3_alt' => $request->input('image_3_alt'),
             'image_4_alt' => $request->input('image_4_alt'),
+            'home_image_alt' => $request->input('home_image_alt'),
             'translations' => $translations,
         ];
 
-        foreach (['image_1', 'image_2', 'image_3', 'image_4'] as $field) {
+        foreach (['image_1', 'image_2', 'image_3', 'image_4', 'home_image'] as $field) {
             if ($request->hasFile($field)) {
                 if ($about->{$field}) {
                     MediaStorage::delete($about->{$field});

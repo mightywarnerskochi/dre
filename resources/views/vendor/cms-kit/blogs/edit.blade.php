@@ -212,7 +212,7 @@
 <script src="{{ asset('vendor/site-manager/js/tinymce/tinymce.min.js') }}"></script>
 <script>
     tinymce.init({
-        selector: '.tinymce-editor',
+        selector: '.tinymce-editor, .tinymce-extra-field',
         height: 400,
         plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table code help wordcount',
         toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help'

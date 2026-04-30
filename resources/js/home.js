@@ -1,6 +1,6 @@
 import './bootstrap';
 import { createApp } from 'vue';
-import HomePage from './pages/HomePage.vue';
+import HomePage from './pages/Home.vue';
 
 const mountEl = document.getElementById('dre-home-app');
 const dataEl = document.getElementById('dre-page-data');

@@ -1,11 +1,10 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from 'vue';
 import DrePageHero from '../components/layout/DrePageHero.vue';
-import FollowSocial from '../components/home/FollowSocial.vue';
-import PropertyCard from '../components/home/PropertyCard.vue';
 import PropertyFilters from '../components/properties/PropertyFilters.vue';
-import SiteFooter from '../components/home/SiteFooter.vue';
-import SiteHeader from '../components/home/SiteHeader.vue';
+import Footer from '../components/Footer.vue';
+import Header from '../components/Header.vue';
+import { dreOnPropertyImgError, DRE_PROPERTY_PLACEHOLDER_IMAGE } from '../utils/propertyImages';
 
 const props = defineProps({
     pageData: { type: Object, default: () => ({}) },
@@ -106,16 +105,29 @@ function pageButtonClick(i) {
 onMounted(() => {
     fetchProperties();
 });
+
+function propertyImage(property) {
+    const list = Array.isArray(property?.images) ? property.images : [];
+    const first = list.find((item) => typeof item === 'string' && item.trim() !== '');
+    return first || property?.image || DRE_PROPERTY_PLACEHOLDER_IMAGE;
+}
+
+function propertyUrl(property) {
+    if (typeof property?.url === 'string' && property.url.trim() !== '') return property.url;
+    if (property?.slug) return `/property-details/${property.slug}`;
+    if (property?.id) return `/property-details/${property.id}`;
+    return '#';
+}
+
+function formatPrice(value) {
+    const number = Number(value || 0);
+    return Number.isFinite(number) ? number.toLocaleString('en-AE') : '0';
+}
 </script>
 
 <template>
     <div class="dre-page dre-properties-figma-page">
-        <SiteHeader
-            v-if="d.site && d.header"
-            variant="solid"
-            :site="d.site"
-            :header="d.header"
-        />
+        <Header />
 
         <DrePageHero
             v-if="d.hero"
@@ -175,7 +187,22 @@ onMounted(() => {
             </div>
 
             <div v-else class="dre-property-grid-figma">
-                <PropertyCard v-for="p in properties" :key="p.id" :property="p" />
+                <article v-for="p in properties" :key="p.id" class="property-card">
+                    <div class="property-card__ghost" aria-hidden="true"></div>
+                    <div class="property-card__inner">
+                        <div class="property-card__media">
+                            <img :src="propertyImage(p)" :alt="p.title || 'Property'" loading="lazy" @error="dreOnPropertyImgError">
+                        </div>
+                        <div class="property-card__body">
+                            <h3 class="property-card__title">{{ p.title || 'Property' }}</h3>
+                            <p class="property-card__location">{{ p.location || 'Dubai, UAE' }}</p>
+                            <div class="property-card__price">{{ formatPrice(p.price) }} AED</div>
+                            <div class="property-card__actions">
+                                <a class="property-btn property-btn--primary" :href="propertyUrl(p)">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                </article>
             </div>
 
             <div v-if="pagination.last_page > 1" class="dre-pagination-figma">
@@ -194,8 +221,7 @@ onMounted(() => {
             </div>
         </main>
 
-        <FollowSocial v-if="d.social" :social="d.social" />
-        <SiteFooter v-if="d.footer" :footer="d.footer" />
+        <Footer />
         <button type="button" class="dre-chat-fab dre-chat-fab--properties">Chat with us</button>
     </div>
 </template>

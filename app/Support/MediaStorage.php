@@ -61,6 +61,15 @@ final class MediaStorage
             return $path;
         }
 
+        // In local/dev, avoid cloudinary SDK URL calls that may block on network.
+        // Build deterministic delivery URL from public id instead.
+        if (self::diskName() === 'cloudinary') {
+            $directCloudinaryUrl = self::cloudinaryDeliveryUrl($path);
+            if ($directCloudinaryUrl !== null) {
+                return $directCloudinaryUrl;
+            }
+        }
+
         if (str_starts_with($path, '/storage/')) {
             $path = ltrim(substr($path, strlen('/storage/')), '/');
         }
@@ -73,6 +82,25 @@ final class MediaStorage
             // Log for debugging if necessary, but returning null prevents crashing the whole page.
             return null;
         }
+    }
+
+    private static function cloudinaryDeliveryUrl(string $path): ?string
+    {
+        $cloud = trim((string) env('CLOUDINARY_CLOUD_NAME'));
+        if ($cloud === '') {
+            return null;
+        }
+
+        $normalized = trim(str_replace('\\', '/', $path), '/');
+        if ($normalized === '') {
+            return null;
+        }
+
+        return sprintf(
+            'https://res.cloudinary.com/%s/image/upload/%s',
+            rawurlencode($cloud),
+            implode('/', array_map('rawurlencode', explode('/', $normalized)))
+        );
     }
 
     public static function store(UploadedFile $file, string $directory): string

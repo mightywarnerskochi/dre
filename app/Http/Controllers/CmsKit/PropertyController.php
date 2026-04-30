@@ -7,6 +7,7 @@ use App\Models\CmsKit\Agent;
 use App\Models\CmsKit\Language;
 use App\Models\CmsKit\NearbyPlace;
 use App\Models\CmsKit\Property;
+use App\Models\CmsKit\SectionLabel;
 use App\Support\MediaStorage;
 use CMS\SiteManager\Support\ValidatesImageDimensions;
 use Illuminate\Http\Request;
@@ -24,6 +25,25 @@ class PropertyController extends Controller
     protected function activeLanguages()
     {
         return Language::where('status', true)->get();
+    }
+
+    protected function homeSection(): SectionLabel
+    {
+        return SectionLabel::firstOrCreate(['section_key' => 'properties']);
+    }
+
+    protected function sectionRules(): array
+    {
+        $rules = [
+            'display_home' => ['required', 'boolean'],
+        ];
+
+        foreach ($this->activeLanguages() as $language) {
+            $rules["translations.{$language->code}.title"] = ['required', 'string', 'max:255'];
+            $rules["translations.{$language->code}.description"] = ['required', 'string'];
+        }
+
+        return $rules;
     }
 
     protected function propertyTypes(): array
@@ -746,7 +766,23 @@ class PropertyController extends Controller
                 ->make(true);
         }
 
-        return view('cms-kit::properties.index');
+        $languages = $this->activeLanguages();
+        $homeSection = $this->homeSection();
+
+        return view('cms-kit::properties.index', compact('languages', 'homeSection'));
+    }
+
+    public function updateSection(Request $request)
+    {
+        $section = $this->homeSection();
+        $request->validate($this->sectionRules());
+
+        $section->forceFill([
+            'translations' => $request->input('translations', []),
+            'status' => $request->boolean('display_home', false),
+        ])->save();
+
+        return redirect()->route('cms.properties.index')->with('success', 'Home rental section settings updated.');
     }
 
     public function create()

@@ -1,0 +1,105 @@
+{
+  "lang": {
+    "english": "الإنجليزية",
+    "arabic": "العربية",
+    "switcherAria": "تغيير اللغة",
+    "enFlagAlt": "علم المملكة المتحدة",
+    "arFlagAlt": "علم الإمارات"
+  },
+  "footer": {
+    "quickLinks": "روابط سريعة",
+    "ourCompany": "شركتنا",
+    "whoWeAre": "من نحن",
+    "navHome": "الرئيسية",
+    "navAbout": "عن الشركة",
+    "navOurProperties": "عقاراتنا",
+    "navMapView": "عرض الخريطة",
+    "navInsights": "المقالات",
+    "navCareers": "الوظائف",
+    "navContact": "اتصل بنا",
+    "coSale": "عقار للبيع",
+    "coRent": "عقار للإيجار",
+    "coBooking": "احجز معاينة",
+    "coAll": "جميع العقارات",
+    "legalPrivacy": "سياسة الخصوصية",
+    "legalTerms": "الشروط والأحكام",
+    "legalDisclaimer": "إخلاء المسؤولية",
+    "legalCookies": "سياسة ملفات تعريف الارتباط",
+    "copyright": "حقوق النشر © {year} Distinguished Real Estate — بدعم من ",
+    "poweredBrand": "Mighty Warner Technologies",
+    "enquireNow": "استفسار الآن"
+  },
+  "followUs": {
+    "title": "تابعنا",
+    "socialAria": "روابط وسائل التواصل الاجتماعي",
+    "facebook": "فيسبوك",
+    "twitter": "إكس",
+    "linkedin": "لينكد إن",
+    "instagram": "إنستغرام",
+    "youtube": "يوتيوب"
+  },
+  "floating": {
+    "sharePanelAria": "مشاركة هذه الصفحة",
+    "shareListAria": "المشاركة على وسائل التواصل",
+    "shareFacebook": "مشاركة على فيسبوك",
+    "shareTwitter": "مشاركة على إكس",
+    "shareLinkedIn": "مشاركة على لينكد إن",
+    "shareInstagram": "زيارة إنستغرام",
+    "youtubeChannel": "قناة يوتيوب",
+    "shareWhatsApp": "مشاركة عبر واتساب",
+    "closeShare": "إغلاق لوحة المشاركة",
+    "shareTriggerAria": "مشاركة هذه الصفحة",
+    "chatSectionAria": "تحدث معنا على واتساب",
+    "chatButtonAria": "تحدث معنا على واتساب",
+    "chatLabel": "تحدث معنا",
+    "chatImgAlt": "مساعد دعم العملاء"
+  },
+  "appDownload": {
+    "title": "حمّل تطبيق البحث العقاري الأكثر موثوقية في الإمارات",
+    "description": "ثبّت تطبيق Distinguished Real Estate وابدأ البحث بذكاء أكبر.",
+    "googlePlayAlt": "احصل عليه من Google Play",
+    "appleStoreAlt": "نزّله من App Store",
+    "qrCaption": "امسح الرمز لتنزيل التطبيق",
+    "qrImgAlt": "رمز الاستجابة السريعة",
+    "phoneAlt": "معاينة تطبيق الجوال"
+  },
+  "common": {
+    "learnMore": "اعرف المزيد"
+  },
+  "insightsDetail": {
+    "breadcrumbAria": "مسار التنقل",
+    "insights": "المقالات",
+    "general": "عام",
+    "shareLabel": "مشاركة",
+    "backToInsights": "العودة إلى المقالات",
+    "relatedPosts": "مقالات ذات صلة",
+    "morePosts": "المزيد من المقالات",
+    "prev": "السابق",
+    "next": "التالي",
+    "share": {
+      "facebook": "فيسبوك",
+      "twitter": "إكس",
+      "linkedin": "لينكد إن",
+      "snapchat": "سناب شات",
+      "pinterest": "بنترست",
+      "whatsapp": "واتساب"
+    }
+  },
+  "home": {
+    "rentals": {
+      "title": "العقارات للإيجار",
+      "description": "استكشف أحدث عقارات الإيجار المناسبة لأسلوب حياتك.",
+      "card": {
+        "imageAlt": "عقار للإيجار",
+        "photos": "صور",
+        "propertyType": "عقار",
+        "rentals": "إيجار",
+        "bedroom": "غرفة نوم",
+        "bathroom": "حمام",
+        "enquiry": "استفسار",
+        "callNow": "اتصل الآن",
+        "whatsapp": "واتساب"
+      }
+    }
+  }
+}

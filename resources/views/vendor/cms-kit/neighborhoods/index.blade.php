@@ -92,6 +92,20 @@
                                 <label class="form-check-label fw-bold" for="neighborhoodSectionStatus">Status</label>
                             </div>
                         </div>
+                        <div class="col-md-auto me-4">
+                            <div class="form-check form-switch mt-2">
+                                <input type="hidden" name="display_home" value="0">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    name="display_home"
+                                    id="neighborhoodDisplayHome"
+                                    value="1"
+                                    {{ old('display_home', data_get($section->extra_fields, 'display_home', true)) ? 'checked' : '' }}
+                                >
+                                <label class="form-check-label fw-bold" for="neighborhoodDisplayHome">Display on Home</label>
+                            </div>
+                        </div>
                         <div class="col-12 border-top pt-4">
                             <button type="submit" class="btn btn-primary px-4 shadow-sm">
                                 <i class="fas fa-save me-2"></i>Update Section Settings
@@ -123,10 +137,14 @@
                     </div>
                     @endif
 
-                    @if(auth('cms')->user()->can('neighborhoods.create'))
+                    @if(auth('cms')->user()->can('neighborhoods.create') && $canCreateMore)
                         <a href="{{ route('cms.neighborhoods.create') }}" class="btn btn-primary btn-sm">
                             <i class="fas fa-plus"></i> Add Neighborhood
                         </a>
+                    @elseif(auth('cms')->user()->can('neighborhoods.create'))
+                        <button type="button" class="btn btn-secondary btn-sm" disabled title="Maximum 3 neighborhoods are allowed">
+                            <i class="fas fa-ban"></i> Max 3 Reached
+                        </button>
                     @endif
                 </div>
             </div>

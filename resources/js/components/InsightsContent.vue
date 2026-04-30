@@ -8,7 +8,7 @@
             </div>
             <div class="banner--page__content">
                 <div class="container-ctn">
-                    <h1 class="banner--page__title">Insights</h1>
+                    <h1 class="banner--page__title">{{ heading }}</h1>
                     <ol class="breadcrumb-minimal" aria-label="Breadcrumb">
                         <li>
                             <RouterLink to="/" aria-label="Home">
@@ -18,29 +18,30 @@
                             </RouterLink>
                         </li>
                         <li class="breadcrumb-minimal__sep" aria-hidden="true">/</li>
-                        <li class="breadcrumb-minimal__current" aria-current="page">Insights</li>
+                        <li class="breadcrumb-minimal__current" aria-current="page">{{ heading }}</li>
                     </ol>
                 </div>
             </div>
         </section>
 
-        <section class="insights-section commonPadding-120" aria-labelledby="insights-heading">
+        <section v-if="insightsItems.length" class="insights-section commonPadding-120" aria-labelledby="insights-heading">
             <div class="container-ctn">
                 <h2 id="insights-heading" class="visually-hidden">Latest articles</h2>
                 <ul class="insights-grid">
-                    <li v-for="(item, index) in insightsItems" :key="index">
+                    <li v-for="item in insightsItems" :key="item.id">
                         <article class="insight-card">
-                            <RouterLink class="insight-card__link" :to="{ name: 'insights-details' }">
+                            <RouterLink class="insight-card__link" :to="{ name: 'insights-details', params: { slug: item.slug } }">
                                 <div class="insight-card__media">
                                     <div class="insight-card__image-wrap">
-                                        <img :src="asset(item.image)" alt="" width="480" height="270" loading="lazy">
+                                        <img :src="item.image || dummyImage" alt="" width="247" height="453" loading="lazy" @error="onImgError">
                                     </div>
-                                    <time class="insight-card__date" :datetime="item.date">
+                                    <time class="insight-card__date" :datetime="item.publishedAt || ''">
                                         <span class="insight-card__date-inner">
-                                            <span class="insight-card__date-text">{{ item.dateLabel }}</span>
+                                            <span class="insight-card__date-text">{{ formatDate(item.publishedAt) }}</span>
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-  <path d="M9.24546 20.7424V3.2494M4.74725 16.6331H2.74805M4.74725 7.38675H2.74805M4.74725 6.74801L4.74725 17.2438C4.74725 18.1717 5.11585 19.0616 5.77197 19.7177C6.42808 20.3738 7.31797 20.7424 8.24586 20.7424H17.7421C18.67 20.7424 19.5598 20.3738 20.216 19.7177C20.8721 19.0616 21.2407 18.1717 21.2407 17.2438V6.74801C21.2407 5.82012 20.8721 4.93023 20.216 4.27412C19.5598 3.618 18.67 3.2494 17.7421 3.2494H8.24586C7.31797 3.2494 6.42808 3.618 5.77197 4.27412C5.11585 4.93023 4.74725 5.82012 4.74725 6.74801Z" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>                              </span>
+                                                <path d="M9.24546 20.7424V3.2494M4.74725 16.6331H2.74805M4.74725 7.38675H2.74805M4.74725 6.74801L4.74725 17.2438C4.74725 18.1717 5.11585 19.0616 5.77197 19.7177C6.42808 20.3738 7.31797 20.7424 8.24586 20.7424H17.7421C18.67 20.7424 19.5598 20.3738 20.216 19.7177C20.8721 19.0616 21.2407 18.1717 21.2407 17.2438V6.74801C21.2407 5.82012 20.8721 4.93023 20.216 4.27412C19.5598 3.618 18.67 3.2494 17.7421 3.2494H8.24586C7.31797 3.2494 6.42808 3.618 5.77197 4.27412C5.11585 4.93023 4.74725 5.82012 4.74725 6.74801Z" stroke="black" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </span>
                                     </time>
                                 </div>
                                 <div class="insight-card__body">
@@ -62,58 +63,34 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
+import { getInsightsListingData } from '@/utils/publicContent';
 
-/** Mirrors html/insights.php $insights_items */
-const insightsItems = [
-    {
-        image: 'public/images/news/1.jpg',
-        date: '2014-05-27',
-        dateLabel: 'May 27, 2014',
-        title: 'The Ultimate Guide to First-Time Homebuyers',
-        excerpt:
-            'Business meeting of real estate broker, Business meeting working with new startup project. Idea presentation analyze plan.',
-    },
-    {
-        image: 'public/images/news/2.jpg',
-        date: '2014-05-27',
-        dateLabel: 'May 27, 2014',
-        title: "Distinguished Real Estate Selects Yardi's Unified Cloud Solution...",
-        excerpt:
-            'Dubai-based real estate owner and operator to utilize a cloud-based solution to expand commercial and residential portfolio operations',
-    },
-    {
-        image: 'public/images/news/1.jpg',
-        date: '2014-05-27',
-        dateLabel: 'May 27, 2014',
-        title: 'Distinguished Real Estate Partners With Keys Please Holiday',
-        excerpt:
-            'Distinguished Real Estate (DRE), one of the largest fully integrated real estate developers in the UAE announced its partnership...',
-    },
-    {
-        image: 'public/images/news/1.jpg',
-        date: '2014-05-27',
-        dateLabel: 'May 27, 2014',
-        title: 'The Ultimate Guide to First-Time Homebuyers',
-        excerpt:
-            'Business meeting of real estate broker, Business meeting working with new startup project. Idea presentation analyze plan.',
-    },
-    {
-        image: 'public/images/news/2.jpg',
-        date: '2014-05-27',
-        dateLabel: 'May 27, 2014',
-        title: "Distinguished Real Estate Selects Yardi's Unified Cloud Solution...",
-        excerpt:
-            'Dubai-based real estate owner and operator to utilize a cloud-based solution to expand commercial and residential portfolio operations',
-    },
-    {
-        image: 'public/images/news/1.jpg',
-        date: '2014-05-27',
-        dateLabel: 'May 27, 2014',
-        title: 'Distinguished Real Estate Partners With Keys Please Holiday',
-        excerpt:
-            'Distinguished Real Estate (DRE), one of the largest fully integrated real estate developers in the UAE announced its partnership...',
-    },
-];
+const { locale } = useI18n({ useScope: 'global' });
+const dummyImage = asset('public/images/news/blog-placeholder-new.png');
+
+const data = computed(() => getInsightsListingData(locale.value));
+const heading = computed(() => data.value.eyebrow || 'Insights');
+const insightsItems = computed(() => data.value.items);
+
+function formatDate(raw) {
+    if (!raw) return '';
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat(locale.value === 'ar' ? 'ar' : 'en', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+    }).format(date);
+}
+
+function onImgError(event) {
+    if (!event?.target) return;
+    if (event.target.src !== dummyImage) {
+        event.target.src = dummyImage;
+    }
+}
 </script>

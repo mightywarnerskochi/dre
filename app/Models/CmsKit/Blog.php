@@ -2,10 +2,13 @@
 
 namespace App\Models\CmsKit;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Blog extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'slug',
         'published_at',
@@ -43,5 +46,4 @@ class Blog extends Model
         return $this->translations[$lang][$attribute] ?? ($this->translations[config('app.fallback_locale')][$attribute] ?? null);
     }
 }
-
 
