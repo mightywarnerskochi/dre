@@ -3,7 +3,7 @@
     <p v-if="loading" class="container-ctn py-5 text-center text-muted">Loading property…</p>
     <p v-else-if="!property" class="container-ctn py-5 text-center">This property could not be found.</p>
     <template v-else>
-<section class="banner banner--page banner--page--listing banner--page--property-detail position-relative" aria-label="Page header">
+<section class="banner banner--page banner--page--listing position-relative" aria-label="Page header">
         <div class="banner--page__bg">
             <picture>
                 <img :src="heroBannerSrc" alt="" width="1920" height="403" loading="eager">
@@ -495,12 +495,7 @@ const galleryImages = computed(() => {
     return [...new Set(list)];
 });
 
-const heroBannerSrc = computed(() => {
-    const imgs = galleryImages.value;
-    const first = imgs.find((u) => typeof u === 'string' && u.trim() !== '');
-    if (first) return first;
-    return asset('public/images/inner-banner.jpg');
-});
+const heroBannerSrc = computed(() => asset('public/images/inner-banner.jpg'));
 
 const priceCurrencySuffix = computed(() => {
     const c = String(property.value?.currency || 'AED').toUpperCase();

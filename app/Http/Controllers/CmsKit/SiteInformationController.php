@@ -86,6 +86,22 @@ class SiteInformationController extends Controller
             }
         }
 
+        foreach (($siteInfoConfig['extra_fields'] ?? []) as $fieldName => $fieldConfig) {
+            if (($fieldConfig['type'] ?? null) !== 'file') {
+                continue;
+            }
+
+            $mimes = collect($fieldConfig['mimes'] ?? [])
+                ->filter(fn ($mime) => is_string($mime) && $mime !== '')
+                ->implode(',');
+            $maxSize = (int) ($fieldConfig['max_size'] ?? 2048);
+
+            $rules["extra_fields.{$fieldName}"] = 'nullable|file'
+                . ($mimes !== '' ? "|mimes:{$mimes}" : '')
+                . "|max:{$maxSize}";
+            $rules["remove_{$fieldName}"] = 'nullable|boolean';
+        }
+
         foreach ($languages as $lang) {
             foreach ($this->translatableFields as $field) {
                 if ($siteInfoConfig[$field] ?? true) {
@@ -189,8 +205,38 @@ class SiteInformationController extends Controller
             $data['footer_logo_alt'] = null;
         }
 
-        $extraFields = [];
+        $existingExtraFields = is_array($siteInfo->extra_fields) ? $siteInfo->extra_fields : [];
+        $extraFields = $existingExtraFields;
         foreach (config('cms-kit.database.site-information.extra_fields', []) as $key => $field) {
+            $isFileField = ($field['type'] ?? null) === 'file';
+            if ($isFileField) {
+                $existingPath = data_get($existingExtraFields, $key);
+                $removeRequested = $request->boolean("remove_{$key}");
+
+                if ($request->hasFile("extra_fields.{$key}")) {
+                    if (is_string($existingPath) && $existingPath !== '') {
+                        MediaStorage::delete($existingPath);
+                    }
+
+                    $directory = trim((string) ($field['directory'] ?? 'site-info'), '/');
+                    $storageName = trim((string) ($field['storage_name'] ?? ''), '/');
+                    $uploadedFile = $request->file("extra_fields.{$key}");
+
+                    $extraFields[$key] = $storageName !== ''
+                        ? MediaStorage::storeAs($uploadedFile, $directory, $storageName)
+                        : MediaStorage::store($uploadedFile, $directory);
+                } elseif ($removeRequested) {
+                    if (is_string($existingPath) && $existingPath !== '') {
+                        MediaStorage::delete($existingPath);
+                    }
+                    $extraFields[$key] = null;
+                } else {
+                    $extraFields[$key] = $existingPath;
+                }
+
+                continue;
+            }
+
             $extraFields[$key] = $request->input("extra_fields.{$key}");
         }
         $data['extra_fields'] = $extraFields;

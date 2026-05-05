@@ -11,8 +11,6 @@
     $classificationValues = [
         'job_type' => old('job_type', $item->job_type ?? ''),
         'department' => old('department', $item->department ?? ''),
-        'location' => old('location', $item->location ?? ''),
-        'country' => old('country', $item->country ?? ''),
         'base' => old('base', $item->base ?? ''),
     ];
 
@@ -71,8 +69,6 @@
 
             <input type="hidden" name="job_type" id="careerJobTypeMaster" value="{{ $classificationValues['job_type'] }}">
             <input type="hidden" name="department" id="careerDepartmentMaster" value="{{ $classificationValues['department'] }}">
-            <input type="hidden" name="location" id="careerLocationMaster" value="{{ $classificationValues['location'] }}">
-            <input type="hidden" name="country" id="careerCountryMaster" value="{{ $classificationValues['country'] }}">
             <input type="hidden" name="base" id="careerBaseMaster" value="{{ $classificationValues['base'] }}">
 
             <div class="row g-4 mb-4">
@@ -167,25 +163,16 @@
                                             </div>
                                             @endif
                                             @if($careerConfig['location'] ?? true)
-                                            <div class="col-md-4">
+                                            <div class="col-md-6">
                                                 <label class="form-label fw-bold">Location {!! in_array('location', $careerRequired, true) ? '<span class="text-danger">*</span>' : '' !!}</label>
-                                                <input type="text" class="form-control career-classification-proxy @error('location') is-invalid @enderror" data-master-field="location" value="{{ $classificationValues['location'] }}">
-                                                @error('location')
-                                                    <div class="invalid-feedback d-block">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                            @endif
-                                            @if($careerConfig['country'] ?? true)
-                                            <div class="col-md-4">
-                                                <label class="form-label fw-bold">Country</label>
-                                                <input type="text" class="form-control career-classification-proxy @error('country') is-invalid @enderror" data-master-field="country" value="{{ $classificationValues['country'] }}">
-                                                @error('country')
+                                                <input type="text" name="translations[{{ $lang->code }}][location]" class="form-control @error("translations.{$lang->code}.location") is-invalid @enderror" value="{{ old("translations.{$lang->code}.location", $translation['location'] ?? ($lang->code === $fallbackLocale ? ($item->location ?? '') : '')) }}">
+                                                @error("translations.{$lang->code}.location")
                                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                                 @enderror
                                             </div>
                                             @endif
                                             @if($careerConfig['base'] ?? true)
-                                            <div class="col-md-4">
+                                            <div class="col-md-6">
                                                 <label class="form-label fw-bold">Base</label>
                                                 <div class="career-dual-dropdown career-classification-proxy @error('base') is-invalid @enderror" data-master-field="base" data-placeholder="Search base">
                                                     <input type="text" class="form-control career-dual-dropdown-input" value="{{ data_get($baseOptionsByLanguage, $lang->code . '.' . $classificationValues['base'] . '.label', '') }}" placeholder="Search base" autocomplete="off">
@@ -240,6 +227,38 @@
                         </div>
                     </div>
                 @endforeach
+            </div>
+
+            <div class="card bg-light border-0 mb-4">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Location Flag</h6>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Flag Image</label>
+                            @if(!empty($item->flag_image ?? null))
+                                <div class="mb-2">
+                                    <img src="{{ media_url($item->flag_image) }}" alt="{{ $item->flag_alt }}" class="rounded border bg-white p-1" style="height: 36px; width: 36px; object-fit: contain;">
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="remove_flag_image" id="removeCareerFlagImage" value="1" {{ old('remove_flag_image') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="removeCareerFlagImage">Remove current flag image</label>
+                                </div>
+                            @endif
+                            <input type="file" name="flag_image" class="form-control @error('flag_image') is-invalid @enderror" accept=".jpg,.jpeg,.png,.webp,.svg,image/jpeg,image/png,image/webp,image/svg+xml">
+                            <small class="text-muted d-block mt-1">Allowed: JPG, PNG, WEBP, SVG. Max size: 512 KB. Recommended square flag icon.</small>
+                            @error('flag_image')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">Flag Alt Text</label>
+                            <input type="text" name="flag_alt" class="form-control @error('flag_alt') is-invalid @enderror" value="{{ old('flag_alt', $item->flag_alt ?? '') }}" placeholder="UAE flag">
+                            @error('flag_alt')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="card bg-light border-0 mb-4">
@@ -352,8 +371,6 @@
     const careerClassificationMasterIds = {
         job_type: 'careerJobTypeMaster',
         department: 'careerDepartmentMaster',
-        location: 'careerLocationMaster',
-        country: 'careerCountryMaster',
         base: 'careerBaseMaster'
     };
 
@@ -515,7 +532,7 @@
         }
     });
 
-    ['job_type', 'department', 'location', 'country', 'base'].forEach((field) => {
+    ['job_type', 'department', 'base'].forEach((field) => {
         const masterInput = document.getElementById(careerClassificationMasterIds[field] || '');
         if (masterInput) {
             syncCareerClassification(field, masterInput.value, null);

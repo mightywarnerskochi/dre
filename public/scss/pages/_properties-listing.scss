@@ -78,28 +78,6 @@
     }
 }
 
-// Property detail hero — sharp listing photo + light overlay (matches intended design; avoids heavy blur)
-.banner.banner--page.banner--page--listing.banner--page--property-detail {
-    .banner--page__bg picture {
-        &::after {
-            backdrop-filter: none;
-            -webkit-backdrop-filter: none;
-            background: linear-gradient(
-                105deg,
-                rgba(30, 58, 95, 0.58) 0%,
-                rgba(42, 85, 156, 0.4) 45%,
-                rgba(15, 23, 42, 0.28) 100%
-            );
-        }
-
-        img {
-            filter: none;
-            -webkit-filter: none;
-            transform: none;
-        }
-    }
-}
-
 // Extra-safe mobile spacing for insights detail where title can be long
 @include max(767) {
     .insights-details-page .banner.banner--page.banner--page--listing {

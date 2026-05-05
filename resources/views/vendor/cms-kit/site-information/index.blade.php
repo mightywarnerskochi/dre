@@ -76,7 +76,7 @@
                                     @if($siteInfoConfig['company_name'] ?? true)
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">Company Name {!! in_array('company_name', $siteInfoRequired) ? '<span class="text-danger">*</span>' : '' !!}</label>
-                                        <input type="text" name="translations[{{ $lang->code }}][company_name]" class="form-control @error("translations.{$lang->code}.company_name") is-invalid @enderror" value="{{ old("translations.{$lang->code}.company_name", $trans['company_name'] ?? $siteInfo->company_name) }}" {{ in_array('company_name', $siteInfoRequired) ? 'required' : '' }}>
+                                        <input type="text" name="translations[{{ $lang->code }}][company_name]" class="form-control @error("translations.{$lang->code}.company_name") is-invalid @enderror" value="{{ old("translations.{$lang->code}.company_name", $trans['company_name'] ?? '') }}" {{ in_array('company_name', $siteInfoRequired) ? 'required' : '' }}>
                                         @error("translations.{$lang->code}.company_name")
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -85,7 +85,7 @@
                                     @if($siteInfoConfig['country'] ?? true)
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">Country</label>
-                                        <input type="text" name="translations[{{ $lang->code }}][country]" class="form-control @error("translations.{$lang->code}.country") is-invalid @enderror" value="{{ old("translations.{$lang->code}.country", $trans['country'] ?? $siteInfo->country) }}">
+                                        <input type="text" name="translations[{{ $lang->code }}][country]" class="form-control @error("translations.{$lang->code}.country") is-invalid @enderror" value="{{ old("translations.{$lang->code}.country", $trans['country'] ?? '') }}">
                                         @error("translations.{$lang->code}.country")
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -94,7 +94,7 @@
                                     @if($siteInfoConfig['po_box'] ?? true)
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">P.O Box</label>
-                                        <input type="text" name="translations[{{ $lang->code }}][po_box]" class="form-control @error("translations.{$lang->code}.po_box") is-invalid @enderror" value="{{ old("translations.{$lang->code}.po_box", $trans['po_box'] ?? $siteInfo->po_box) }}">
+                                        <input type="text" name="translations[{{ $lang->code }}][po_box]" class="form-control @error("translations.{$lang->code}.po_box") is-invalid @enderror" value="{{ old("translations.{$lang->code}.po_box", $trans['po_box'] ?? '') }}">
                                         @error("translations.{$lang->code}.po_box")
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -103,7 +103,7 @@
                                     @if($siteInfoConfig['fax'] ?? true)
                                     <div class="col-md-6 mb-3">
                                         <label class="form-label fw-bold">Fax</label>
-                                        <input type="text" name="translations[{{ $lang->code }}][fax]" class="form-control @error("translations.{$lang->code}.fax") is-invalid @enderror" value="{{ old("translations.{$lang->code}.fax", $trans['fax'] ?? $siteInfo->fax) }}">
+                                        <input type="text" name="translations[{{ $lang->code }}][fax]" class="form-control @error("translations.{$lang->code}.fax") is-invalid @enderror" value="{{ old("translations.{$lang->code}.fax", $trans['fax'] ?? '') }}">
                                         @error("translations.{$lang->code}.fax")
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -112,7 +112,7 @@
                                     @if($siteInfoConfig['address'] ?? true)
                                     <div class="col-12 mb-3">
                                         <label class="form-label fw-bold">Address {!! in_array('address', $siteInfoRequired) ? '<span class="text-danger">*</span>' : '' !!}</label>
-                                        <textarea name="translations[{{ $lang->code }}][address]" class="form-control @error("translations.{$lang->code}.address") is-invalid @enderror" rows="3" {{ in_array('address', $siteInfoRequired) ? 'required' : '' }}>{{ old("translations.{$lang->code}.address", $trans['address'] ?? $siteInfo->address) }}</textarea>
+                                        <textarea name="translations[{{ $lang->code }}][address]" class="form-control @error("translations.{$lang->code}.address") is-invalid @enderror" rows="3" {{ in_array('address', $siteInfoRequired) ? 'required' : '' }}>{{ old("translations.{$lang->code}.address", $trans['address'] ?? '') }}</textarea>
                                         @error("translations.{$lang->code}.address")
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
@@ -129,7 +129,7 @@
                                         @if($siteInfoConfig['privacy_policy'] ?? true)
                                         <div class="mb-3">
                                             <label class="form-label">Privacy Policy</label>
-                                            <textarea name="translations[{{ $lang->code }}][privacy_policy]" class="form-control tinymce-site-info @error("translations.{$lang->code}.privacy_policy") is-invalid @enderror" rows="6">{{ old("translations.{$lang->code}.privacy_policy", $trans['privacy_policy'] ?? $siteInfo->privacy_policy) }}</textarea>
+                                            <textarea name="translations[{{ $lang->code }}][privacy_policy]" class="form-control tinymce-site-info @error("translations.{$lang->code}.privacy_policy") is-invalid @enderror" rows="6">{{ old("translations.{$lang->code}.privacy_policy", $trans['privacy_policy'] ?? '') }}</textarea>
                                             @error("translations.{$lang->code}.privacy_policy")
                                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                                             @enderror
@@ -138,7 +138,7 @@
                                         @if($siteInfoConfig['terms_and_conditions'] ?? true)
                                         <div class="mb-3">
                                             <label class="form-label">Terms & Conditions</label>
-                                            <textarea name="translations[{{ $lang->code }}][terms_and_conditions]" class="form-control tinymce-site-info @error("translations.{$lang->code}.terms_and_conditions") is-invalid @enderror" rows="6">{{ old("translations.{$lang->code}.terms_and_conditions", $trans['terms_and_conditions'] ?? $siteInfo->terms_and_conditions) }}</textarea>
+                                            <textarea name="translations[{{ $lang->code }}][terms_and_conditions]" class="form-control tinymce-site-info @error("translations.{$lang->code}.terms_and_conditions") is-invalid @enderror" rows="6">{{ old("translations.{$lang->code}.terms_and_conditions", $trans['terms_and_conditions'] ?? '') }}</textarea>
                                             @error("translations.{$lang->code}.terms_and_conditions")
                                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                                             @enderror
@@ -147,7 +147,7 @@
                                         @if($siteInfoConfig['disclaimer'] ?? true)
                                         <div class="mb-3">
                                             <label class="form-label">Disclaimer</label>
-                                            <textarea name="translations[{{ $lang->code }}][disclaimer]" class="form-control tinymce-site-info @error("translations.{$lang->code}.disclaimer") is-invalid @enderror" rows="6">{{ old("translations.{$lang->code}.disclaimer", $trans['disclaimer'] ?? $siteInfo->disclaimer) }}</textarea>
+                                            <textarea name="translations[{{ $lang->code }}][disclaimer]" class="form-control tinymce-site-info @error("translations.{$lang->code}.disclaimer") is-invalid @enderror" rows="6">{{ old("translations.{$lang->code}.disclaimer", $trans['disclaimer'] ?? '') }}</textarea>
                                             @error("translations.{$lang->code}.disclaimer")
                                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                                             @enderror
@@ -156,7 +156,7 @@
                                         @if($siteInfoConfig['footer_description'] ?? true)
                                         <div class="mb-0">
                                             <label class="form-label">Footer Description</label>
-                                            <textarea name="translations[{{ $lang->code }}][footer_description]" class="form-control @error("translations.{$lang->code}.footer_description") is-invalid @enderror" rows="3">{{ old("translations.{$lang->code}.footer_description", $trans['footer_description'] ?? $siteInfo->footer_description) }}</textarea>
+                                            <textarea name="translations[{{ $lang->code }}][footer_description]" class="form-control @error("translations.{$lang->code}.footer_description") is-invalid @enderror" rows="3">{{ old("translations.{$lang->code}.footer_description", $trans['footer_description'] ?? '') }}</textarea>
                                             @error("translations.{$lang->code}.footer_description")
                                                 <div class="invalid-feedback d-block">{{ $message }}</div>
                                             @enderror
@@ -432,6 +432,15 @@
     };
     if (typeof tinymce !== 'undefined') {
         tinymce.init(Object.assign({ selector: '.tinymce-site-info' }, common));
+    }
+
+    const siteInfoForm = document.querySelector('form[action="{{ route('cms.site-information.update') }}"]');
+    if (siteInfoForm) {
+        siteInfoForm.addEventListener('submit', function () {
+            if (typeof tinymce !== 'undefined') {
+                tinymce.triggerSave();
+            }
+        });
     }
 </script>
 @endpush

@@ -143,6 +143,21 @@
   "common": {
     "learnMore": "Learn More"
   },
+  "legal": {
+    "empty": "This page content will be published soon.",
+    "privacy-policy": {
+      "title": "Privacy Policy"
+    },
+    "terms-conditions": {
+      "title": "Terms & Conditions"
+    },
+    "disclaimer": {
+      "title": "Disclaimer"
+    },
+    "cookie-policy": {
+      "title": "Cookie Policy"
+    }
+  },
   "insightsDetail": {
     "breadcrumbAria": "Breadcrumb",
     "insights": "Insights",
@@ -160,6 +175,105 @@
       "snapchat": "Snapchat",
       "pinterest": "Pinterest",
       "whatsapp": "WhatsApp"
+    }
+  },
+  "careers": {
+    "pageHeaderAria": "Page header",
+    "breadcrumbAria": "Breadcrumb",
+    "homeAria": "Home",
+    "heroTitle": "Careers",
+    "breadcrumbCurrent": "Careers",
+    "filtersAria": "Job filters",
+    "search": "Search",
+    "allOption": "All",
+    "empty": "There are no openings at the moment. Please check back soon.",
+    "applyNow": "Apply Now",
+    "detailMetaJobType": "Job type",
+    "detailMetaBase": "Employment type",
+    "detailPublished": "Posted",
+    "detailLocation": "Location",
+    "sectionAbout": "About",
+    "sectionResponsibilities": "Responsibilities",
+    "sectionRequirements": "Requirements",
+    "sectionJoin": "Join the team",
+    "detailBreadcrumbCareers": "Careers",
+    "notFoundRedirect": "Vacancy not found.",
+    "modalTitle": "Apply for this role",
+    "modalCvHeadline": "We See You, Not Your CV!",
+    "modalClose": "Close",
+    "form": {
+      "name": "Name",
+      "lastName": "Last Name",
+      "email": "Email",
+      "phone": "Phone",
+      "country": "Country",
+      "countryOptionUae": "UAE",
+      "countryOptionIndia": "India",
+      "state": "State",
+      "stateOptionDubai": "Dubai",
+      "stateOptionSharjah": "Sharjah",
+      "place": "Place",
+      "applyFor": "Apply for",
+      "designation": "Designation",
+      "designationMid": "Mid-level",
+      "designationSenior": "Senior",
+      "experience": "Experience",
+      "additionalInfo": "Additional Information",
+      "attachPrompt": "Add an attachment",
+      "attachHint": "Max. 10 MB. (pdf, doc, ps, jpeg, docx)",
+      "consentPrefix": "I have read the ",
+      "privacyLink": "privacy policy",
+      "consentSuffix": " and consent to the processing of my data for handling my application.",
+      "submit": "Submit",
+      "pleaseWait": "Please wait",
+      "submitSuccess": "Your application has been submitted successfully.",
+      "submitError": "Could not submit your application. Please try again.",
+      "cancel": "Cancel",
+      "counter": "{n} / 1000 characters",
+      "counterWords": "{n} / 1000 Words",
+      "validationRequired": "This field is required.",
+      "validationRequiredSelect": "Please select an option.",
+      "validationEmail": "Please enter a valid email address.",
+      "validationPhoneDial": "Please select a valid country code.",
+      "validationPhoneNational": "Enter a phone number of 6 to 13 digits (without country code).",
+      "validationWordsMax": "Additional information must be at most 1000 words.",
+      "validationAttachment": "Please attach your CV or supporting document.",
+      "validationAttachmentSize": "Attachment must not exceed 10 MB.",
+      "validationPrivacy": "You must agree to the privacy policy.",
+      "validationRecaptcha": "reCAPTCHA verification failed. Please refresh and try again."
+    },
+    "departmentBadgeFallback": "Department"
+  },
+  "contact": {
+    "pageHeaderAria": "Page header",
+    "breadcrumbAria": "Breadcrumb",
+    "homeAria": "Home",
+    "heroTitle": "Contact Us",
+    "breadcrumbCurrent": "Contact Us",
+    "officeLocations": "Office Locations",
+    "officeAria": "{name} office",
+    "mapAlt": "Map: {name}",
+    "openMap": "Open map",
+    "noLocations": "Location details will be published soon.",
+    "form": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "subject": "Subject",
+      "message": "Message",
+      "submit": "Submit",
+      "pleaseWait": "Please wait",
+      "validationRequired": "This field is required.",
+      "validationEmail": "Enter a valid email address.",
+      "validationPhone": "Enter 6 to 13 digits without country code.",
+      "validationRecaptcha": "reCAPTCHA could not be loaded. Please refresh and try again.",
+      "submitError": "Could not submit your enquiry. Please try again."
+    },
+    "labels": {
+      "phone": "Phone",
+      "email": "Email",
+      "whatsapp": "WhatsApp",
+      "fax": "Fax"
     }
   },
   "home": {

@@ -4,6 +4,9 @@ namespace App\Support;
 
 use App\Models\CmsKit\About;
 use App\Models\CmsKit\Blog;
+use App\Models\CmsKit\Career;
+use App\Models\CmsKit\CareerDepartment;
+use App\Models\CmsKit\Location;
 use App\Models\CmsKit\MissionVision;
 use App\Models\CmsKit\Neighborhood;
 use App\Models\CmsKit\Property;
@@ -152,6 +155,19 @@ class PublicContentViewData
             return $raw !== '' ? $raw : $fallbackValue;
         };
 
+        $pageTitleEn = trim((string) data_get($translations, 'en.page_title'));
+        $pageTitleAr = trim((string) data_get($translations, 'ar.page_title'));
+        $breadcrumbEn = trim((string) data_get($translations, 'en.breadcrumb_label'));
+        $breadcrumbAr = trim((string) data_get($translations, 'ar.breadcrumb_label'));
+
+        $heroBackground = null;
+        if ($section && filled($section->banner)) {
+            $heroBackground = media_url((string) $section->banner);
+        }
+        if (! filled($heroBackground)) {
+            $heroBackground = '/images/inner-banner.jpg';
+        }
+
         return [
             'title' => [
                 'en' => $value('en', 'title', $fallback['title']['en']),
@@ -165,6 +181,505 @@ class PublicContentViewData
                 'en' => $value('en', 'content', $fallback['content']['en']),
                 'ar' => $value('ar', 'content', $fallback['content']['ar']),
             ],
+            'pageTitle' => [
+                'en' => $pageTitleEn,
+                'ar' => $pageTitleAr,
+            ],
+            'breadcrumbLabel' => [
+                'en' => $breadcrumbEn,
+                'ar' => $breadcrumbAr,
+            ],
+            'heroBackgroundImage' => $heroBackground,
+        ];
+    }
+
+    /**
+     * Locations section label + active offices for the public Contact page.
+     *
+     * @return array{title: array{en: string, ar: string}, description: array{en: string, ar: string}, items: list<array<string, mixed>>}
+     */
+    public static function locationsSectionForSpa(): array
+    {
+        $fallbackTitle = [
+            'en' => 'Office Locations',
+            'ar' => 'مواقع المكاتب',
+        ];
+
+        $titleEn = $fallbackTitle['en'];
+        $titleAr = $fallbackTitle['ar'];
+        $descEn = '';
+        $descAr = '';
+
+        if (Schema::hasTable('section_labels')) {
+            $locSection = SectionLabel::query()->where('section_key', 'locations')->first();
+            $tr = is_array($locSection?->translations) ? $locSection->translations : [];
+            $titleEn = trim((string) data_get($tr, 'en.title')) ?: $titleEn;
+            $titleAr = trim((string) data_get($tr, 'ar.title')) ?: $titleAr;
+            $descEn = trim((string) data_get($tr, 'en.description'));
+            $descAr = trim((string) data_get($tr, 'ar.description'));
+        }
+
+        $items = [];
+        if (Schema::hasTable('locations')) {
+            $items = Location::query()
+                ->active()
+                ->orderBy('order_index')
+                ->get()
+                ->map(function (Location $loc) {
+                    $tr = is_array($loc->translations) ? $loc->translations : [];
+                    $titleEn = trim((string) data_get($tr, 'en.title'));
+                    $titleAr = trim((string) data_get($tr, 'ar.title'));
+                    $addrEn = trim((string) data_get($tr, 'en.address'));
+                    $addrAr = trim((string) data_get($tr, 'ar.address'));
+                    $countryEn = trim((string) data_get($tr, 'en.country'));
+                    $countryAr = trim((string) data_get($tr, 'ar.country'));
+
+                    $imageUrl = filled($loc->image) ? media_url((string) $loc->image) : null;
+                    if (! filled($imageUrl)) {
+                        $imageUrl = '/images/map-2.jpg';
+                    }
+
+                    $phones = is_array($loc->phone)
+                        ? array_values(array_filter(array_map(static fn ($p) => trim((string) $p), $loc->phone)))
+                        : [];
+                    $emails = is_array($loc->emails)
+                        ? array_values(array_filter(array_map(static fn ($e) => trim((string) $e), $loc->emails)))
+                        : [];
+
+                    $whatsappRaw = trim((string) ($loc->whatsapp ?? ''));
+                    $faxRaw = trim((string) ($loc->fax ?? ''));
+                    $mapLink = trim((string) ($loc->map_link ?? ''));
+
+                    return [
+                        'id' => (int) $loc->id,
+                        'title' => [
+                            'en' => $titleEn,
+                            'ar' => $titleAr,
+                        ],
+                        'address' => [
+                            'en' => self::joinLocationAddressLine($addrEn, $countryEn),
+                            'ar' => self::joinLocationAddressLine($addrAr, $countryAr),
+                        ],
+                        'image' => $imageUrl,
+                        'imageAlt' => trim((string) ($loc->image_alt ?? '')),
+                        'phones' => $phones,
+                        'emails' => $emails,
+                        'whatsapp' => $whatsappRaw !== '' ? $whatsappRaw : null,
+                        'fax' => $faxRaw !== '' ? $faxRaw : null,
+                        'mapLink' => $mapLink !== '' ? $mapLink : null,
+                    ];
+                })
+                ->values()
+                ->all();
+        }
+
+        return [
+            'title' => ['en' => $titleEn, 'ar' => $titleAr],
+            'description' => ['en' => $descEn, 'ar' => $descAr],
+            'items' => $items,
+        ];
+    }
+
+    private static function joinLocationAddressLine(string $address, string $country): string
+    {
+        $parts = array_filter([trim($address), trim($country)]);
+
+        return implode(', ', $parts);
+    }
+
+    /**
+     * Careers common section settings + vacancy list for SPA listing/details.
+     *
+     * @return array<string, mixed>
+     */
+    public static function careersPublicForSpa(): array
+    {
+        $fallbackHero = '/images/inner-banner.jpg';
+        $listingHeading = [
+            'en' => 'Current Opening',
+            'ar' => 'الوظائف المتاحة',
+        ];
+        $listingIntro = ['en' => '', 'ar' => ''];
+        $filterEnabled = false;
+        $filters = [];
+        $hero = $fallbackHero;
+
+        if (Schema::hasTable('section_labels')) {
+            $section = SectionLabel::query()->where('section_key', 'careers')->first();
+            $tr = is_array($section?->translations) ? $section->translations : [];
+            $listingHeading['en'] = trim((string) data_get($tr, 'en.title')) ?: $listingHeading['en'];
+            $listingHeading['ar'] = trim((string) data_get($tr, 'ar.title')) ?: $listingHeading['ar'];
+            $listingIntro['en'] = (string) data_get($tr, 'en.description');
+            $listingIntro['ar'] = (string) data_get($tr, 'ar.description');
+            $extra = is_array($section?->extra_fields) ? $section->extra_fields : [];
+            $filterEnabled = (bool) data_get($extra, 'filter_enabled', false);
+            $filters = self::careersFilterPayloadForSpa($filterEnabled, $extra);
+            if ($section && filled($section->banner)) {
+                $bannerUrl = media_url((string) $section->banner);
+                if (filled($bannerUrl)) {
+                    $hero = $bannerUrl;
+                }
+            }
+        }
+
+        $vacancies = [];
+        if (Schema::hasTable('careers')) {
+            $vacancies = Career::query()
+                ->active()
+                ->ordered()
+                ->get()
+                ->map(fn (Career $career) => self::careerVacancyPayload($career))
+                ->values()
+                ->all();
+        }
+
+        return [
+            'listingHeading' => $listingHeading,
+            'listingIntroHtml' => $listingIntro,
+            'filterEnabled' => $filterEnabled,
+            'filters' => $filters,
+            'heroBackgroundImage' => $hero,
+            'vacancies' => $vacancies,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $extraFields
+     * @return list<array<string, mixed>>
+     */
+    private static function careersFilterPayloadForSpa(bool $filterEnabled, array $extraFields): array
+    {
+        if (! $filterEnabled) {
+            return [];
+        }
+
+        $allowed = self::careersAllowedFilterColumns();
+        $configured = config('cms-kit.database.careers.items.columns', []);
+
+        $raw = data_get($extraFields, 'filters', []);
+        if (! is_array($raw)) {
+            return [];
+        }
+
+        $out = [];
+
+        foreach ($raw as $row) {
+            $key = trim((string) (data_get($row, 'key') ?? data_get($row, 'column') ?? ''));
+            $key = $key === 'base' ? 'title' : $key;
+            if ($key === '' || ! in_array($key, $allowed, true)) {
+                continue;
+            }
+
+            if ($key !== 'title' && ($configured[$key] ?? true) !== true) {
+                continue;
+            }
+
+            $values = self::careersDistinctColumnValues($key);
+
+            $options = [];
+            foreach ($values as $value) {
+                $value = trim((string) $value);
+                if ($value === '') {
+                    continue;
+                }
+                $options[] = [
+                    'value' => $value,
+                    'label' => [
+                        'en' => self::careersFilterOptionLabel($key, $value, 'en'),
+                        'ar' => self::careersFilterOptionLabel($key, $value, 'ar'),
+                    ],
+                ];
+            }
+
+            $out[] = [
+                'key' => $key,
+                'label' => [
+                    'en' => self::careersFilterColumnLabel($key, 'en'),
+                    'ar' => self::careersFilterColumnLabel($key, 'ar'),
+                ],
+                'options' => $options,
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function careersAllowedFilterColumns(): array
+    {
+        $itemConfig = config('cms-kit.database.careers.items', []);
+
+        return collect(config('cms-kit.database.careers.section.filterable_columns', ['title', 'job_type', 'department', 'location']))
+            ->filter(function (string $column) use ($itemConfig) {
+                $configuredCols = $itemConfig['columns'] ?? [];
+
+                return ($itemConfig[$column] ?? true) && ($configuredCols[$column] ?? true);
+            })
+            ->values()
+            ->all();
+    }
+
+    private static function careersFilterColumnLabel(string $column, string $locale): string
+    {
+        if ($locale === 'ar') {
+            return match ($column) {
+                'title' => 'المسمى الوظيفي',
+                'job_type' => 'نوع الوظيفة',
+                'department' => 'القسم',
+                'location' => 'الموقع',
+                'country' => 'البلد',
+                default => Str::headline($column),
+            };
+        }
+
+        return match ($column) {
+            'title' => 'Job Title',
+            'job_type' => 'Job Type',
+            'department' => 'Department',
+            'location' => 'Location',
+            'country' => 'Country',
+            default => Str::headline($column),
+        };
+    }
+
+    private static function careersFilterOptionLabel(string $column, string $value, string $locale): string
+    {
+        if ($column === 'job_type') {
+            return self::careersStaticOptionLabel('job_type_options', $value, $locale);
+        }
+
+        if ($column === 'title') {
+            return self::careersLocalizedVacancyTitleForFilter($value, $locale);
+        }
+
+        if ($column === 'department') {
+            return self::careersDepartmentLocalized($value, $locale);
+        }
+
+        return $value;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function careersDistinctColumnValues(string $column): array
+    {
+        if (! Schema::hasTable('careers')) {
+            return [];
+        }
+
+        $column = $column === 'base' ? 'title' : $column;
+
+        if ($column === 'title') {
+            $fallbackLocale = config('app.fallback_locale', 'en');
+
+            return Career::query()
+                ->active()
+                ->ordered()
+                ->get()
+                ->map(function (Career $career) use ($fallbackLocale) {
+                    return trim((string) ($career->getTranslation('title', 'en')
+                        ?: $career->getTranslation('title', $fallbackLocale)));
+                })
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+        }
+
+        if ($column === 'job_type') {
+            $configured = array_keys(config('cms-kit.database.careers.items.job_type_options', []));
+            $stored = Career::query()
+                ->active()
+                ->whereNotNull('job_type')
+                ->where('job_type', '!=', '')
+                ->distinct()
+                ->orderBy('job_type')
+                ->pluck('job_type')
+                ->all();
+
+            return array_values(array_unique(array_merge($configured, $stored)));
+        }
+
+        return Career::query()
+            ->active()
+            ->whereNotNull($column)
+            ->where($column, '!=', '')
+            ->distinct()
+            ->orderBy($column)
+            ->pluck($column)
+            ->map(fn ($v) => trim((string) $v))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private static function careersLocalizedVacancyTitleForFilter(string $canonicalTitle, string $locale): string
+    {
+        if ($canonicalTitle === '') {
+            return '';
+        }
+
+        $fallbackLocale = config('app.fallback_locale', 'en');
+
+        $match = Career::query()
+            ->active()
+            ->get()
+            ->first(function (Career $career) use ($canonicalTitle, $fallbackLocale) {
+                $en = trim((string) $career->getTranslation('title', 'en'));
+                $fallback = trim((string) $career->getTranslation('title', $fallbackLocale));
+
+                return $canonicalTitle === $en || $canonicalTitle === $fallback;
+            });
+
+        if (! $match) {
+            return $canonicalTitle;
+        }
+
+        return trim((string) $match->getTranslation('title', $locale))
+            ?: trim((string) $match->getTranslation('title', $fallbackLocale))
+            ?: $canonicalTitle;
+    }
+
+    private static function careersDepartmentLocalized(string $storedDepartment, string $locale): string
+    {
+        $storedDepartment = trim($storedDepartment);
+        if ($storedDepartment === '') {
+            return '';
+        }
+
+        if (! Schema::hasTable('career_departments')) {
+            return $storedDepartment;
+        }
+
+        $fallbackLocale = config('app.fallback_locale', 'en');
+
+        foreach (CareerDepartment::query()->where('status', true)->ordered()->get() as $department) {
+            $tr = is_array($department->translations) ? $department->translations : [];
+            $en = trim((string) data_get($tr, 'en.title'));
+            $ar = trim((string) data_get($tr, 'ar.title'));
+
+            if ($storedDepartment !== $en && $storedDepartment !== $ar) {
+                continue;
+            }
+
+            $localized = trim((string) data_get($tr, "{$locale}.title"));
+
+            return $localized !== '' ? $localized : ($en !== '' ? $en : $ar);
+        }
+
+        return $storedDepartment;
+    }
+
+    private static function careersStaticOptionLabel(string $optionsKey, ?string $value, string $locale): string
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return '';
+        }
+
+        $row = config("cms-kit.database.careers.items.{$optionsKey}.{$value}");
+        if (is_array($row)) {
+            $label = trim((string) ($row[$locale] ?? $row['en'] ?? ''));
+
+            return $label !== '' ? $label : trim((string) ($row['en'] ?? ''));
+        }
+
+        return Str::headline(str_replace(['-', '_'], ' ', $value));
+    }
+
+    private static function careerPlainSummary(?string $html, int $max = 280): string
+    {
+        if ($html === null || $html === '') {
+            return '';
+        }
+
+        $plain = preg_replace('/\s+/', ' ', strip_tags(html_entity_decode($html, ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+        $plain = is_string($plain) ? trim(str_replace("\xc2\xa0", ' ', $plain)) : '';
+
+        return $plain !== '' ? Str::limit($plain, $max) : '';
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private static function careerVacancyPayload(Career $c): array
+    {
+        $tr = is_array($c->translations) ? $c->translations : [];
+        $fallbackLocale = config('app.fallback_locale', 'en');
+
+        $titleEn = trim((string) data_get($tr, 'en.title'));
+        $titleAr = trim((string) data_get($tr, 'ar.title'));
+
+        $titleFb = trim((string) ($c->getTranslation('title', $fallbackLocale) ?: ''));
+        if ($titleAr === '') {
+            $titleAr = $titleEn !== '' ? $titleEn : $titleFb;
+        }
+        if ($titleEn === '') {
+            $titleEn = $titleFb !== '' ? $titleFb : $titleAr;
+        }
+
+        $titleFilterKey = trim((string) ($c->getTranslation('title', 'en') ?: $titleEn ?: $titleAr));
+
+        $locEn = trim((string) data_get($tr, 'en.location')) ?: trim((string) ($c->location ?? ''));
+        $locAr = trim((string) data_get($tr, 'ar.location')) ?: $locEn;
+
+        $deptStored = trim((string) ($c->department ?? ''));
+        $flagUrl = filled($c->flag_image)
+            ? media_url((string) $c->flag_image)
+            : '/images/career-location-placeholder.svg';
+
+        return [
+            'id' => (int) $c->id,
+            'slug' => (string) ($c->slug ?? ''),
+            'title' => ['en' => $titleEn, 'ar' => $titleAr],
+            'titleFilterKey' => $titleFilterKey,
+            'shortDescription' => [
+                'en' => self::careerPlainSummary(data_get($tr, 'en.short_description')),
+                'ar' => self::careerPlainSummary(data_get($tr, 'ar.short_description')),
+            ],
+            'aboutHtml' => [
+                'en' => (string) data_get($tr, 'en.about'),
+                'ar' => (string) data_get($tr, 'ar.about'),
+            ],
+            'responsibilitiesHtml' => [
+                'en' => (string) data_get($tr, 'en.responsibilities'),
+                'ar' => (string) data_get($tr, 'ar.responsibilities'),
+            ],
+            'requirementsHtml' => [
+                'en' => (string) data_get($tr, 'en.requirements'),
+                'ar' => (string) data_get($tr, 'ar.requirements'),
+            ],
+            'joinTeamHtml' => [
+                'en' => (string) data_get($tr, 'en.join_the_team'),
+                'ar' => (string) data_get($tr, 'ar.join_the_team'),
+            ],
+            'jobTypeKey' => trim((string) ($c->job_type ?? '')),
+            'jobTypeLabel' => [
+                'en' => self::careersStaticOptionLabel('job_type_options', $c->job_type, 'en'),
+                'ar' => self::careersStaticOptionLabel('job_type_options', $c->job_type, 'ar'),
+            ],
+            'baseKey' => trim((string) ($c->base ?? '')),
+            'baseLabel' => [
+                'en' => self::careersStaticOptionLabel('base_options', $c->base, 'en'),
+                'ar' => self::careersStaticOptionLabel('base_options', $c->base, 'ar'),
+            ],
+            'departmentKey' => $deptStored,
+            'departmentLabel' => [
+                'en' => self::careersDepartmentLocalized($deptStored, 'en'),
+                'ar' => self::careersDepartmentLocalized($deptStored, 'ar'),
+            ],
+            'locationKey' => trim((string) ($c->location ?? '')),
+            'locationLine' => [
+                'en' => $locEn,
+                'ar' => $locAr,
+            ],
+            'flagImage' => $flagUrl,
+            'flagAlt' => (string) ($c->flag_alt ?? ''),
+            'publishedDate' => optional($c->published_date)->toDateString(),
         ];
     }
 
@@ -642,7 +1157,7 @@ class PublicContentViewData
 
         return $query->get()
             ->map(function (Blog $blog) use ($includeContent): array {
-                $placeholder = asset('public/images/news/blog-placeholder-new.png');
+                $placeholder = '/images/news/blog-placeholder-new.png';
                 $translations = is_array($blog->translations) ? $blog->translations : [];
                 $extraFieldsEn = is_array(data_get($translations, 'en.extra_fields')) ? data_get($translations, 'en.extra_fields') : [];
                 $extraFieldsAr = is_array(data_get($translations, 'ar.extra_fields')) ? data_get($translations, 'ar.extra_fields') : [];

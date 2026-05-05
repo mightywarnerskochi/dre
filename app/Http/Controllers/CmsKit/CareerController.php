@@ -22,6 +22,7 @@ class CareerController extends Controller
     protected array $translatableFields = [
         'title',
         'short_description',
+        'location',
         'about',
         'responsibilities',
         'requirements',
@@ -87,13 +88,16 @@ class CareerController extends Controller
             'metadata.og_image' => ['nullable', 'image', 'max:512'],
             'remove_metadata_og_image' => ['nullable', 'boolean'],
             'metadata.other_meta_tags' => ['nullable', 'string'],
+            'flag_image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,svg', 'max:512'],
+            'flag_alt' => ['nullable', 'string', 'max:255'],
+            'remove_flag_image' => ['nullable', 'boolean'],
         ];
 
         if ($careerConfig['slug'] ?? true) {
             $rules['slug'] = ['nullable', 'string', 'max:255'];
         }
 
-        foreach (['job_type', 'department', 'location', 'country', 'base'] as $field) {
+        foreach (['job_type', 'department', 'base'] as $field) {
             if (!($careerConfig[$field] ?? true)) {
                 continue;
             }
@@ -197,6 +201,25 @@ class CareerController extends Controller
         return $normalized;
     }
 
+    protected function careerTranslatedColumnValue(array $translations, string $field): string
+    {
+        $fallbackLocale = config('app.fallback_locale', 'en');
+        $fallbackValue = trim((string) data_get($translations, "{$fallbackLocale}.{$field}"));
+
+        if ($fallbackValue !== '') {
+            return $fallbackValue;
+        }
+
+        foreach ($translations as $values) {
+            $value = trim((string) data_get($values, $field));
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
+    }
+
     protected function normalizeSectionTranslations(array $translations): array
     {
         $sectionConfig = config('cms-kit.database.careers.section', []);
@@ -237,6 +260,7 @@ class CareerController extends Controller
 
         foreach ($filters as $filter) {
             $column = trim((string) ($filter['column'] ?? $filter['key'] ?? ''));
+            $column = $column === 'base' ? 'title' : $column;
 
             if ($column === '' || !in_array($column, $allowedColumns, true)) {
                 continue;
@@ -252,7 +276,7 @@ class CareerController extends Controller
     {
         $itemConfig = config('cms-kit.database.careers.items', []);
         $configured = $itemConfig['columns'] ?? [];
-        $defaultColumns = config('cms-kit.database.careers.section.filterable_columns', ['job_type', 'department', 'location', 'country', 'base']);
+        $defaultColumns = config('cms-kit.database.careers.section.filterable_columns', ['title', 'job_type', 'department', 'location']);
 
         return collect($defaultColumns)
             ->filter(fn ($column) => ($itemConfig[$column] ?? true) && ($configured[$column] ?? true))
@@ -262,6 +286,22 @@ class CareerController extends Controller
 
     protected function getDistinctCareerColumnOptions(string $column): array
     {
+        if ($column === 'title') {
+            $fallbackLocale = config('app.fallback_locale', 'en');
+            $languages = $this->activeLanguages()->pluck('code')->push($fallbackLocale)->unique()->values();
+
+            return Career::query()
+                ->active()
+                ->get()
+                ->flatMap(function (Career $career) use ($languages) {
+                    return $languages->map(fn ($lang) => trim((string) $career->getTranslation('title', $lang)));
+                })
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+        }
+
         if ($column === 'job_type') {
             $configured = array_keys($this->getStaticOptionDefinitions('job_type_options'));
 
@@ -445,11 +485,20 @@ class CareerController extends Controller
         return collect($filters)
             ->filter(fn ($filter) => !empty($filter['key']))
             ->mapWithKeys(fn ($filter) => [
-                $filter['key'] => [
-                    'label' => Str::headline($filter['key']),
-                    'options' => $this->getDistinctCareerColumnOptions($filter['key']),
+                $filter['key'] === 'base' ? 'title' : $filter['key'] => [
+                    'label' => $this->filterColumnLabel($filter['key'] === 'base' ? 'title' : $filter['key']),
+                    'options' => $this->getDistinctCareerColumnOptions($filter['key'] === 'base' ? 'title' : $filter['key']),
                 ],
             ])->all();
+    }
+
+    protected function filterColumnLabel(string $column): string
+    {
+        return match ($column) {
+            'title' => 'Job Title',
+            'job_type' => 'Job Type',
+            default => Str::headline($column),
+        };
     }
 
     protected function validationMessages(): array
@@ -466,6 +515,8 @@ class CareerController extends Controller
             'department.required' => 'Department is required',
             'department.in' => 'Invalid department selected.',
             'location.required' => 'Location is required',
+            'flag_image.mimes' => 'Flag image must be a JPG, PNG, WEBP, or SVG file.',
+            'flag_image.max' => 'Flag image must not be larger than 512 KB.',
             'base.in' => 'Invalid base selected.',
             'published_date.required' => 'Published date is required',
             'published_date.date' => 'Invalid input',
@@ -564,12 +615,19 @@ class CareerController extends Controller
             $metadata['og_image'] = MediaStorage::store($request->file('metadata.og_image'), 'careers/metadata');
         }
 
+        $flagImage = null;
+        if ($request->hasFile('flag_image')) {
+            $flagImage = MediaStorage::store($request->file('flag_image'), 'careers/flags');
+        }
+
         Career::create([
             'slug' => $this->resolveUniqueSlug($request, $translations),
             'job_type' => trim((string) ($validated['job_type'] ?? '')),
             'department' => trim((string) ($validated['department'] ?? '')),
-            'location' => trim((string) ($validated['location'] ?? '')),
-            'country' => trim((string) ($validated['country'] ?? '')),
+            'location' => $this->careerTranslatedColumnValue($translations, 'location'),
+            'country' => '',
+            'flag_image' => $flagImage,
+            'flag_alt' => trim((string) ($validated['flag_alt'] ?? '')),
             'base' => trim((string) ($validated['base'] ?? '')),
             'published_date' => $validated['published_date'] ?? now()->toDateString(),
             'order_index' => $order,
@@ -617,16 +675,28 @@ class CareerController extends Controller
             $metadata['og_image'] = $existingMetadata['og_image'] ?? null;
         }
 
+        $translations = $this->normalizeTranslations($request->input('translations', []));
+        $flagImage = $career->flag_image;
+        if ($request->hasFile('flag_image')) {
+            MediaStorage::delete($flagImage);
+            $flagImage = MediaStorage::store($request->file('flag_image'), 'careers/flags');
+        } elseif ($request->boolean('remove_flag_image')) {
+            MediaStorage::delete($flagImage);
+            $flagImage = null;
+        }
+
         $career->update([
-            'slug' => $this->resolveUniqueSlug($request, $this->normalizeTranslations($request->input('translations', [])), $career->id),
+            'slug' => $this->resolveUniqueSlug($request, $translations, $career->id),
             'job_type' => trim((string) ($validated['job_type'] ?? $career->job_type)),
             'department' => trim((string) ($validated['department'] ?? $career->department)),
-            'location' => trim((string) ($validated['location'] ?? $career->location)),
-            'country' => trim((string) ($validated['country'] ?? $career->country)),
+            'location' => $this->careerTranslatedColumnValue($translations, 'location'),
+            'country' => '',
+            'flag_image' => $flagImage,
+            'flag_alt' => trim((string) ($validated['flag_alt'] ?? $career->flag_alt)),
             'base' => trim((string) ($validated['base'] ?? $career->base)),
             'published_date' => $validated['published_date'] ?? optional($career->published_date)->toDateString(),
             'status' => $request->has('status') ? $request->boolean('status') : $career->status,
-            'translations' => $this->normalizeTranslations($request->input('translations', [])),
+            'translations' => $translations,
             'metadata' => $metadata,
         ]);
 
@@ -637,6 +707,8 @@ class CareerController extends Controller
     {
         $career = Career::findOrFail($id);
         $order = $career->order_index;
+        MediaStorage::delete($career->flag_image);
+        MediaStorage::delete(data_get($career->metadata, 'og_image'));
 
         $career->delete();
 

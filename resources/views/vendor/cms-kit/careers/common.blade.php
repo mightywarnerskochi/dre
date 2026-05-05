@@ -11,10 +11,14 @@
     $sectionTranslations = $section->translations ?? [];
     $existingFilters = old('section_filters', collect(data_get($section->extra_fields, 'filters', []))
         ->map(fn ($filter) => [
-            'column' => $filter['column'] ?? $filter['key'] ?? '',
+            'column' => ($filter['column'] ?? $filter['key'] ?? '') === 'base' ? 'title' : ($filter['column'] ?? $filter['key'] ?? ''),
         ])->values()->all());
     $filterEnabled = old('filter_enabled', data_get($section->extra_fields, 'filter_enabled', false) ? '1' : '0');
-    $filterableColumns = collect($filterableColumns ?? [])->mapWithKeys(fn ($column) => [$column => \Illuminate\Support\Str::headline($column)])->all();
+    $filterableColumns = collect($filterableColumns ?? [])->mapWithKeys(fn ($column) => [$column => match ($column) {
+        'title' => 'Job Title',
+        'job_type' => 'Job Type',
+        default => \Illuminate\Support\Str::headline($column),
+    }])->all();
 @endphp
 
 <div class="card mb-4 border-0 shadow-sm">

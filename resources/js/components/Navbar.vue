@@ -3,7 +3,7 @@
         <div class="offcanvas-header mobile-menu__header">
             <h2 class="visually-hidden" id="mobileOffcanvasLabel">{{ t('nav.mobileMenu') }}</h2>
             <RouterLink :to="{ name: 'home' }" class="mobile-menu__brand" :aria-label="t('brand.logoAria')">
-                <img :src="asset('public/images/logo-blue.png')" :alt="t('brand.logoAlt')" width="160" height="48" loading="lazy" class="img-fluid mobile-menu__logo" />
+                <img :src="mobileBrandLogo" :alt="mobileBrandLogoAlt" width="160" height="48" loading="lazy" class="img-fluid mobile-menu__logo" />
             </RouterLink>
             <button type="button" class="mobile-menu__close" data-bs-dismiss="offcanvas" :aria-label="t('nav.closeMenu')">
                 <span class="mobile-menu__close-label">{{ t('nav.close') }}</span>
@@ -151,12 +151,19 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { computed, inject, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
 import MobileNavLink from '@/components/MobileNavLink.vue';
+import { getPublicSiteBoot } from '@/utils/publicSite';
 
 const { t } = useI18n({ useScope: 'global' });
 const isPropertiesMenuOpen = ref(false);
+const injectedSite = inject('dreSite', null);
+const dreSite = injectedSite ?? computed(() => getPublicSiteBoot());
+const mobileBrandLogo = computed(
+    () => dreSite.value?.colourLogoUrl || dreSite.value?.logoUrl || asset('public/images/logo-blue.png'),
+);
+const mobileBrandLogoAlt = computed(() => dreSite.value?.logoAlt || t('brand.logoAlt'));
 </script>

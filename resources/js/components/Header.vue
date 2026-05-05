@@ -1,5 +1,5 @@
 <template>
-    <header>
+    <header :class="{ scrolled: isScrolled, 'header-white': isInnerPage }">
         <div class="container-ctn">
             <div class="d-flex flex-wrap align-items-center justify-content-between">
                 <RouterLink :to="{ name: 'home' }" class="brand" :aria-label="t('brand.logoAria')">
@@ -9,7 +9,7 @@
                             width="320"
                             height="50"
                             class="img-fluid"
-                            :alt="t('brand.logoAlt')"
+                            :alt="logoAltText"
                             loading="eager"
                         />
                     </picture>
@@ -80,21 +80,37 @@
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
+import { getPublicSiteBoot } from '@/utils/publicSite';
 
 const { locale, t } = useI18n({ useScope: 'global' });
 const route = useRoute();
 const isScrolled = ref(false);
+const injectedSite = inject('dreSite', null);
+const dreSite = injectedSite ?? computed(() => getPublicSiteBoot());
+
+const isInnerPage = computed(() => route.name !== 'home');
 
 const displayCode = computed(() => (locale.value === 'ar' ? 'AR' : 'ENG'));
 
 const flagSrc = computed(() => asset(locale.value === 'ar' ? 'public/images/arabic.jpg' : 'public/images/english.jpg'));
+const logoAltText = computed(() => dreSite.value?.logoAlt || t('brand.logoAlt'));
+const cmsColourLogoSrc = computed(() => dreSite.value?.colourLogoUrl || null);
+const homeLogoSrc = computed(
+    () => dreSite.value?.logoUrl || dreSite.value?.colourLogoUrl || asset('public/images/logo.png'),
+);
+const innerLogoSrc = computed(
+    () => dreSite.value?.colourLogoUrl || dreSite.value?.logoUrl || asset('public/images/logo-blue.png'),
+);
 const logoSrc = computed(() => {
+    if (cmsColourLogoSrc.value) {
+        return cmsColourLogoSrc.value;
+    }
     const isHomeTop = route.name === 'home' && !isScrolled.value;
-    return asset(isHomeTop ? 'public/images/logo.png' : 'public/images/logo-blue.png');
+    return isHomeTop ? homeLogoSrc.value : innerLogoSrc.value;
 });
 
 function updateScrolled() {
@@ -105,6 +121,17 @@ onMounted(() => {
     updateScrolled();
     window.addEventListener('scroll', updateScrolled, { passive: true });
 });
+
+watch(
+    () => route.fullPath,
+    () => {
+        // Route transitions can retain stale scroll class briefly;
+        // re-check after router scrollBehavior has applied.
+        requestAnimationFrame(() => {
+            requestAnimationFrame(updateScrolled);
+        });
+    },
+);
 
 onBeforeUnmount(() => {
     window.removeEventListener('scroll', updateScrolled);

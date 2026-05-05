@@ -3,13 +3,16 @@
 use App\Http\Controllers\CmsKit\AboutController;
 use App\Http\Controllers\CmsKit\AgentController;
 use App\Http\Controllers\CmsKit\ContactSectionController;
+use App\Http\Controllers\CmsKit\CareerCandidateController;
 use App\Http\Controllers\CmsKit\HomeBannerFiltersController;
 use App\Http\Controllers\CmsKit\MissionVisionController;
+use App\Http\Controllers\CareerApplicationController;
 use App\Http\Controllers\CmsKit\NearbyPlaceController;
 use App\Http\Controllers\CmsKit\NeighborhoodController;
 use App\Http\Controllers\CmsKit\PropertyController;
 use App\Http\Controllers\CmsKit\SuccessfulJourneyController;
 use App\Http\Controllers\CmsKit\WhyChooseUsController;
+use App\Http\Controllers\ContactEnquiryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PropertyPageController;
 use App\Support\PublicContentViewData;
@@ -141,6 +144,12 @@ Route::middleware(['web'])->group(function () {
                 ->middleware('cms.permission:site-information.edit');
         });
 
+        Route::middleware(['cms.permission:careers.show'])->group(function () {
+            Route::get('/careers/candidates/{id}/attachment', [CareerCandidateController::class, 'attachment'])
+                ->whereNumber('id')
+                ->name('cms.careers.candidates.attachment');
+        });
+
         Route::middleware(['cms.permission:nearby-places.view'])->group(function () {
             if (config('cms-kit.common.modules.nearby-places', true)) {
                 Route::get('/nearby-places', [NearbyPlaceController::class, 'index'])->name('cms.nearby-places.index');
@@ -175,10 +184,18 @@ Route::get('/home/neighborhoods/{id}/properties', [HomeController::class, 'neigh
     ->whereNumber('id')
     ->name('home.neighborhood.properties');
 
+Route::post('/career-application', [CareerApplicationController::class, 'store'])
+    ->middleware('throttle:20,1')
+    ->name('career.application.store');
+
+Route::post('/contact-enquiry', [ContactEnquiryController::class, 'store'])
+    ->middleware('throttle:20,1')
+    ->name('contact.enquiry.store');
+
 Route::get('/{any?}', function () {
     return response()
         ->view('app', [
-            'styleVersion' => '14',
+            'styleVersion' => '15',
             'sitePublic' => PublicSiteViewData::forSpa(),
             'contentPublic' => [
                 'rentalSection' => PublicContentViewData::rentalSectionForSpa(),
@@ -188,6 +205,8 @@ Route::get('/{any?}', function () {
                 'homeAbout' => PublicContentViewData::homeAboutForSpa(),
                 'aboutPage' => PublicContentViewData::aboutPageForSpa(),
                 'contactSection' => PublicContentViewData::contactSectionForSpa(),
+                'locationsSection' => PublicContentViewData::locationsSectionForSpa(),
+                'careers' => PublicContentViewData::careersPublicForSpa(),
             ],
         ])
         ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')

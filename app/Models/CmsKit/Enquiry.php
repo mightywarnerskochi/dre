@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Enquiry extends Model
 {
+    protected $appends = [
+        'subject',
+    ];
+
     protected $fillable = [
         'name',
         'email',
@@ -21,6 +25,9 @@ class Enquiry extends Model
     protected $casts = [
         'extra_fields' => 'array',
     ];
+
+    public function getSubjectAttribute(): ?string
+    {
+        return data_get($this->extra_fields, 'subject');
+    }
 }
-
-

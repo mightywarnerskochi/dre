@@ -8,7 +8,21 @@ use Illuminate\Support\Facades\Schema;
 class PublicSiteViewData
 {
     /**
-     * @return array{phone1: ?string, phone2: ?string, email: ?string, social: list<array{network: string, href: string}>}
+     * @return array{
+     *   phone1: ?string,
+     *   phone2: ?string,
+     *   email: ?string,
+     *   logoUrl: ?string,
+     *   colourLogoUrl: ?string,
+     *   logoAlt: ?string,
+     *   social: list<array{network: string, href: string}>,
+     *   legalPages: array<string, mixed>,
+     *   tracking: array{
+     *     gtmContainerIds: list<string>,
+     *     customHeadScript: ?string,
+     *     customBodyScript: ?string
+     *   }
+     * }
      */
     public static function forSpa(): array
     {
@@ -22,13 +36,29 @@ class PublicSiteViewData
     }
 
     /**
-     * @return array{phone1: ?string, phone2: ?string, email: ?string, social: list<array{network: string, href: string}>}
+     * @return array{
+     *   phone1: ?string,
+     *   phone2: ?string,
+     *   email: ?string,
+     *   logoUrl: ?string,
+     *   colourLogoUrl: ?string,
+     *   logoAlt: ?string,
+     *   social: list<array{network: string, href: string}>,
+     *   legalPages: array<string, mixed>,
+     *   tracking: array{
+     *     gtmContainerIds: list<string>,
+     *     customHeadScript: ?string,
+     *     customBodyScript: ?string
+     *   }
+     * }
      */
     public static function fromModel(?SiteInformation $info): array
     {
         if (! $info) {
             return self::empty();
         }
+
+        $extraFields = is_array($info->extra_fields) ? $info->extra_fields : [];
 
         $socialRows = [
             ['network' => 'facebook', 'url' => $info->facebook],
@@ -51,12 +81,31 @@ class PublicSiteViewData
             'phone1' => self::nonEmptyString($info->phone_1 ?? null),
             'phone2' => self::nonEmptyString($info->phone_2 ?? null),
             'email' => self::nonEmptyString($info->email_1 ?? null),
+            'logoUrl' => self::mediaPathUrl($info->logo ?? null),
+            'colourLogoUrl' => self::mediaPathUrl(data_get($extraFields, 'colour_logo')),
+            'logoAlt' => self::nonEmptyString($info->logo_alt ?? null) ?: self::nonEmptyString($info->company_name ?? null),
             'social' => $social,
+            'legalPages' => self::legalPages($info),
+            'tracking' => self::tracking($info),
         ];
     }
 
     /**
-     * @return array{phone1: null, phone2: null, email: null, social: array{}}
+     * @return array{
+     *   phone1: null,
+     *   phone2: null,
+     *   email: null,
+     *   logoUrl: null,
+     *   colourLogoUrl: null,
+     *   logoAlt: null,
+     *   social: array{},
+     *   legalPages: array{},
+     *   tracking: array{
+     *     gtmContainerIds: array{},
+     *     customHeadScript: null,
+     *     customBodyScript: null
+     *   }
+     * }
      */
     public static function empty(): array
     {
@@ -64,8 +113,76 @@ class PublicSiteViewData
             'phone1' => null,
             'phone2' => null,
             'email' => null,
+            'logoUrl' => null,
+            'colourLogoUrl' => null,
+            'logoAlt' => null,
             'social' => [],
+            'legalPages' => [],
+            'tracking' => [
+                'gtmContainerIds' => [],
+                'customHeadScript' => null,
+                'customBodyScript' => null,
+            ],
         ];
+    }
+
+    private static function legalPages(SiteInformation $info): array
+    {
+        $translations = is_array($info->translations) ? $info->translations : [];
+        $extraFields = is_array($info->extra_fields) ? $info->extra_fields : [];
+
+        return [
+            'privacy-policy' => [
+                'title' => ['en' => 'Privacy Policy', 'ar' => 'سياسة الخصوصية'],
+                'content' => [
+                    'en' => (string) data_get($translations, 'en.privacy_policy', $info->privacy_policy ?? ''),
+                    'ar' => (string) data_get($translations, 'ar.privacy_policy', data_get($translations, 'en.privacy_policy', $info->privacy_policy ?? '')),
+                ],
+            ],
+            'terms-conditions' => [
+                'title' => ['en' => 'Terms & Conditions', 'ar' => 'الشروط والأحكام'],
+                'content' => [
+                    'en' => (string) data_get($translations, 'en.terms_and_conditions', $info->terms_and_conditions ?? ''),
+                    'ar' => (string) data_get($translations, 'ar.terms_and_conditions', data_get($translations, 'en.terms_and_conditions', $info->terms_and_conditions ?? '')),
+                ],
+            ],
+            'disclaimer' => [
+                'title' => ['en' => 'Disclaimer', 'ar' => 'إخلاء المسؤولية'],
+                'content' => [
+                    'en' => (string) data_get($translations, 'en.disclaimer', $info->disclaimer ?? ''),
+                    'ar' => (string) data_get($translations, 'ar.disclaimer', data_get($translations, 'en.disclaimer', $info->disclaimer ?? '')),
+                ],
+            ],
+            'cookie-policy' => [
+                'title' => ['en' => 'Cookie Policy', 'ar' => 'سياسة ملفات تعريف الارتباط'],
+                'content' => [
+                    'en' => (string) data_get($translations, 'en.extra_fields.cookie_policy', data_get($extraFields, 'cookie_policy', '')),
+                    'ar' => (string) data_get($translations, 'ar.extra_fields.cookie_policy', data_get($translations, 'en.extra_fields.cookie_policy', data_get($extraFields, 'cookie_policy', ''))),
+                ],
+            ],
+        ];
+    }
+
+    private static function tracking(SiteInformation $info): array
+    {
+        return [
+            'gtmContainerIds' => self::extractGtmContainerIds((string) ($info->gtag ?? '')),
+            'customHeadScript' => self::nonEmptyString((string) ($info->custom_head_script ?? '')),
+            'customBodyScript' => self::nonEmptyString((string) ($info->custom_body_script ?? '')),
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private static function extractGtmContainerIds(string $raw): array
+    {
+        return collect(preg_split('/[\r\n,]+/', $raw) ?: [])
+            ->map(fn ($id) => strtoupper(trim((string) $id)))
+            ->filter(fn ($id) => preg_match('/^GTM-[A-Z0-9]+$/', $id) === 1)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     private static function nonEmptyString(?string $value): ?string
@@ -83,6 +200,22 @@ class PublicSiteViewData
         }
         if (! preg_match('#^https?://#i', $t)) {
             return 'https://'.$t;
+        }
+
+        return $t;
+    }
+
+    private static function mediaPathUrl(mixed $path): ?string
+    {
+        $t = trim((string) $path);
+        if ($t === '') {
+            return null;
+        }
+        if (preg_match('#^https?://#i', $t)) {
+            return $t;
+        }
+        if (function_exists('media_url')) {
+            return media_url($t);
         }
 
         return $t;

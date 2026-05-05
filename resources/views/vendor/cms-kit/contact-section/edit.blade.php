@@ -69,6 +69,24 @@
                                     @enderror
                                     <div class="form-text mt-1">Introductory text shown above the form fields.</div>
                                 </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Page title (hero)</label>
+                                    <input type="text" name="translations[{{ $lang->code }}][page_title]" class="form-control @error("translations.{$lang->code}.page_title") is-invalid @enderror" value="{{ old("translations.{$lang->code}.page_title", $trans['page_title'] ?? '') }}" placeholder="Contact Us">
+                                    @error("translations.{$lang->code}.page_title")
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <div class="form-text mt-1">Large heading on the Contact page banner. Leave empty to use the site default.</div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Breadcrumb label</label>
+                                    <input type="text" name="translations[{{ $lang->code }}][breadcrumb_label]" class="form-control @error("translations.{$lang->code}.breadcrumb_label") is-invalid @enderror" value="{{ old("translations.{$lang->code}.breadcrumb_label", $trans['breadcrumb_label'] ?? '') }}" placeholder="Contact Us">
+                                    @error("translations.{$lang->code}.breadcrumb_label")
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <div class="form-text mt-1">Breadcrumb text for this page. Leave empty to use the site default.</div>
+                                </div>
                             </div>
                         </div>
                         @endforeach

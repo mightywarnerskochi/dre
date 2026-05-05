@@ -7769,6 +7769,17 @@ html[dir=rtl] .breadcrumb-minimal {
     width: 551px;
   }
 }
+.property-detail-gallery__slider:not(.slick-initialized) {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: var(--pd-gallery-gap, 12px);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.property-detail-gallery__slider:not(.slick-initialized) .property-detail-gallery__slide {
+  flex: 0 0 auto;
+}
 .property-detail-gallery__toolbar {
   display: flex;
   align-items: center;
@@ -8539,6 +8550,17 @@ html[dir=rtl] .breadcrumb-minimal {
   color: #4B535D;
   margin-bottom: 0;
 }
+.property-detail-specs--detail-cards.property-detail-specs--cards .property-detail-specs__label {
+  font-size: clamp(13px, 0.85vw, 15px);
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+.property-detail-specs--detail-cards.property-detail-specs--cards .property-detail-specs__value {
+  font-size: clamp(16px, 1vw, 18px);
+  font-weight: 600;
+  color: #1a1f26;
+}
 
 .property-detail-icon-grid {
   display: flex;
@@ -8807,6 +8829,10 @@ html[dir=rtl] .breadcrumb-minimal {
   overflow: hidden;
 }
 .property-detail-map-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 13px 15px 12px;
   border-bottom: 1px solid #e8ecf0;
 }
@@ -8835,6 +8861,15 @@ html[dir=rtl] .breadcrumb-minimal {
   overflow: hidden;
   background: #dbe4f0;
   border: 1px solid #e4e9f0;
+}
+.property-detail-map-card__leaflet {
+  width: 100%;
+  min-height: min(420px, 55vh);
+}
+.property-detail-map-card__leaflet .leaflet-container {
+  width: 100%;
+  height: min(420px, 55vh);
+  font-family: inherit;
 }
 .property-detail-map-card__img {
   display: block;
@@ -8905,6 +8940,26 @@ html[dir=rtl] .breadcrumb-minimal {
 .property-detail-map-card__poi--attraction {
   background: #7c3aed;
 }
+.property-detail-map-card__poi--leaflet {
+  position: relative;
+  left: auto !important;
+  top: auto !important;
+  transform: none;
+}
+.property-detail-map-card__poi--leaflet:hover, .property-detail-map-card__poi--leaflet:focus-visible {
+  transform: scale(1.08);
+}
+.property-detail-map-card__poi .property-detail-map-card__poi-glyph {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.property-detail-map-card__poi .property-detail-map-card__poi-glyph svg {
+  display: block;
+}
 .property-detail-map-card__pin {
   position: absolute;
   left: 52%;
@@ -8913,6 +8968,13 @@ html[dir=rtl] .breadcrumb-minimal {
   z-index: 2;
   pointer-events: none;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+.property-detail-map-card__pin--leaflet {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  pointer-events: auto;
 }
 .property-detail-map-card__pin-dot {
   display: flex;
@@ -9037,6 +9099,13 @@ html[dir=rtl] .breadcrumb-minimal {
 }
 .property-detail-map-card__tab:hover:not(.is-active) {
   color: #2f3f58;
+}
+.property-detail-map-card__tab:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.property-detail-map-card__tab:disabled:hover {
+  color: inherit;
 }
 .property-detail-map-card__tab:focus-visible {
   outline: 2px solid #2A559C;

@@ -30,10 +30,10 @@
 
                     <div class="site-footer__col">
                         <ul class="site-footer__links">
-                            <li><RouterLink :to="{ name: 'terms' }">{{ t('footer.legalPrivacy') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'privacy-policy' }">{{ t('footer.legalPrivacy') }}</RouterLink></li>
                             <li><RouterLink :to="{ name: 'terms' }">{{ t('footer.legalTerms') }}</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'terms' }">{{ t('footer.legalDisclaimer') }}</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'terms' }">{{ t('footer.legalCookies') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'disclaimer' }">{{ t('footer.legalDisclaimer') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'cookie-policy' }">{{ t('footer.legalCookies') }}</RouterLink></li>
                         </ul>
                     </div>
 

@@ -37,31 +37,18 @@
 <div class="card">
     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
         <h5 class="mb-0">Enquiries List</h5>
-        @if($cmsUser->can('enquiries.delete'))
-        <div class="dropdown" id="bulkActions" style="display: none;">
-            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                Bulk Actions (<span id="selectedCount">0</span>)
-            </button>
-            <ul class="dropdown-menu">
-                <li><button class="dropdown-item" type="button" onclick="bulkAction('delete')"><i class="fas fa-trash text-danger me-2"></i> Delete Selected</button></li>
-            </ul>
-        </div>
-        @endif
     </div>
     <div class="card-body p-4">
         <div class="table-responsive">
             <table class="table premium-table mb-0 w-100">
                 <thead>
                     <tr>
-                        <th style="width: 40px;">
-                            <input type="checkbox" class="form-check-input" id="selectAll">
-                        </th>
-                        <th>#</th>
-                        @foreach(config('cms-kit.database.enquiries.columns', []) as $key => $show)
-                            @if($show && $key != 'created_at')
-                            <th>{{ ucwords(str_replace('_', ' ', $key)) }}</th>
-                            @endif
-                        @endforeach
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Country</th>
+                        <th>Subject</th>
                         <th>Date</th>
                         <th class="text-end pe-4">Actions</th>
                     </tr>
@@ -73,20 +60,6 @@
     </div>
 </div>
 
-<!-- View Enquiry Modal -->
-<div class="modal fade" id="viewEnquiryModal" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Enquiry Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="enquiryDetails">
-                <!-- Details will be loaded here via AJAX -->
-            </div>
-        </div>
-    </div>
-</div>
 @endsection
 
 @push('scripts')
@@ -108,22 +81,26 @@
                 }
             },
             columns: [
-                {data: 'select_all', name: 'select_all', orderable: false, searchable: false},
-                {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
-                @foreach(config('cms-kit.database.enquiries.columns', []) as $key => $show)
-                    @if($show && $key != 'created_at')
-                    {data: '{{ $key }}', name: '{{ $key }}', render: function(data) {
-                        return data ? `<span class="text-truncate d-inline-block" style="max-width: 150px;">${data}</span>` : '-';
-                    }},
-                    @endif
-                @endforeach
+                {data: 'id', name: 'id'},
+                {data: 'name', name: 'name', render: function(data) {
+                    return data ? `<span class="text-truncate d-inline-block" style="max-width: 150px;">${data}</span>` : '-';
+                }},
+                {data: 'email', name: 'email', render: function(data) {
+                    return data ? `<span class="text-truncate d-inline-block" style="max-width: 180px;">${data}</span>` : '-';
+                }},
+                {data: 'phone', name: 'phone', render: function(data) {
+                    return data ? `<span class="text-truncate d-inline-block" style="max-width: 140px;">${data}</span>` : '-';
+                }},
+                {data: 'country', name: 'country', render: function(data) {
+                    return data ? `<span class="text-truncate d-inline-block" style="max-width: 120px;">${data}</span>` : '-';
+                }},
+                {data: 'subject', name: 'subject', orderable: false, searchable: false, render: function(data) {
+                    return data ? `<span class="text-truncate d-inline-block" style="max-width: 150px;">${data}</span>` : '-';
+                }},
                 {data: 'date', name: 'created_at'},
                 {data: 'action', name: 'action', orderable: false, searchable: false}
             ],
-            order: [[{{ count(array_filter(config('cms-kit.database.enquiries.columns', []))) + 1 }}, 'desc']],
-            drawCallback: function() {
-                updateBulkVisibility();
-            }
+            order: [[6, 'desc']]
         });
 
         $('#applyFilter').on('click', function() {
@@ -137,50 +114,6 @@
                 to_date: $('#filterToDate').val()
             });
             window.location.href = "{{ route('cms.enquiries.export') }}?" + params;
-        });
-
-        // View Enquiry
-        $(document).on('click', '.view-enquiry', function() {
-            const id = $(this).data('id');
-            $.get(`{{ url(config('cms-kit.common.auth.prefix', 'admin')) }}/enquiries/${id}`)
-            .done(function(data) {
-                let html = '<div class="row g-3">';
-                
-                // Fields to show explicitly if present
-                const fields = {
-                    'name': 'Name',
-                    'email': 'Email',
-                    'phone': 'Phone',
-                    'company': 'Company',
-                    'country': 'Country',
-                    'subject': 'Subject',
-                    'page_source': 'Page Source',
-                    'page_url': 'Page URL',
-                    'message': 'Message',
-                    'created_at': 'Date'
-                };
-
-                for(let key in fields) {
-                    if(data[key]) {
-                        let val = data[key];
-                        if(key === 'page_url') val = `<a href="${val}" target="_blank">${val}</a>`;
-                        html += `<div class="col-md-6"><p><strong>${fields[key]}:</strong><br>${val || '-'}</p></div>`;
-                    }
-                }
-                
-                if(data.extra_fields && Object.keys(data.extra_fields).length > 0) {
-                    for(let key in data.extra_fields) {
-                        if(!fields[key]) { // Don't duplicate if already shown
-                            let label = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                            html += `<div class="col-md-6"><p><strong>${label}:</strong><br>${data.extra_fields[key] || '-'}</p></div>`;
-                        }
-                    }
-                }
-                
-                html += '</div>';
-                $('#enquiryDetails').html(html);
-                $('#viewEnquiryModal').modal('show');
-            });
         });
 
         // Delete
@@ -198,43 +131,6 @@
             }
         });
 
-        // Bulk Select
-        $('#selectAll').on('change', function() {
-            $('.row-checkbox').prop('checked', this.checked);
-            updateBulkVisibility();
-        });
-
-        $(document).on('change', '.row-checkbox', function() {
-            updateBulkVisibility();
-        });
-
-        function updateBulkVisibility() {
-            const checkedCount = $('.row-checkbox:checked').length;
-            $('#selectedCount').text(checkedCount);
-            $('#bulkActions').toggle(checkedCount > 0);
-            $('#selectAll').prop('checked', checkedCount > 0 && checkedCount === $('.row-checkbox').length && $('.row-checkbox').length > 0);
-        }
-
-        window.bulkAction = function(action) {
-            if (action === 'delete' && !confirm('Are you sure you want to delete selected enquiries?')) {
-                return;
-            }
-
-            const ids = $('.row-checkbox:checked').map(function() {
-                return $(this).val();
-            }).get();
-
-            $.post("{{ route('cms.enquiries.bulk-action') }}", {
-                _token: '{{ csrf_token() }}',
-                action: action,
-                ids: ids
-            })
-            .done(function() {
-                table.ajax.reload(null, false);
-                $('#selectAll').prop('checked', false);
-                updateBulkVisibility();
-            });
-        };
     });
 </script>
 @endpush

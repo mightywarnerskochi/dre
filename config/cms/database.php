@@ -304,7 +304,7 @@ return [
             'banner_alt' => false,
             'filter_enabled' => true,
             'filters' => true,
-            'filterable_columns' => ['job_type', 'department', 'location', 'country', 'base'],
+            'filterable_columns' => ['title', 'job_type', 'department', 'location'],
             'extra_fields' => [],
             'required' => ['title'],
         ],
@@ -314,6 +314,8 @@ return [
                 'job_type' => true,
                 'department' => true,
                 'location' => true,
+                'flag_image' => true,
+                'flag_alt' => true,
                 'published_date' => true,
                 'order' => true,
                 'status' => true,
@@ -339,7 +341,9 @@ return [
             ],
             'department' => true,
             'location' => true,
-            'country' => true,
+            'country' => false,
+            'flag_image' => true,
+            'flag_alt' => true,
             'base' => true,
             'base_options' => [
                 'temporary' => [
@@ -368,12 +372,12 @@ return [
         'departments' => [
             'columns' => [
                 'title' => true,
-                'description' => true,
+                'description' => false,
                 'order' => true,
                 'status' => true,
             ],
             'title' => true,
-            'description' => true,
+            'description' => false,
             'stats' => false,
             'order' => true,
             'status' => true,

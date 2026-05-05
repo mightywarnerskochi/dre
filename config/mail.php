@@ -115,4 +115,18 @@ return [
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Career applications
+    |--------------------------------------------------------------------------
+    |
+    | When set, new public career applications are emailed here. Falls back to
+    | site email (CMS Site Information → email 1), then MAIL_FROM_ADDRESS.
+    |
+    */
+
+    'career_application_to' => env('MAIL_CAREER_APPLICATION_TO', ''),
+
+    'contact_enquiry_to' => env('MAIL_CONTACT_ENQUIRY_TO', ''),
+
 ];

@@ -136,13 +136,56 @@ const router = createRouter({
                     name: 'terms',
                     component: TermsConditions,
                     meta: {
-                        title: 'Terms & Conditions | DRE',
+                        title: 'Terms & Conditions | Distinguished Real Estate',
                         bodyClass: 'terms-page',
+                        policyKey: 'terms-conditions',
                     },
                 },
                 {
                     path: 'terms-conditions.php',
                     redirect: { name: 'terms' },
+                },
+                {
+                    path: 'privacy-policy',
+                    name: 'privacy-policy',
+                    component: TermsConditions,
+                    meta: {
+                        title: 'Privacy Policy | Distinguished Real Estate',
+                        bodyClass: 'terms-page',
+                        policyKey: 'privacy-policy',
+                    },
+                },
+                {
+                    path: 'privacy-policy.php',
+                    redirect: { name: 'privacy-policy' },
+                },
+                {
+                    path: 'disclaimer',
+                    name: 'disclaimer',
+                    component: TermsConditions,
+                    meta: {
+                        title: 'Disclaimer | Distinguished Real Estate',
+                        bodyClass: 'terms-page',
+                        policyKey: 'disclaimer',
+                    },
+                },
+                {
+                    path: 'disclaimer.php',
+                    redirect: { name: 'disclaimer' },
+                },
+                {
+                    path: 'cookie-policy',
+                    name: 'cookie-policy',
+                    component: TermsConditions,
+                    meta: {
+                        title: 'Cookie Policy | Distinguished Real Estate',
+                        bodyClass: 'terms-page',
+                        policyKey: 'cookie-policy',
+                    },
+                },
+                {
+                    path: 'cookie-policy.php',
+                    redirect: { name: 'cookie-policy' },
                 },
                 {
                     path: 'thank-you',
@@ -156,13 +199,15 @@ const router = createRouter({
                 },
                 {
                     path: '404.php',
-                    redirect: { name: 'not-found' },
+                    name: 'not-found-php',
+                    component: NotFound,
+                    meta: { title: 'Page Not Found | Distinguished Real Estate', bodyClass: 'error-404-page' },
                 },
                 {
                     path: ':pathMatch(.*)*',
                     name: 'not-found',
                     component: NotFound,
-                    meta: { title: 'Page Not Found | DRE', bodyClass: 'error-404' },
+                    meta: { title: 'Page Not Found | Distinguished Real Estate', bodyClass: 'error-404-page' },
                 },
             ],
         },

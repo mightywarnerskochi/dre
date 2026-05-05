@@ -33,6 +33,9 @@ class EnquiryController extends Controller
                 ->addColumn('select_all', function ($row) {
                 return '<input type="checkbox" class="row-checkbox form-check-input" value="' . $row->id . '">';
             })
+                ->addColumn('subject', function ($row) {
+                return $row->subject ?: '-';
+            })
                 ->addColumn('date', function ($row) {
                 return $row->created_at->format('d M Y H:i');
             });
@@ -47,8 +50,9 @@ class EnquiryController extends Controller
             }
 
             return $dataTable->addColumn('action', function ($row) {
+                $viewUrl = route('cms.enquiries.show', ['id' => $row->id]);
                 return '<div class="btn-group">
-                                <button type="button" class="btn btn-sm btn-outline-primary view-enquiry" data-id="' . $row->id . '"><i class="fas fa-eye"></i> View</button>
+                                <a href="' . e($viewUrl) . '" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i> View</a>
                                 <button type="button" class="btn btn-sm btn-outline-danger delete-item" data-id="' . $row->id . '"><i class="fas fa-trash"></i></button>
                             </div>';
             })
@@ -62,10 +66,38 @@ class EnquiryController extends Controller
         return view('cms-kit::enquiries.index', compact('sources', 'hasData'));
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $enquiry = Enquiry::findOrFail($id);
-        return response()->json($enquiry);
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json($enquiry);
+        }
+
+        $extraFields = is_array($enquiry->extra_fields) ? $enquiry->extra_fields : [];
+        $details = [
+            'Name' => $enquiry->name,
+            'Email' => $enquiry->email,
+            'Phone' => $enquiry->phone,
+            'Country' => $enquiry->country,
+            'Subject' => $enquiry->subject ?: data_get($extraFields, 'subject'),
+            'Page Source' => $enquiry->page_source,
+            'Message' => $enquiry->message,
+            'Date' => optional($enquiry->created_at)->format('Y-m-d H:i:s'),
+        ];
+
+        if (filled($enquiry->page_url)) {
+            $details['Page URL'] = $enquiry->page_url;
+        }
+
+        foreach ($extraFields as $key => $value) {
+            if (!filled($value) || in_array($key, ['subject'], true)) {
+                continue;
+            }
+            $label = str($key)->replace('_', ' ')->title()->toString();
+            $details[$label] = $value;
+        }
+
+        return view('cms-kit::enquiries.show', compact('enquiry', 'details'));
     }
 
     public function export(Request $request)
@@ -94,7 +126,7 @@ class EnquiryController extends Controller
             "Expires" => "0"
         ];
 
-        $columns = ['ID', 'Name', 'Email', 'Phone', 'Company', 'Country', 'Page Source', 'Page URL', 'Message', 'Date'];
+        $columns = ['ID', 'Name', 'Email', 'Phone', 'Company', 'Country', 'Subject', 'Page Source', 'Page URL', 'Message', 'Date'];
 
         $callback = function () use ($enquiries, $columns) {
             $file = fopen('php://output', 'w');
@@ -108,6 +140,7 @@ class EnquiryController extends Controller
                     $enquiry->phone,
                     $enquiry->company,
                     $enquiry->country,
+                    $enquiry->subject,
                     $enquiry->page_source,
                     $enquiry->page_url,
                     $enquiry->message,
@@ -140,5 +173,4 @@ class EnquiryController extends Controller
         return response()->json(['success' => true]);
     }
 }
-
 

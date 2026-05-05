@@ -64,8 +64,20 @@ jQuery(function () {
     });
   })();
 
+  function isHomeLikePath(pathname) {
+    const cleaned = String(pathname || "/")
+      .replace(/\/+$/, "")
+      .toLowerCase();
+    return cleaned === "" || cleaned === "/" || cleaned === "/index.php";
+  }
+
+  function shouldUseWhiteHeaderOnLoad() {
+    if (document.querySelector(".banner--page")) return true;
+    return !isHomeLikePath(window.location.pathname);
+  }
+
   const header = document.querySelector("header");
-  if (header && document.querySelector(".banner--page")) {
+  if (header && shouldUseWhiteHeaderOnLoad()) {
     header.classList.add("header-white");
   }
   window.addEventListener("scroll", () => {
@@ -1285,37 +1297,120 @@ jQuery(function () {
     }
   })();
 
-  (function initCareerAttachment() {
-    const input = document.getElementById("career-attachment");
-    const nameEl = document.getElementById("career-attachment-filename");
-    if (!input || !nameEl) return;
-    input.addEventListener("change", function () {
-      const f = this.files && this.files[0];
-      if (f) {
-        nameEl.textContent = f.name;
-        nameEl.removeAttribute("hidden");
-      } else {
-        nameEl.textContent = "";
-        nameEl.setAttribute("hidden", "");
-      }
-    });
-  })();
-
 });
+
 
 
 
 // ==========================contry dorp down=============================
 
-function initializePhoneInput(selector) {
-  const shippingFormWrapper = document.querySelector(selector + ' .phone_number');
-  if (shippingFormWrapper !== null) {
-    const phoneInput = window.intlTelInput(shippingFormWrapper, {
-      preferredCountries: ["ae", "sa", "kw", "bh", "qa", "om"],
-      excludeCountries: ["ru", "cu", "sy", "ir", "sd", "ss", "kp", "ye", "KR", "UA"],
-      utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
-    });
-    $(selector + ' .phone_number').on('blur', function () {
+(function initCareerAttachDelegation() {
+  if (window.__dreCareerAttachDelegBound) return;
+  window.__dreCareerAttachDelegBound = true;
+  document.addEventListener("change", function (e) {
+    var t = e.target;
+    if (!t || t.id !== "career-attachment") return;
+    var nameEl = document.getElementById("career-attachment-filename");
+    if (!nameEl) return;
+    var f = t.files && t.files[0];
+    if (f) {
+      nameEl.textContent = f.name;
+      nameEl.removeAttribute("hidden");
+    } else {
+      nameEl.textContent = "";
+      nameEl.setAttribute("hidden", "");
+    }
+  });
+})();
+
+function initializePhoneInput(selector, options) {
+  options = options || {};
+  var input = document.querySelector(selector + " .phone_number");
+  if (!input || typeof window.intlTelInput !== "function") return;
+  if (window.intlTelInputGlobals && typeof window.intlTelInputGlobals.getInstance === "function") {
+    var existing = window.intlTelInputGlobals.getInstance(input);
+    if (existing) {
+      try {
+        existing.destroy();
+      } catch (e) {}
+    }
+  }
+  var previousDialCode = "";
+
+  function isRepeatedDialOnly(digits, dial) {
+    if (!digits || !dial) return false;
+    if (digits.length < dial.length * 2) return false;
+    if (digits.length % dial.length !== 0) return false;
+    var repeatCount = digits.length / dial.length;
+    for (var i = 0; i < repeatCount; i++) {
+      if (digits.slice(i * dial.length, (i + 1) * dial.length) !== dial) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  function extractNationalDigits(rawDigits, currentDialCode) {
+    if (!rawDigits) return "";
+    var candidate = rawDigits;
+    if (previousDialCode && candidate.indexOf(previousDialCode) === 0) {
+      candidate = candidate.slice(previousDialCode.length);
+    }
+    if (currentDialCode && candidate.indexOf(currentDialCode) === 0) {
+      if (isRepeatedDialOnly(candidate, currentDialCode)) {
+        return "";
+      }
+      var remainder = candidate.slice(currentDialCode.length);
+      // Guard against accidental dial-code duplication after country switch (+966966).
+      if (remainder === "" || remainder === currentDialCode) {
+        return "";
+      }
+      return remainder;
+    }
+    return candidate;
+  }
+
+  function syncDialCodeInInput(forceReplace) {
+    if (!phoneInput) return;
+    var selected = phoneInput.getSelectedCountryData() || {};
+    var dial = String(selected.dialCode || "").replace(/\D/g, "");
+    if (!dial) return;
+    var current = String(input.value || "").trim();
+    var digits = current.replace(/\D/g, "");
+    var nationalDigits = extractNationalDigits(digits, dial);
+    var hasNationalDigits = nationalDigits.length > 0;
+    var nextValue =
+      forceReplace || current === "" || current === "+" || /^\+\d{1,4}$/.test(current)
+        ? "+" + dial + (hasNationalDigits ? nationalDigits : "")
+        : current;
+    input.value = nextValue;
+    previousDialCode = dial;
+    try {
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    } catch (e) {}
+  }
+
+  var phoneInput = window.intlTelInput(input, {
+    initialCountry: options.initialCountry || "ae",
+    preferredCountries: ["ae", "sa", "kw", "bh", "qa", "om"],
+    excludeCountries: ["ru", "cu", "sy", "ir", "sd", "ss", "kp", "ye", "KR", "UA"],
+    nationalMode: false,
+    autoHideDialCode: false,
+    formatOnDisplay: false,
+    utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
+  });
+  previousDialCode = String((phoneInput.getSelectedCountryData() || {}).dialCode || "").replace(/\D/g, "");
+  syncDialCodeInInput(false);
+  if (input.__dreCountryChangeHandler) {
+    input.removeEventListener("countrychange", input.__dreCountryChangeHandler);
+  }
+  input.__dreCountryChangeHandler = function () {
+    syncDialCodeInInput(true);
+  };
+  input.addEventListener("countrychange", input.__dreCountryChangeHandler);
+  $(selector + " .phone_number").off("blur.drePhone");
+  if (!options.skipContactPhoneBlur) {
+    $(selector + " .phone_number").on("blur.drePhone", function () {
       contactPhone(selector, phoneInput);
     });
   }
@@ -1333,7 +1428,7 @@ function contactPhone(selector, phoneInput) {
   $(selector + ' .phone_number').val(phoneNumber);
 }
 
-initializePhoneInput("#careerApplyModal");
+initializePhoneInput("#careerApplyModal", { skipContactPhoneBlur: true });
 initializePhoneInput("#siteEnquiryForm");
 initializePhoneInput(".contact-form");
 
@@ -1363,7 +1458,8 @@ initializePhoneInput(".contact-form");
   function initHeaderStateForSpa() {
     const header = document.querySelector("header");
     if (!header) return;
-    header.classList.toggle("header-white", !!document.querySelector(".banner--page"));
+    header.classList.toggle("header-white", shouldUseWhiteHeaderOnLoad());
+    header.classList.toggle("scrolled", window.scrollY > 50);
 
     if (window.__dreHeaderScrollBound) return;
     window.__dreHeaderScrollBound = true;
@@ -1378,8 +1474,8 @@ initializePhoneInput(".contact-form");
 
   function initBannerSliderForSpa() {
     if (typeof jQuery === "undefined" || !jQuery.fn.slick) return;
-    const $bannerSlider = jQuery(".banner-slider");
-    if (!$bannerSlider.length || $bannerSlider.hasClass("slick-initialized")) return;
+    const $bannerSlider = jQuery(".banner-slider").not(".slick-initialized");
+    if (!$bannerSlider.length) return;
 
     const BANNER_AUTOPLAY_MS = 5000;
 
@@ -1477,8 +1573,8 @@ initializePhoneInput(".contact-form");
 
   function initPropertyRowSliderForSpa() {
     if (typeof jQuery === "undefined" || !jQuery.fn.slick) return;
-    const $propertySlider = jQuery(".property-slider");
-    if (!$propertySlider.length || $propertySlider.hasClass("slick-initialized")) return;
+    const $propertySlider = jQuery(".property-slider").not(".slick-initialized");
+    if (!$propertySlider.length) return;
 
     const $wrap = $propertySlider.closest(".rental-properties");
     const $fill = $wrap.find(".property-slider__progress-fill");
@@ -1533,8 +1629,8 @@ initializePhoneInput(".contact-form");
 
   function initNewsSliderForSpa() {
     if (typeof jQuery === "undefined" || !jQuery.fn.slick) return;
-    const $newsSlider = jQuery(".news-card-slider");
-    if (!$newsSlider.length || $newsSlider.hasClass("slick-initialized")) return;
+    const $newsSlider = jQuery(".news-card-slider").not(".slick-initialized");
+    if (!$newsSlider.length) return;
 
     const $newsWrap = $newsSlider.closest(".news-slider-wrap");
     const $newsFill = $newsWrap.find(".property-slider__progress-fill");
@@ -1583,19 +1679,47 @@ initializePhoneInput(".contact-form");
     });
   }
 
-  function reinitializeSpaPageUi() {
-    initHeaderStateForSpa();
-    initBannerSearchDropdownsForSpa();
+  function dreInitCareerApplyOnly() {
+    initializePhoneInput("#careerApplyModal", { skipContactPhoneBlur: true });
+  }
+
+  function initHomePageUiForSpa() {
     initBannerSliderForSpa();
     initPropertyCardMediaForSpa();
     initPropertyRowSliderForSpa();
     initNewsSliderForSpa();
+  }
+
+  function reinitializeSpaPageUi() {
+    initHeaderStateForSpa();
+    initBannerSearchDropdownsForSpa();
+    initHomePageUiForSpa();
+    initializePhoneInput(".contact-form");
+    initializePhoneInput("#siteEnquiryForm");
+    dreInitCareerApplyOnly();
     if (typeof window.dreInitPropertyDetailGallerySlider === "function") {
       window.dreInitPropertyDetailGallerySlider();
     }
   }
 
-  window.addEventListener("dre:page-mounted", function () {
-    setTimeout(reinitializeSpaPageUi, 0);
+  window.addEventListener("dre:page-mounted", function (event) {
+    // Home has heavier DOM; give it a bit more time before init.
+    const mountedPath =
+      (event && event.detail && typeof event.detail.path === "string" && event.detail.path) ||
+      window.location.pathname ||
+      "/";
+    const isHomePath = /^\/(?:[?#].*)?$/.test(mountedPath);
+    setTimeout(reinitializeSpaPageUi, isHomePath ? 140 : 80);
   });
+
+  window.addEventListener("dre:career-form-mounted", function () {
+    setTimeout(dreInitCareerApplyOnly, 0);
+  });
+
+  // Home can render after global route mount; re-init home widgets after component paint.
+  window.dreInitHomeUi = function () {
+    setTimeout(initHomePageUiForSpa, 0);
+    setTimeout(initHomePageUiForSpa, 120);
+  };
+
 })();

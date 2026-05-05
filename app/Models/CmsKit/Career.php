@@ -3,16 +3,21 @@
 namespace App\Models\CmsKit;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Career extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'slug',
         'job_type',
         'department',
         'location',
         'country',
+        'flag_image',
+        'flag_alt',
         'base',
         'published_date',
         'order_index',
@@ -50,7 +55,7 @@ class Career extends Model
 
     public function scopeApplyFrontendFilters(Builder $query, array $filters = []): Builder
     {
-        foreach (['job_type', 'department', 'location', 'country', 'base'] as $field) {
+        foreach (['job_type', 'department', 'location', 'base'] as $field) {
             $value = trim((string) ($filters[$field] ?? ''));
 
             if ($value !== '') {

@@ -3,10 +3,13 @@
 namespace App\Models\CmsKit;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CareerDepartment extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'translations',
         'stats',

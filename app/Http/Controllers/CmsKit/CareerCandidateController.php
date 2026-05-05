@@ -6,6 +6,7 @@ use App\Models\CmsKit\CareerCandidate;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
 class CareerCandidateController extends Controller
@@ -128,6 +129,43 @@ class CareerCandidateController extends Controller
         ];
 
         return view('cms-kit::careers.candidates.show', compact('candidate', 'detailColumns'));
+    }
+
+    public function attachment($id)
+    {
+        $candidate = CareerCandidate::findOrFail($id);
+        $path = trim((string) $candidate->attachment);
+
+        if ($path === '' || preg_match('#^https?://#i', $path)) {
+            abort(404);
+        }
+
+        $normalized = str_replace('\\', '/', $path);
+        $normalized = preg_replace('#^/?storage/#', '', $normalized) ?? $normalized;
+        $normalized = ltrim($normalized, '/');
+
+        try {
+            $localPath = Storage::disk('public')->path($normalized);
+        } catch (\Throwable) {
+            abort(404);
+        }
+
+        if (! is_file($localPath)) {
+            abort(404);
+        }
+
+        return response()->file($localPath, [
+            'Content-Disposition' => 'inline; filename="'.$this->attachmentFilename($candidate, $localPath).'"',
+        ]);
+    }
+
+    protected function attachmentFilename(CareerCandidate $candidate, string $path): string
+    {
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
+        $base = trim(preg_replace('/[^A-Za-z0-9_-]+/', '-', (string) $candidate->name) ?? '', '-');
+        $base = $base !== '' ? $base : 'career-application';
+
+        return $extension !== '' ? "{$base}-attachment.{$extension}" : "{$base}-attachment";
     }
 
     public function export(Request $request)
