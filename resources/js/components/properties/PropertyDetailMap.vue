@@ -8,6 +8,7 @@ const props = defineProps({
     lng: { type: Number, required: true },
     title: { type: String, default: '' },
     priceDisplay: { type: String, default: '' },
+    beds: { type: Number, default: 0 },
     baths: { type: Number, default: 0 },
     sqft: { type: Number, default: 0 },
     thumb: { type: String, default: '' },
@@ -21,8 +22,6 @@ let map = null;
 let propertyMarker = null;
 let poiLayer = null;
 
-const activeCategory = ref('all');
-
 const TYPE_ORDER = ['school', 'hospital', 'restaurant', 'attraction'];
 
 const TYPE_LABELS = {
@@ -30,41 +29,19 @@ const TYPE_LABELS = {
     hospital: 'Hospitals',
     restaurant: 'Restaurants',
     attraction: 'Attractions',
-    other: 'Other',
 };
 
 const hasNearbyList = computed(() => Array.isArray(props.nearbyPlaces) && props.nearbyPlaces.length > 0);
 
-const categoryTabs = computed(() => {
-    const tabs = [{ key: 'all', label: 'All', count: coordsPlaces(props.nearbyPlaces).length }];
+const categoryTabs = computed(() =>
+    TYPE_ORDER.map((type) => ({
+        key: type,
+        label: TYPE_LABELS[type] || type,
+        count: props.nearbyPlaces.filter((p) => normalizePoiType(p) === type && hasCoords(p)).length,
+    })),
+);
 
-    TYPE_ORDER.forEach((type) => {
-        const count = props.nearbyPlaces.filter(
-            (p) => (p.type || 'other').toLowerCase() === type && hasCoords(p),
-        ).length;
-        tabs.push({
-            key: type,
-            label: TYPE_LABELS[type] || type,
-            count,
-        });
-    });
-
-    const extras = new Set(
-        props.nearbyPlaces
-            .map((p) => (p.type || 'other').toLowerCase())
-            .filter((t) => t && !TYPE_ORDER.includes(t)),
-    );
-    extras.forEach((type) => {
-        const count = props.nearbyPlaces.filter((p) => (p.type || '').toLowerCase() === type && hasCoords(p)).length;
-        tabs.push({
-            key: type,
-            label: TYPE_LABELS[type] || type.charAt(0).toUpperCase() + type.slice(1),
-            count,
-        });
-    });
-
-    return tabs;
-});
+const showCategoryFilters = computed(() => hasNearbyList.value);
 
 function hasCoords(p) {
     const la = Number(p?.latitude);
@@ -74,16 +51,48 @@ function hasCoords(p) {
 }
 
 function coordsPlaces(list) {
-    return list.filter(hasCoords);
+    return (Array.isArray(list) ? list : []).filter(hasCoords);
+}
+
+const activeCategory = ref(TYPE_ORDER[0]);
+
+/** Map CMS / legacy values onto tab keys so filters + icons stay in sync. */
+function normalizePoiType(p) {
+    const raw = String(p?.type ?? '')
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, '_');
+    const syn = {
+        education: 'school',
+        schools: 'school',
+        medical: 'hospital',
+        hospitals: 'hospital',
+        clinic: 'hospital',
+        pharmacy: 'hospital',
+        dining: 'restaurant',
+        cafe: 'restaurant',
+        coffee: 'restaurant',
+        restaurants: 'restaurant',
+        food: 'restaurant',
+        landmark: 'attraction',
+        attractions: 'attraction',
+        park: 'attraction',
+        recreation: 'attraction',
+    };
+    if (syn[raw]) {
+        return syn[raw];
+    }
+    if (TYPE_ORDER.includes(raw)) {
+        return raw;
+    }
+
+    return raw || 'other';
 }
 
 const visiblePois = computed(() => {
     const withCoords = coordsPlaces(props.nearbyPlaces);
-    if (activeCategory.value === 'all') {
-        return withCoords;
-    }
 
-    return withCoords.filter((p) => (p.type || 'other').toLowerCase() === activeCategory.value);
+    return withCoords.filter((p) => normalizePoiType(p) === activeCategory.value);
 });
 
 function esc(s) {
@@ -94,48 +103,55 @@ function esc(s) {
         .replace(/"/g, '&quot;');
 }
 
-function poiStyle(type) {
+/** CMS `type` → BEM modifier on `.property-detail-map-card__poi` (restaurant → `--food`). */
+function poiModifier(type) {
     const t = String(type || '').toLowerCase();
-    if (t === 'restaurant') {
-        return { bg: '#f4a261', label: 'R' };
-    }
-    if (t === 'hospital') {
-        return { bg: '#e76f51', label: 'H' };
-    }
-    if (t === 'school') {
-        return { bg: '#457b9d', label: 'S' };
-    }
-    if (t === 'attraction') {
-        return { bg: '#2a559c', label: 'A' };
-    }
+    if (t === 'restaurant') return 'food';
 
-    return { bg: '#868e96', label: '•' };
+    return ['school', 'hospital', 'attraction'].includes(t) ? t : 'attraction';
 }
 
-function propertyPopupHtml() {
+/** White glyphs inside coloured POI circles (same logic as static map card design). */
+function poiGlyphSvg(mod) {
+    if (mod === 'school') {
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3 1 9l11 6 9-4.91V17h2V9L12 3z"/></svg>';
+    }
+    if (mod === 'hospital') {
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+    }
+    if (mod === 'food') {
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8h1a4 4 0 010 8h-1"/><path d="M2 8h16v9a2 2 0 01-2 2H6a2 2 0 01-2-2V8z"/><path d="M6 1v3"/></svg>';
+    }
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12 2l2.4 7.4H22l-6 4.6 2.3 7L12 17.8 5.7 21 8 14 2 9.4h7.6L12 2z"/></svg>';
+}
+
+const HOUSE_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 10.5L12 3L21 10.5V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V10.5Z" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+function propertySummaryPopupHtml() {
     const img = esc(props.thumb || props.placeholderImage);
     const ph = esc(props.placeholderImage);
     const title = esc(props.title);
     const price = esc(props.priceDisplay);
     const metaBits = [];
-    if (props.baths) {
+    if (Number(props.beds) > 0) {
+        metaBits.push(`${props.beds} BD`);
+    }
+    if (Number.isFinite(Number(props.baths))) {
         metaBits.push(`${props.baths} BA`);
     }
     if (props.sqft) {
         metaBits.push(`${Number(props.sqft).toLocaleString('en-AE')} ft²`);
     }
-    const meta = esc(metaBits.join('  ·  '));
+    const meta = esc(metaBits.join('  '));
 
     return `
-<div class="dre-map-infobox">
-  <button type="button" class="dre-map-infobox__close" aria-label="Close">&times;</button>
-  <div class="dre-map-infobox__row">
-    <div class="dre-map-infobox__thumb"><img src="${img}" alt="" loading="lazy" onerror="this.onerror=null;this.src='${ph}'"></div>
-    <div class="dre-map-infobox__body">
-      <div class="dre-map-infobox__title">${title}</div>
-      <div class="dre-map-infobox__price">${price}</div>
-      <div class="dre-map-infobox__meta">${meta}</div>
-    </div>
+<div class="property-detail-map-card__popup-inner">
+  <button type="button" class="property-detail-map-card__popup-close dre-vue-map-popup-close" aria-label="Close"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+  <img class="property-detail-map-card__popup-thumb" src="${img}" alt="" width="64" height="64" loading="lazy" onerror="this.onerror=null;this.src='${ph}'">
+  <div class="property-detail-map-card__popup-body">
+    <p class="property-detail-map-card__popup-title">${title}</p>
+    <p class="property-detail-map-card__popup-price">${price}</p>
+    <p class="property-detail-map-card__popup-meta">${meta}</p>
   </div>
 </div>`.trim();
 }
@@ -145,7 +161,7 @@ function poiPopupHtml(place) {
     const addr = esc(place.address || '');
     let dist = '';
     if (place.distance !== null && place.distance !== undefined && place.distance !== '') {
-        dist = isNaN(Number(place.distance))
+        dist = Number.isNaN(Number(place.distance))
             ? esc(String(place.distance))
             : esc(`${place.distance} km`);
     }
@@ -158,22 +174,54 @@ function poiPopupHtml(place) {
 </div>`.trim();
 }
 
-const propertyDivIcon = L.divIcon({
-    className: 'dre-map-property-marker-wrap',
-    html: `<div class="dre-map-property-marker" aria-hidden="true">
-    <svg viewBox="0 0 32 42" width="32" height="42" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M16 42s14-12.2 14-22a14 14 0 10-28 0c0 9.8 14 22 14 22z" fill="#c92a2a"/>
-      <path d="M9 18L16 11l7 7v9H9v-9z" fill="#fff"/>
-      <path d="M13 22h6v5h-6v-5z" fill="#c92a2a"/>
-    </svg>
-  </div>`,
-    iconSize: [32, 42],
-    iconAnchor: [16, 42],
-    popupAnchor: [0, -36],
-});
+const PIN_DOT_PX = 40;
+
+/** Leaflet + string `html` can reuse one DOM node across markers — use fresh Elements per icon. */
+function createPropertyDivIcon() {
+    const pin = document.createElement('div');
+    pin.className = 'property-detail-map-card__pin property-detail-map-card__pin--leaflet';
+    pin.setAttribute('aria-hidden', 'true');
+    const dot = document.createElement('span');
+    dot.className = 'property-detail-map-card__pin-dot';
+    dot.innerHTML = HOUSE_SVG;
+    pin.appendChild(dot);
+
+    return L.divIcon({
+        className: 'dre-vue-map-marker-host',
+        html: pin,
+        iconSize: [PIN_DOT_PX, PIN_DOT_PX],
+        iconAnchor: [PIN_DOT_PX / 2, PIN_DOT_PX / 2],
+        popupAnchor: [0, -PIN_DOT_PX / 2 - 6],
+    });
+}
+
+function createPoiDivIconForPlace(place) {
+    const mod = poiModifier(activeCategory.value);
+    const glyphHtml = poiGlyphSvg(mod);
+    const label = (place.name || '').trim().slice(0, 28) || mod;
+    const ariaLabel = place.name || (mod === 'food' ? TYPE_LABELS.restaurant : TYPE_LABELS[mod]) || 'Location';
+
+    const wrap = document.createElement('div');
+    wrap.className = `property-detail-map-card__poi property-detail-map-card__poi--${mod} property-detail-map-card__poi--leaflet`;
+    wrap.setAttribute('data-poi-label', label);
+    wrap.setAttribute('role', 'img');
+    wrap.setAttribute('aria-label', ariaLabel);
+
+    const glyph = document.createElement('span');
+    glyph.className = 'property-detail-map-card__poi-glyph';
+    glyph.innerHTML = glyphHtml;
+    wrap.appendChild(glyph);
+
+    return L.divIcon({
+        className: 'dre-vue-map-marker-host',
+        html: wrap,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13],
+    });
+}
 
 function onMapContainerClick(e) {
-    if (e.target.closest('.dre-map-infobox__close')) {
+    if (e.target.closest('.dre-vue-map-popup-close')) {
         e.preventDefault();
         e.stopPropagation();
         map?.closePopup();
@@ -185,14 +233,7 @@ function renderPois() {
     poiLayer.clearLayers();
 
     visiblePois.value.forEach((p) => {
-        const st = poiStyle(p.type);
-        const icon = L.divIcon({
-            className: 'dre-poi-marker-wrap',
-            html: `<div class="dre-poi-marker" style="background:${st.bg}"><span>${esc(st.label)}</span></div>`,
-            iconSize: [34, 34],
-            iconAnchor: [17, 17],
-        });
-        const m = L.marker([p.latitude, p.longitude], { icon });
+        const m = L.marker([p.latitude, p.longitude], { icon: createPoiDivIconForPlace(p) });
         m.bindPopup(poiPopupHtml(p), {
             className: 'dre-map-leaflet-popup dre-map-leaflet-popup--poi',
             maxWidth: 260,
@@ -220,27 +261,29 @@ function initMap() {
     map = L.map(mapRoot.value, {
         zoomControl: true,
         scrollWheelZoom: true,
-        attributionControl: true,
+        attributionControl: false,
     });
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd',
+        maxZoom: 20,
+    }).addTo(map);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
         subdomains: 'abcd',
         maxZoom: 20,
     }).addTo(map);
 
     propertyMarker = L.marker([props.lat, props.lng], {
-        icon: propertyDivIcon,
+        icon: createPropertyDivIcon(),
         zIndexOffset: 1000,
     }).addTo(map);
 
-    propertyMarker.bindPopup(propertyPopupHtml(), {
-        className: 'dre-map-leaflet-popup dre-map-leaflet-popup--property',
+    propertyMarker.bindPopup(propertySummaryPopupHtml(), {
+        className: 'dre-map-leaflet-popup dre-map-leaflet-popup--property-card',
         closeButton: false,
         autoClose: false,
         closeOnClick: false,
-        maxWidth: 320,
+        maxWidth: 340,
     });
 
     map.getContainer().addEventListener('click', onMapContainerClick);
@@ -271,11 +314,11 @@ onBeforeUnmount(() => {
 });
 
 watch(
-    () => [props.lat, props.lng, props.title, props.priceDisplay, props.thumb, props.baths, props.sqft],
+    () => [props.lat, props.lng, props.title, props.priceDisplay, props.thumb, props.beds, props.baths, props.sqft],
     () => {
         if (!map || !propertyMarker) return;
         propertyMarker.setLatLng([props.lat, props.lng]);
-        propertyMarker.setPopupContent(propertyPopupHtml());
+        propertyMarker.setPopupContent(propertySummaryPopupHtml());
         propertyMarker.openPopup();
         fitMap();
     },
@@ -283,11 +326,17 @@ watch(
 
 watch(
     () => props.nearbyPlaces,
-    () => {
+    (list) => {
+        const keysWithPins = TYPE_ORDER.filter((type) =>
+            coordsPlaces(Array.isArray(list) ? list : []).some((p) => normalizePoiType(p) === type),
+        );
+        if (!keysWithPins.includes(activeCategory.value)) {
+            activeCategory.value = keysWithPins[0] || TYPE_ORDER[0];
+        }
         renderPois();
         fitMap();
     },
-    { deep: true },
+    { deep: true, immediate: true },
 );
 
 watch(activeCategory, () => {
@@ -301,205 +350,137 @@ function setCategory(key) {
 </script>
 
 <template>
-    <div class="dre-detail-map">
-        <div class="dre-detail-map__head">
-            <h3 class="dre-detail-map__title">Map</h3>
-            <a
-                v-if="externalMapUrl && externalMapUrl !== '#'"
-                class="dre-detail-map__open"
-                :href="externalMapUrl"
-                target="_blank"
-                rel="noopener noreferrer"
-            >Open in Google Maps</a>
+    <div class="property-detail-map-card position-relative">
+        <div class="property-detail-map-card__head">
+            <p class="property-detail-map-card__title">Map</p>
         </div>
 
-        <div class="dre-detail-map__surface">
-            <div ref="mapRoot" class="dre-detail-map__canvas" role="application" aria-label="Property location map" />
+        <div class="property-detail-map-card__map-panels" aria-live="polite">
+            <div
+                id="dre-vue-property-map-panel"
+                class="property-detail-map-card__map-panel"
+                role="tabpanel"
+                :aria-labelledby="`dre-vue-map-tab-${activeCategory}`"
+            >
+                <div class="property-detail-map-card__frame">
+                    <div ref="mapRoot" class="property-detail-map-card__leaflet" role="application" aria-label="Property location map" />
+                </div>
+            </div>
+        </div>
 
-            <div v-if="hasNearbyList" class="dre-detail-map__filters" role="tablist" aria-label="Nearby categories">
+        <div v-if="showCategoryFilters" class="property-detail-map-card__tabs-outer">
+            <div class="property-detail-map-card__tabs" role="tablist" aria-label="Nearby places">
                 <button
                     v-for="tab in categoryTabs"
                     :key="tab.key"
                     type="button"
+                    class="property-detail-map-card__tab"
+                    :class="{ 'is-active': activeCategory === tab.key && tab.count > 0 }"
+                    :disabled="tab.count === 0"
                     role="tab"
-                    class="dre-detail-map__filter"
-                    :class="{ 'is-active': activeCategory === tab.key }"
-                    :aria-selected="activeCategory === tab.key"
+                    :id="`dre-vue-map-tab-${tab.key}`"
+                    aria-controls="dre-vue-property-map-panel"
+                    :aria-selected="activeCategory === tab.key && tab.count > 0"
+                    :tabindex="activeCategory === tab.key ? 0 : -1"
                     @click="setCategory(tab.key)"
                 >
                     {{ tab.label }}
-                    <span v-if="tab.key !== 'all' && tab.count" class="dre-detail-map__filter-count">{{ tab.count }}</span>
                 </button>
             </div>
         </div>
 
-        <p v-if="hasNearbyList && !coordsPlaces(nearbyPlaces).length" class="dre-detail-map__hint">
+        <p v-if="hasNearbyList && !coordsPlaces(nearbyPlaces).length" class="property-detail-map-card__hint">
             Add latitude and longitude to nearby places in the CMS to show pins on the map.
         </p>
     </div>
 </template>
 
 <style scoped>
-.dre-detail-map {
-    border: 1px solid #e3eaf5;
-    border-radius: 26px;
-    padding: 22px 22px 18px;
-    background: #fff;
-    box-shadow: 0 18px 38px rgba(17, 38, 70, 0.06);
-}
-
-.dre-detail-map__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    margin-bottom: 14px;
-}
-
-.dre-detail-map__title {
+.property-detail-map-card__hint {
     margin: 0;
-    font-size: 20px;
-    color: #12284c;
-}
-
-.dre-detail-map__open {
-    font-size: 14px;
-    font-weight: 700;
-    color: #2d57b6;
-    text-decoration: none;
-}
-
-.dre-detail-map__open:hover {
-    text-decoration: underline;
-}
-
-.dre-detail-map__surface {
-    position: relative;
-    border-radius: 20px;
-    overflow: hidden;
-    border: 1px solid #e4ebf5;
-    background: #f1f5fb;
-}
-
-.dre-detail-map__canvas {
-    height: min(420px, 55vh);
-    width: 100%;
-    z-index: 1;
-}
-
-.dre-detail-map__filters {
-    position: absolute;
-    left: 50%;
-    bottom: 16px;
-    transform: translateX(-50%);
-    z-index: 400;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 6px;
-    padding: 8px 10px;
-    background: rgba(255, 255, 255, 0.96);
-    border-radius: 999px;
-    box-shadow: 0 8px 28px rgba(15, 35, 70, 0.12);
-    border: 1px solid #e8edf5;
-    max-width: calc(100% - 24px);
-}
-
-.dre-detail-map__filter {
-    border: none;
-    background: transparent;
-    padding: 8px 14px;
-    border-radius: 999px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #10233f;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: background 0.15s ease, color 0.15s ease;
-}
-
-.dre-detail-map__filter:hover {
-    background: #f1f5fb;
-}
-
-.dre-detail-map__filter.is-active {
-    background: #2a559c;
-    color: #fff;
-}
-
-.dre-detail-map__filter-count {
-    font-size: 11px;
-    opacity: 0.85;
-}
-
-.dre-detail-map__hint {
-    margin: 12px 0 0;
+    padding: 10px 18px 16px;
     font-size: 13px;
     color: #73829b;
 }
 
-:deep(.dre-map-property-marker-wrap),
-:deep(.dre-poi-marker-wrap) {
+.property-detail-map-card__external-map {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2a559c;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.property-detail-map-card__external-map:hover {
+    text-decoration: underline;
+}
+
+:deep(.property-detail-map-card__leaflet) {
+    width: 100%;
+    min-height: min(420px, 55vh);
+    z-index: 0;
+}
+
+:deep(.property-detail-map-card__leaflet .leaflet-container) {
+    width: 100%;
+    height: min(420px, 55vh);
+    font-family: inherit;
+}
+
+:deep(.dre-vue-map-marker-host) {
     background: transparent !important;
     border: none !important;
 }
 
-:deep(.dre-map-property-marker) {
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+:deep(.dre-map-leaflet-popup--property-card .leaflet-popup-content-wrapper) {
+    padding: 0;
+    background: transparent;
+    border: none;
+    box-shadow: none;
 }
 
-:deep(.dre-poi-marker) {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 12px;
-    font-weight: 800;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
-    border: 2px solid #fff;
+:deep(.dre-map-leaflet-popup--property-card .leaflet-popup-tip-container) {
+    display: none;
 }
 
-:deep(.dre-map-leaflet-popup .leaflet-popup-content-wrapper) {
-    border-radius: 16px;
+:deep(.dre-map-leaflet-popup--property-card .leaflet-popup-content) {
+    margin: 0;
+    width: auto !important;
+}
+
+:deep(.dre-map-leaflet-popup--poi .leaflet-popup-content-wrapper) {
+    border-radius: 12px;
     padding: 0;
     overflow: hidden;
-    box-shadow: 0 12px 40px rgba(15, 35, 70, 0.18);
-}
-
-:deep(.dre-map-leaflet-popup .leaflet-popup-content) {
-    margin: 0;
-    min-width: 0;
-}
-
-:deep(.dre-map-leaflet-popup--property .leaflet-popup-content) {
-    padding: 0;
+    box-shadow: 0 10px 28px rgba(15, 35, 70, 0.16);
 }
 
 :deep(.dre-map-leaflet-popup--poi .leaflet-popup-content) {
+    margin: 0;
     padding: 12px 14px;
     font-size: 14px;
     line-height: 1.45;
     color: #10233f;
 }
-</style>
 
-<style>
-.dre-map-infobox {
+.property-detail-map-card__popup-inner {
     position: relative;
-    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 36px 12px 12px;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #e8ecf0;
+    box-shadow: 0 8px 28px rgba(10, 20, 40, 0.12);
     min-width: 240px;
     max-width: 300px;
 }
 
-.dre-map-infobox__close {
+.property-detail-map-card__popup-inner .property-detail-map-card__popup-close {
     position: absolute;
-    top: 8px;
-    right: 10px;
+    top: 6px;
+    right: 6px;
     border: none;
     background: transparent;
     font-size: 22px;
@@ -508,55 +489,16 @@ function setCategory(key) {
     cursor: pointer;
     padding: 4px;
     z-index: 2;
+    border-radius: 6px;
 }
 
-.dre-map-infobox__close:hover {
+.property-detail-map-card__popup-inner .property-detail-map-card__popup-close:hover {
     color: #334155;
+    background: #f4f6f9;
 }
+</style>
 
-.dre-map-infobox__row {
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
-    padding-right: 18px;
-}
-
-.dre-map-infobox__thumb {
-    width: 72px;
-    height: 72px;
-    border-radius: 12px;
-    overflow: hidden;
-    flex-shrink: 0;
-    background: #eef2f7;
-}
-
-.dre-map-infobox__thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.dre-map-infobox__title {
-    font-weight: 800;
-    font-size: 15px;
-    color: #10233f;
-    line-height: 1.25;
-    margin-bottom: 4px;
-}
-
-.dre-map-infobox__price {
-    font-weight: 700;
-    font-size: 15px;
-    color: #2a559c;
-    margin-bottom: 4px;
-}
-
-.dre-map-infobox__meta {
-    font-size: 12px;
-    color: #64748b;
-}
-
+<style>
 .dre-map-poi-popup__addr {
     margin-top: 6px;
     font-size: 13px;

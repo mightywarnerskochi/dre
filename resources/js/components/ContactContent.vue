@@ -27,10 +27,10 @@
         <div class="container-ctn">
             <div class="d-flex flex-wrap justify-content-between">
                 <div class=" contact-form__left">
-                    <h2 class="contact-form__heading" id="contact-form-heading">Get in Touch</h2>
+                    <h2 class="contact-form__heading" id="contact-form-heading">{{ contactSection.title }}</h2>
                     <div class="form-wrapper">
-                        <h3 id="information-request-heading">Information Request</h3>
-                        <p id="information-request-desc">Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text</p>
+                        <h3 id="information-request-heading">{{ contactSection.subTitle }}</h3>
+                        <p id="information-request-desc">{{ contactSection.content }}</p>
                         <form class="information-request-form" action="" method="post" aria-labelledby="information-request-heading" aria-describedby="information-request-desc">
                             <div class="d-flex flex-wrap justify-content-between">
                                 <div class="col--6">
@@ -123,5 +123,11 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
+import { getContactSectionData } from '@/utils/publicContent';
+
+const { locale } = useI18n({ useScope: 'global' });
+const contactSection = computed(() => getContactSectionData(locale.value));
 </script>

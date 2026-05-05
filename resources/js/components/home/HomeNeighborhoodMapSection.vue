@@ -84,12 +84,12 @@ function initNeighborhoodMap() {
     neighborhoodMap.value = L.map(neighborhoodMapEl.value, {
         zoomControl: true,
         scrollWheelZoom: false,
+        attributionControl: false,
     });
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         maxZoom: 19,
         subdomains: 'abcd',
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
     }).addTo(neighborhoodMap.value);
 
     neighborhoodMarkerLayer.value = L.layerGroup().addTo(neighborhoodMap.value);

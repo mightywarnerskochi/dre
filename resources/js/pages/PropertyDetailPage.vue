@@ -1,12 +1,15 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import DrePageHero from '../components/layout/DrePageHero.vue';
 import MortgageCalculator from '../components/properties/MortgageCalculator.vue';
 import PropertyDetailMap from '../components/properties/PropertyDetailMap.vue';
 import Footer from '../components/Footer.vue';
 import Header from '../components/Header.vue';
 import {
+    DRE_AGENT_PLACEHOLDER_IMAGE,
     dreNormalizePropertyImages,
+    dreOnAgentImgError,
     dreOnPropertyImgError,
     DRE_PROPERTY_PLACEHOLDER_IMAGE,
 } from '../utils/propertyImages';
@@ -16,6 +19,7 @@ const props = defineProps({
     propertyId: { type: [Number, String], required: true },
 });
 
+const { locale } = useI18n({ useScope: 'global' });
 const d = props.pageData;
 const property = ref(null);
 const similar = ref([]);
@@ -176,7 +180,9 @@ async function fetchProperty() {
     loading.value = true;
 
     try {
-        const response = await window.axios.get(`/api/properties/${props.propertyId}`);
+        const response = await window.axios.get(`/api/properties/${props.propertyId}`, {
+            params: { lang: locale.value || 'en' },
+        });
         property.value = response.data.property;
         similar.value = response.data.similar || [];
     } catch (error) {
@@ -205,7 +211,7 @@ function setHeroImage(img, index) {
 
 function formatNumber(num) {
     const value = Number(num || 0);
-    return new Intl.NumberFormat('en-AE').format(value);
+    return new Intl.NumberFormat(locale.value === 'ar' ? 'ar-AE' : 'en-AE').format(value);
 }
 
 function formatPrice(num) {
@@ -226,6 +232,10 @@ function similarImage(item) {
 }
 
 onMounted(() => {
+    fetchProperty();
+});
+
+watch(locale, () => {
     fetchProperty();
 });
 </script>
@@ -391,6 +401,7 @@ onMounted(() => {
                             :lng="Number(property.longitude)"
                             :title="property.title"
                             :price-display="mapPopupPriceDisplay"
+                            :beds="Number(property.beds || property.bedrooms || 0)"
                             :baths="Number(property.baths || property.bathrooms || 0)"
                             :sqft="Number(property.sqft || 0)"
                             :thumb="galleryImages[0] || DRE_PROPERTY_PLACEHOLDER_IMAGE"
@@ -405,10 +416,10 @@ onMounted(() => {
                             <div class="dre-sidebar-card__head">
                                 <div class="dre-agent-avatar">
                                     <img
-                                        v-if="property.agent?.image"
-                                        :src="property.agent.image"
+                                        v-if="property.agent"
+                                        :src="property.agent.image || DRE_AGENT_PLACEHOLDER_IMAGE"
                                         :alt="property.agent?.name || 'Agent'"
-                                        @error="dreOnPropertyImgError"
+                                        @error="dreOnAgentImgError"
                                     >
                                     <span v-else>{{ agentInitials }}</span>
                                 </div>
@@ -417,6 +428,17 @@ onMounted(() => {
                                     <h3>{{ property.agent?.name || 'Sales Team' }}</h3>
                                     <p class="dre-sidebar-card__role">{{ property.agent?.designation || 'Property Consultant' }}</p>
                                 </div>
+                            </div>
+
+                            <div v-if="property.agent?.experience || property.agent?.languages" class="dre-agent-meta">
+                                <p v-if="property.agent?.experience">
+                                    <strong>Experience :</strong>
+                                    <span>{{ property.agent.experience }}</span>
+                                </p>
+                                <p v-if="property.agent?.languages">
+                                    <strong>Languages :</strong>
+                                    <span>{{ property.agent.languages }}</span>
+                                </p>
                             </div>
 
                             <div class="dre-contact-actions">
@@ -436,9 +458,15 @@ onMounted(() => {
                         <a href="/properties">View All</a>
                     </div>
                     <div class="dre-similar__grid">
-                        <article v-for="p in similar" :key="p.id" class="property-card">
+                        <article
+                            v-for="p in similar"
+                            :key="p.id"
+                            class="property-card"
+                            :data-property-url="similarUrl(p) !== '#' ? similarUrl(p) : null"
+                        >
                             <div class="property-card__inner">
                                 <div class="property-card__media">
+                                    <span v-if="p.isFeatured || p.is_featured" class="property-card__badge">Featured</span>
                                     <img :src="similarImage(p)" :alt="p.title || 'Property'" @error="dreOnPropertyImgError">
                                 </div>
                                 <div class="property-card__body">
@@ -880,6 +908,31 @@ onMounted(() => {
     margin: 2px 0 4px;
     font-size: 22px;
     color: #12284c;
+}
+
+.dre-agent-meta {
+    margin: 0 0 18px;
+    padding: 14px 0 16px;
+    border-top: 1px solid #e6edf7;
+    border-bottom: 1px solid #e6edf7;
+    color: #21344f;
+    font-size: 15px;
+}
+
+.dre-agent-meta p {
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    line-height: 1.6;
+}
+
+.dre-agent-meta p + p {
+    margin-top: 4px;
+}
+
+.dre-agent-meta strong {
+    color: #10233f;
 }
 
 .dre-contact-actions {

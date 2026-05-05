@@ -27,6 +27,7 @@ class Agent extends Model
         'image_alt',
         'designation',
         'experience',
+        'languages',
         'description',
         'translations',
         'status',

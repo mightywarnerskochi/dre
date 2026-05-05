@@ -21,6 +21,7 @@ class PropertyDetail extends Model
         'description',
         'year_built',
         'security_deposit',
+        'virtual_tour_url',
         'direct_from_owner',
         'easy_to_access',
         'key_features',

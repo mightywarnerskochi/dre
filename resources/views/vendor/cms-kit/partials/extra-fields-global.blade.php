@@ -13,7 +13,7 @@
     }
 
     $globalFields = collect($extraFields)
-        ->filter(fn($field) => !($field['translatable'] ?? false));
+        ->filter(fn($field) => !($field['translatable'] ?? false) && (($field['section'] ?? null) !== 'visual_assets'));
 @endphp
 
 @if($globalFields->count())

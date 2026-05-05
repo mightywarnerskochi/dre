@@ -37,6 +37,7 @@
                         <th style="width: 80px;">Image</th>
                         <th>Name</th>
                         <th>Designation</th>
+                        <th>Languages</th>
                         <th>Phone</th>
                         <th style="width: 100px;" class="text-center">Status</th>
                         <th style="width: 100px;" class="text-end">Actions</th>
@@ -65,6 +66,7 @@ $(function () {
             {data:'image', orderable:false, searchable:false},
             {data:'name', name:'name'},
             {data:'designation', name:'designation'},
+            {data:'languages', name:'languages'},
             {data:'phone', name:'phone'},
             {data:'status', orderable:false, searchable:false, className:'text-center'},
             {data:'action', orderable:false, searchable:false, className:'text-end'}

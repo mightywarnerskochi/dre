@@ -14,6 +14,7 @@ return new class extends Migration
             $table->longText('description')->nullable();
             $table->unsignedSmallInteger('year_built')->nullable();
             $table->decimal('security_deposit', 15, 2)->nullable();
+            $table->string('virtual_tour_url', 2048)->nullable();
             $table->string('direct_from_owner')->nullable();
             $table->json('easy_to_access')->nullable();
             $table->json('key_features')->nullable();

@@ -11,6 +11,8 @@
         $siteInfoRequired = $siteInfoConfig['required'] ?? [];
         $showLanguageUi = config('cms-kit.common.modules.languages', true);
         $siteInfoExtraFields = config('cms-kit.database.site-information.extra_fields', []);
+        $colourLogoConfig = $siteInfoExtraFields['colour_logo'] ?? null;
+        $colourLogoPath = data_get($siteInfo->extra_fields, 'colour_logo');
         $hasTranslatableExtraFields = collect($siteInfoExtraFields)->contains(fn($field) => $field['translatable'] ?? false);
         $translations = $siteInfo->translations ?? [];
         $socialFields = [
@@ -271,6 +273,26 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                             @endif
+                        </div>
+                        @endif
+
+                        @if($colourLogoConfig)
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">{{ $colourLogoConfig['label'] ?? 'Colour Logo' }}</label>
+                            <small class="text-muted d-block mb-1">{{ $colourLogoConfig['helpText'] ?? 'Recommended size: 200x60px (PNG/SVG). Stored as colour-logo.' }}</small>
+                            @if($colourLogoPath)
+                            <div class="mb-2">
+                                <img src="{{ media_url($colourLogoPath) }}" class="img-thumbnail rounded" style="max-height: 80px;">
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="remove_colour_logo" id="removeSiteColourLogo" value="1" {{ old('remove_colour_logo') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="removeSiteColourLogo">Remove current colour logo</label>
+                            </div>
+                            @endif
+                            <input type="file" name="extra_fields[colour_logo]" class="form-control @error('extra_fields.colour_logo') is-invalid @enderror" accept="image/*,.svg">
+                            @error('extra_fields.colour_logo')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
                         </div>
                         @endif
 

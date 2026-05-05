@@ -36,6 +36,24 @@ export function getPublicContentBoot() {
     return raw;
 }
 
+export function getContactSectionData(locale) {
+    const root = getPublicContentBoot();
+    const block = root.contactSection;
+    if (!block || typeof block !== 'object') {
+        return {
+            title: 'Get in Touch',
+            subTitle: 'Information Request',
+            content: "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
+        };
+    }
+
+    return {
+        title: pickLocalized(block.title, locale) || 'Get in Touch',
+        subTitle: pickLocalized(block.subTitle, locale) || 'Information Request',
+        content: pickLocalized(block.content, locale) || "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
+    };
+}
+
 export function getNewsInsightsData(locale) {
     const root = getPublicContentBoot();
     const block = root.newsInsights;
@@ -92,14 +110,21 @@ export function getHomeRentalSectionData(locale) {
         displayHome: block.displayHome !== false,
         properties: items.map((item) => ({
             id: item.id,
-            title: item.title || '',
-            location: item.location || '',
+            title: pickLocalized(item.title, locale),
+            location: pickLocalized(item.location, locale),
             price: Number(item.price || 0),
             period: item.period || '',
             beds: Number(item.beds || 0),
             baths: Number(item.baths || 0),
             sqft: Number(item.sqft || 0),
             images: normalizeImages(item.images),
+            imageCount: Number(item.imageCount || 0),
+            isFeatured: Boolean(item.isFeatured || item.is_featured),
+            virtualTourUrl: item.virtualTourUrl || null,
+            propertyTypeLabel: pickLocalized(item.propertyTypeLabel, locale),
+            listingTypeLabel: pickLocalized(item.listingTypeLabel, locale),
+            categoryLabel: pickLocalized(item.categoryLabel, locale),
+            slug: typeof item.slug === 'string' ? item.slug : '',
             url: item.url || null,
             phone: item.phone || '#',
             whatsapp: item.whatsapp || '#',
@@ -151,6 +176,7 @@ export function getInsightsListingData(locale) {
     return {
         eyebrow: pickLocalized(section.description, locale),
         title: pickLocalized(section.title, locale),
+        listingTitle: pickLocalized(section.listingTitle, locale),
         items: list.map((item) => ({
             type: pickLocalized(item.type, locale),
             id: item.id,
@@ -282,4 +308,3 @@ export function getAboutPageData(locale) {
         },
     };
 }
-

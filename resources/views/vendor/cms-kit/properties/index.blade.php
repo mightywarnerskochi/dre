@@ -121,7 +121,9 @@
                         <th style="width: 40px;">#</th>
                         <th>Listing</th>
                         <th>Type</th>
+                        <th>Category</th>
                         <th>Price</th>
+                        <th style="width: 110px;">Featured</th>
                         <th style="width: 100px;">Order</th>
                         <th style="width: 100px;" class="text-center">Status</th>
                         <th style="width: 100px;" class="text-end">Actions</th>
@@ -149,7 +151,9 @@ $(function () {
             {data:'DT_RowIndex', orderable:false, searchable:false},
             {data:'property', name:'title', orderable:false, searchable:true},
             {data:'type', name:'property_type', orderable:false, searchable:false},
+            {data:'category_label', name:'category', orderable:false, searchable:false},
             {data:'price_label', name:'price', orderable:false, searchable:true},
+            {data:'featured', name:'is_featured', orderable:false, searchable:false},
             {data:'order_input', orderable:false, searchable:false},
             {data:'status', orderable:false, searchable:false, className:'text-center'},
             {data:'action', orderable:false, searchable:false, className:'text-end'}

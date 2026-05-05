@@ -73,7 +73,7 @@ const { locale } = useI18n({ useScope: 'global' });
 const dummyImage = asset('public/images/news/blog-placeholder-new.png');
 
 const data = computed(() => getInsightsListingData(locale.value));
-const heading = computed(() => data.value.eyebrow || 'Insights');
+const heading = computed(() => data.value.listingTitle || data.value.title || 'Insights');
 const insightsItems = computed(() => data.value.items);
 
 function formatDate(raw) {

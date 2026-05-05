@@ -1434,9 +1434,6 @@ header.scrolled {
   padding-bottom: 15px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
-header.scrolled .brand img {
-  filter: invert(1);
-}
 header.scrolled .navbar-toggler svg path {
   stroke: #2F3F58;
 }
@@ -1459,9 +1456,6 @@ header.header-white {
     -webkit-backdrop-filter: none;
     box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
   }
-}
-header.header-white .brand img {
-  filter: invert(1);
 }
 header.header-white .navbar-toggler svg path {
   stroke: #2F3F58;
@@ -5788,7 +5782,7 @@ html[dir=rtl] .modal-content .btn-close {
   align-items: stretch;
   border-top: 1px solid #E6E9F2;
   border-bottom: 1px solid #E6E9F2;
-  margin-top: auto;
+  margin-top: 0;
 }
 
 .property-details__item {
@@ -6768,6 +6762,7 @@ html[dir=rtl] .modal-content .btn-close {
     max-width: 95%;
   }
 }
+
 @media (max-width: 767px) {
   .insights-details-page .banner.banner--page.banner--page--listing {
     padding-top: 122px;
@@ -6776,7 +6771,6 @@ html[dir=rtl] .modal-content .btn-close {
     align-items: flex-start;
   }
 }
-
 .breadcrumb-minimal {
   display: inline-flex;
   align-items: center;
@@ -7615,7 +7609,8 @@ html[dir=rtl] .breadcrumb-minimal {
   align-items: center;
   justify-content: space-between;
   gap: clamp(7px, 1vw, 12px);
-  margin-top: clamp(12px, 2vw, 20px);
+  margin-top: auto;
+  padding-top: clamp(12px, 2vw, 20px);
 }
 .property-card--listing .property-card__agent {
   display: flex;
@@ -8186,6 +8181,26 @@ html[dir=rtl] .breadcrumb-minimal {
   color: #2F3F58;
   font-size: clamp(14px, 1.266vw, 18px);
 }
+.property-detail-agent__meta {
+  margin: 0;
+  padding: 0 0 10px;
+  color: #2F3F58;
+  font-size: clamp(14px, 1.266vw, 18px);
+  line-height: 1.45;
+}
+.property-detail-agent__meta p {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.property-detail-agent__meta p + p {
+  margin-top: 4px;
+}
+.property-detail-agent__meta strong {
+  font-weight: 600;
+  color: #0f2f63;
+}
 .property-detail-agent__actions {
   display: flex;
   flex-direction: column;
@@ -8315,6 +8330,10 @@ html[dir=rtl] .breadcrumb-minimal {
   flex-wrap: wrap;
   align-items: flex-start;
   padding-top: clamp(8px, 2vw, 24px);
+  gap: 0 clamp(24px, 3vw, 40px);
+}
+.property-detail-body--no-map .property-detail-body__main._left_col {
+  width: 100%;
 }
 .property-detail-body__main._left_col {
   min-width: 0;
@@ -8342,6 +8361,36 @@ html[dir=rtl] .breadcrumb-minimal {
     flex-shrink: 1;
     width: 100%;
   }
+}
+
+.property-detail-map-fallback {
+  border-radius: 12px;
+  border: 1px solid #e1e6ed;
+  background: #f8fafc;
+  padding: clamp(20px, 2.5vw, 28px);
+}
+.property-detail-map-fallback__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 10px;
+  color: #0A1119;
+}
+.property-detail-map-fallback__text {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: #5c6778;
+}
+.property-detail-map-fallback__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #2A559C;
+  text-decoration: none;
+}
+.property-detail-map-fallback__link:hover {
+  text-decoration: underline;
 }
 
 .property-detail-section {
@@ -9073,6 +9122,28 @@ html[dir=rtl] .breadcrumb-minimal {
 }
 .property-detail-similar__slider-outer {
   position: relative;
+}
+.property-detail-similar .js-property-detail-similar-slider:not(.slick-initialized) {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: clamp(16px, 2vw, 28px);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -10px;
+  padding-bottom: 8px;
+  scroll-snap-type: x proximity;
+}
+.property-detail-similar .js-property-detail-similar-slider:not(.slick-initialized) .property-detail-similar__slide {
+  flex: 0 0 clamp(260px, 78vw, 360px);
+  max-width: 100%;
+  margin-right: 0;
+  scroll-snap-align: start;
+}
+.property-detail-similar .js-property-detail-similar-slider:not(.slick-initialized) .property-card--listing {
+  height: auto;
+}
+.property-detail-similar .js-property-detail-similar-slider:not(.slick-initialized) .property-card__ghost {
+  display: none;
 }
 .property-detail-similar__controls {
   margin-top: clamp(20px, 3vw, 32px);

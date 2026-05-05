@@ -208,6 +208,12 @@
                     </a>
                     @endif
 
+                    @if($cmsUser->can('site-information.view'))
+                    <a class="nav-link @if(Route::is('cms.contact-section.*')) active @endif" href="{{ route('cms.contact-section.edit') }}">
+                        <i class="fas fa-address-card"></i> Contact Us
+                    </a>
+                    @endif
+
 
                     @if(config('cms-kit.common.modules.enquiries', true) && $cmsUser->can('enquiries.view'))
                     <div class="nav-item sidebar-group">

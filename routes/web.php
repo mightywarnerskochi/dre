@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CmsKit\AboutController;
 use App\Http\Controllers\CmsKit\AgentController;
+use App\Http\Controllers\CmsKit\ContactSectionController;
 use App\Http\Controllers\CmsKit\HomeBannerFiltersController;
 use App\Http\Controllers\CmsKit\MissionVisionController;
 use App\Http\Controllers\CmsKit\NearbyPlaceController;
@@ -132,6 +133,14 @@ Route::middleware(['web'])->group(function () {
             }
         });
 
+        Route::middleware(['cms.permission:site-information.view'])->group(function () {
+            Route::get('/contact-section', [ContactSectionController::class, 'edit'])
+                ->name('cms.contact-section.edit');
+            Route::put('/contact-section', [ContactSectionController::class, 'update'])
+                ->name('cms.contact-section.update')
+                ->middleware('cms.permission:site-information.edit');
+        });
+
         Route::middleware(['cms.permission:nearby-places.view'])->group(function () {
             if (config('cms-kit.common.modules.nearby-places', true)) {
                 Route::get('/nearby-places', [NearbyPlaceController::class, 'index'])->name('cms.nearby-places.index');
@@ -178,6 +187,7 @@ Route::get('/{any?}', function () {
                 'insights' => PublicContentViewData::insightsForSpa(),
                 'homeAbout' => PublicContentViewData::homeAboutForSpa(),
                 'aboutPage' => PublicContentViewData::aboutPageForSpa(),
+                'contactSection' => PublicContentViewData::contactSectionForSpa(),
             ],
         ])
         ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')

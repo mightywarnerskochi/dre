@@ -11,6 +11,7 @@ use App\Models\CmsKit\SectionLabel;
 use App\Models\CmsKit\SuccessfulJourney;
 use App\Models\CmsKit\WhyChooseUs;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 
 class PublicContentViewData
 {
@@ -47,41 +48,57 @@ class PublicContentViewData
         }
 
         $rows = Property::query()
-            ->with(['agent', 'translations'])
+            ->with(['agent', 'translations', 'details'])
             ->where('status', true)
             ->ordered()
             ->take(12)
             ->get();
 
         $items = $rows->map(function (Property $property) {
-            $images = collect($property->images ?? [])
+            $allImageUrls = collect($property->images ?? [])
                 ->map(fn ($image) => media_url((string) ($image->image ?? '')))
                 ->filter(fn ($url) => filled($url))
-                ->take(3)
-                ->values()
-                ->all();
+                ->values();
+
+            $imageCount = $allImageUrls->count();
+            $images = $allImageUrls->take(3)->all();
 
             if ($images === []) {
                 $images = [dre_property_placeholder_image()];
             }
 
-            $location = collect([$property->community, $property->city, $property->country])
-                ->filter(fn ($value) => filled($value))
-                ->implode(', ');
-
             $agentPhone = trim((string) ($property->agent?->phone ?? ''));
             $whatsApp = trim((string) ($property->agent?->whatsapp_number ?? ''));
+            $virtualTour = trim((string) ($property->details?->virtual_tour_url ?? ''));
+            $labels = self::rentalPropertyClassificationLabels(
+                (string) ($property->property_type ?? ''),
+                (string) ($property->listing_type ?? ''),
+                (string) ($property->category ?? ''),
+            );
 
             return [
                 'id' => (int) $property->id,
-                'title' => $property->getTranslation('title') ?: ($property->title ?: 'Property'),
-                'location' => $location !== '' ? $location : 'United Arab Emirates',
+                'title' => [
+                    'en' => $property->getTranslation('title', 'en') ?: ($property->title ?: 'Property'),
+                    'ar' => $property->getTranslation('title', 'ar') ?: ($property->getTranslation('title', 'en') ?: ($property->title ?: 'Property')),
+                ],
+                'location' => [
+                    'en' => self::propertyLocationForLocale($property, 'en'),
+                    'ar' => self::propertyLocationForLocale($property, 'ar'),
+                ],
                 'price' => (float) ($property->price ?? 0),
                 'period' => $property->listing_type === 'rent' ? ' / yr' : '',
                 'beds' => (int) ($property->bedrooms ?? 0),
                 'baths' => (int) ($property->bathrooms ?? 0),
                 'sqft' => (int) ($property->sqft ?? 0),
                 'images' => $images,
+                'imageCount' => $imageCount,
+                'isFeatured' => (bool) $property->is_featured,
+                'virtualTourUrl' => $virtualTour !== '' ? $virtualTour : null,
+                'propertyTypeLabel' => $labels['propertyType'],
+                'listingTypeLabel' => $labels['listingType'],
+                'categoryLabel' => $labels['category'],
+                'slug' => (string) ($property->slug ?? ''),
                 'url' => filled($property->slug) ? '/property-details/'.$property->slug : null,
                 'phone' => $agentPhone !== '' ? 'tel:'.preg_replace('/\s+/', '', $agentPhone) : '#',
                 'whatsapp' => $whatsApp !== '' ? 'https://wa.me/'.preg_replace('/\D+/', '', $whatsApp) : '#',
@@ -95,6 +112,136 @@ class PublicContentViewData
             'displayHome' => $displayHome,
             'properties' => $items,
         ];
+    }
+
+    private static function propertyLocationForLocale(Property $property, string $locale): string
+    {
+        $location = collect([
+            $property->getTranslation('city', $locale) ?: $property->city,
+            $property->getTranslation('country', $locale) ?: $property->country,
+        ])
+            ->filter(fn ($value) => filled($value))
+            ->implode(', ');
+
+        if ($location !== '') {
+            return $location;
+        }
+
+        return trim((string) ($property->getTranslation('address', $locale) ?: $property->address ?: 'United Arab Emirates'));
+    }
+
+    public static function contactSectionForSpa(): array
+    {
+        $fallback = [
+            'title' => ['en' => 'Get in Touch', 'ar' => 'Get in Touch'],
+            'subTitle' => ['en' => 'Information Request', 'ar' => 'Information Request'],
+            'content' => [
+                'en' => "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
+                'ar' => "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text",
+            ],
+        ];
+
+        $section = Schema::hasTable('section_labels')
+            ? SectionLabel::query()->where('section_key', 'contact')->first()
+            : null;
+        $translations = is_array($section?->translations) ? $section->translations : [];
+
+        $value = static function (string $lang, string $field, string $fallbackValue) use ($translations): string {
+            $raw = trim((string) data_get($translations, "{$lang}.{$field}"));
+
+            return $raw !== '' ? $raw : $fallbackValue;
+        };
+
+        return [
+            'title' => [
+                'en' => $value('en', 'title', $fallback['title']['en']),
+                'ar' => $value('ar', 'title', $fallback['title']['ar']),
+            ],
+            'subTitle' => [
+                'en' => $value('en', 'sub_title', $fallback['subTitle']['en']),
+                'ar' => $value('ar', 'sub_title', $fallback['subTitle']['ar']),
+            ],
+            'content' => [
+                'en' => $value('en', 'content', $fallback['content']['en']),
+                'ar' => $value('ar', 'content', $fallback['content']['ar']),
+            ],
+        ];
+    }
+
+    /**
+     * Localized labels for home rental cards (matches CMS property / listing type config).
+     *
+     * @return array{propertyType: array{en: string, ar: string}, listingType: array{en: string, ar: string}}
+     */
+    private static function rentalPropertyClassificationLabels(string $propertyType, string $listingType, string $category = ''): array
+    {
+        $propertyTypes = config('cms-kit.database.properties.property_types', []);
+        $listingTypes = config('cms-kit.database.properties.listing_types', []);
+        $categories = config('cms-kit.database.properties.categories', []);
+
+        $ptKey = trim($propertyType);
+        $propertyTypeEn = '';
+        $propertyTypeAr = '';
+        if ($ptKey !== '') {
+            $opt = $propertyTypes[$ptKey] ?? null;
+            if (is_array($opt)) {
+                $propertyTypeEn = trim((string) ($opt['en'] ?? '')) ?: Str::headline(str_replace(['-', '_'], ' ', $ptKey));
+                $propertyTypeAr = trim((string) ($opt['ar'] ?? '')) ?: $propertyTypeEn;
+            } elseif (is_string($opt) && trim($opt) !== '') {
+                $t = trim($opt);
+                $propertyTypeEn = $t;
+                $propertyTypeAr = $t;
+            } else {
+                $propertyTypeEn = Str::headline(str_replace(['-', '_'], ' ', $ptKey));
+                $propertyTypeAr = $propertyTypeEn;
+            }
+        }
+
+        $ltKey = trim($listingType);
+        $listingTypeEn = '';
+        $listingTypeAr = '';
+        if ($ltKey !== '') {
+            $opt = $listingTypes[$ltKey] ?? null;
+            if (is_array($opt)) {
+                $listingTypeEn = trim((string) ($opt['en'] ?? '')) ?: Str::headline(str_replace(['-', '_'], ' ', $ltKey));
+                $listingTypeAr = trim((string) ($opt['ar'] ?? '')) ?: $listingTypeEn;
+            } elseif (is_string($opt) && trim($opt) !== '') {
+                $t = trim($opt);
+                $listingTypeEn = $t;
+                $listingTypeAr = $t;
+            } else {
+                $listingTypeEn = Str::headline(str_replace(['-', '_'], ' ', $ltKey));
+                $listingTypeAr = $listingTypeEn;
+            }
+        }
+
+        return [
+            'propertyType' => ['en' => $propertyTypeEn, 'ar' => $propertyTypeAr],
+            'listingType' => ['en' => $listingTypeEn, 'ar' => $listingTypeAr],
+            'category' => self::localizedOptionLabel($categories, $category),
+        ];
+    }
+
+    private static function localizedOptionLabel(array $options, string $key): array
+    {
+        $key = trim($key);
+        if ($key === '') {
+            return ['en' => '', 'ar' => ''];
+        }
+
+        $option = $options[$key] ?? null;
+        if (is_array($option)) {
+            $en = trim((string) ($option['en'] ?? '')) ?: Str::headline(str_replace(['-', '_'], ' ', $key));
+            $ar = trim((string) ($option['ar'] ?? '')) ?: $en;
+
+            return ['en' => $en, 'ar' => $ar];
+        }
+
+        $label = is_string($option) && trim($option) !== ''
+            ? trim($option)
+            : Str::headline(str_replace(['-', '_'], ' ', $key));
+
+        return ['en' => $label, 'ar' => $label];
     }
 
     public static function homeAboutForSpa(): array
@@ -228,7 +375,7 @@ class PublicContentViewData
             'hero' => [
                 'title' => ['en' => 'About Us', 'ar' => 'من نحن'],
                 'breadcrumb' => ['en' => 'About Us', 'ar' => 'من نحن'],
-                'backgroundImage' => asset('public/images/inner-banner.jpg'),
+                'backgroundImage' => asset('images/inner-banner.jpg'),
             ],
             'intro' => [
                 'eyebrow' => ['en' => 'About Us', 'ar' => 'من نحن'],
@@ -436,7 +583,8 @@ class PublicContentViewData
     private static function sectionData(): array
     {
         $fallback = [
-            'title' => ['en' => 'Browse Our Latest News & Articles', 'ar' => 'تصفح أحدث الأخبار والمقالات'],
+            'listingTitle' => ['en' => 'Insights', 'ar' => 'Insights'],
+            'title' => ['en' => 'News & Insights', 'ar' => 'الأخبار والرؤى'],
             'description' => ['en' => 'News & Insights', 'ar' => 'الأخبار والرؤى'],
         ];
 
@@ -452,6 +600,8 @@ class PublicContentViewData
         $translations = is_array($section->translations) ? $section->translations : [];
         $titleEn = trim((string) ($translations['en']['title'] ?? ''));
         $titleAr = trim((string) ($translations['ar']['title'] ?? ''));
+        $listingTitleEn = trim((string) ($translations['en']['listing_title'] ?? ''));
+        $listingTitleAr = trim((string) ($translations['ar']['listing_title'] ?? ''));
         $descEn = trim((string) ($translations['en']['description'] ?? ''));
         $descAr = trim((string) ($translations['ar']['description'] ?? ''));
 
@@ -459,6 +609,10 @@ class PublicContentViewData
             'title' => [
                 'en' => $titleEn !== '' ? $titleEn : $fallback['title']['en'],
                 'ar' => $titleAr !== '' ? $titleAr : $fallback['title']['ar'],
+            ],
+            'listingTitle' => [
+                'en' => $listingTitleEn !== '' ? $listingTitleEn : ($titleEn !== '' ? $titleEn : $fallback['listingTitle']['en']),
+                'ar' => $listingTitleAr !== '' ? $listingTitleAr : ($titleAr !== '' ? $titleAr : $fallback['listingTitle']['ar']),
             ],
             'description' => [
                 'en' => $descEn !== '' ? $descEn : $fallback['description']['en'],
@@ -589,4 +743,3 @@ class PublicContentViewData
             ->all();
     }
 }
-

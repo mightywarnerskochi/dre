@@ -10,11 +10,14 @@
     $classificationValues = [
         'property_type' => old('property_type', $item->property_type ?? ''),
         'listing_type' => old('listing_type', $item->listing_type ?? ''),
+        'category' => old('category', $item->category ?? ''),
         'source_type' => old('source_type', $item->source_type ?? 'manual'),
     ];
     $customPropertyTypeValue = old('custom_property_type', '');
+    $customCategoryValue = old('custom_category', '');
     $propertyTypeOptionsByLanguage = [];
     $listingTypeOptionsByLanguage = [];
+    $categoryOptionsByLanguage = [];
     $sourceTypeOptionsByLanguage = [];
     $placeTypeSidebarLabels = [];
 
@@ -25,6 +28,15 @@
     ) {
         $customPropertyTypeValue = $customPropertyTypeValue !== '' ? $customPropertyTypeValue : $classificationValues['property_type'];
         $classificationValues['property_type'] = 'custom';
+    }
+
+    if (
+        $classificationValues['category'] !== ''
+        && !array_key_exists($classificationValues['category'], $categories)
+        && $classificationValues['category'] !== 'custom'
+    ) {
+        $customCategoryValue = $customCategoryValue !== '' ? $customCategoryValue : $classificationValues['category'];
+        $classificationValues['category'] = 'custom';
     }
 
     foreach ($languages as $lang) {
@@ -54,6 +66,21 @@
             return [$value => ['label' => $localized !== '' ? $localized : $english, 'english' => $english]];
         })->all();
 
+        $categoryOptionsByLanguage[$lang->code] = collect($categories)->mapWithKeys(function ($labels, $value) use ($lang, $fallbackLocale) {
+            if (!is_array($labels)) {
+                $labels = [$fallbackLocale => (string) $labels];
+            }
+
+            $english = trim((string) ($labels[$fallbackLocale] ?? reset($labels) ?: ''));
+            $localized = trim((string) ($labels[$lang->code] ?? $english));
+
+            return [$value => ['label' => $localized !== '' ? $localized : $english, 'english' => $english]];
+        })->all();
+        $categoryOptionsByLanguage[$lang->code]['custom'] = [
+            'label' => $lang->code === 'ar' ? 'Ø£Ø®Ø±Ù‰ / Ù…Ø®ØµØµ' : 'Other / Custom',
+            'english' => 'Other / Custom',
+        ];
+
         $sourceTypeOptionsByLanguage[$lang->code] = collect($sourceTypes)->mapWithKeys(function ($labels, $value) use ($lang, $fallbackLocale) {
             if (!is_array($labels)) {
                 $labels = [$fallbackLocale => (string) $labels];
@@ -75,6 +102,60 @@
 
         return [$value => $localized !== '' ? $localized : $english];
     })->all();
+    $translatedSectionMeta = [
+        'easy_to_access' => ['tab' => 'access', 'title' => 'Easy Access', 'value_field' => 'label'],
+        'amenities' => ['tab' => 'amenities', 'title' => 'Amenities', 'value_field' => 'name'],
+        'property_attributes' => ['tab' => 'attributes', 'title' => 'Property Attributes', 'value_field' => 'name'],
+    ];
+    $normalizeSectionRows = function ($rows): array {
+        $rows = is_array($rows) ? $rows : [];
+
+        return array_values($rows);
+    };
+    $fallbackSectionRows = function (string $section, string $valueField) use ($translationCollection, $fallbackLocale, $details, $normalizeSectionRows): array {
+        $fallbackTranslation = $translationCollection->get($fallbackLocale);
+        $rows = $normalizeSectionRows($fallbackTranslation?->{$section} ?? []);
+
+        if ($rows === []) {
+            $rows = $normalizeSectionRows($details?->{$section} ?? []);
+        }
+
+        return $rows !== [] ? $rows : [['icon' => '', $valueField => '']];
+    };
+    $sectionRowsForLanguage = function (string $languageCode, string $section, string $valueField, $translation) use ($fallbackLocale, $details, $fallbackSectionRows, $normalizeSectionRows): array {
+        $oldRows = old("translations.{$languageCode}.{$section}");
+        if (is_array($oldRows)) {
+            return $normalizeSectionRows($oldRows);
+        }
+
+        $translatedRows = $normalizeSectionRows($translation?->{$section} ?? []);
+
+        if ($languageCode === $fallbackLocale) {
+            if ($translatedRows === []) {
+                $translatedRows = $normalizeSectionRows($details?->{$section} ?? []);
+            }
+
+            return $translatedRows !== [] ? $translatedRows : [['icon' => '', $valueField => '']];
+        }
+
+        $fallbackRows = $fallbackSectionRows($section, $valueField);
+        $rowCount = max(count($fallbackRows), count($translatedRows), 1);
+        $rows = [];
+
+        for ($index = 0; $index < $rowCount; $index++) {
+            $fallbackRow = $fallbackRows[$index] ?? [];
+            $translatedRow = $translatedRows[$index] ?? [];
+            $icon = trim((string) ($translatedRow['icon'] ?? $translatedRow['current_icon'] ?? $fallbackRow['icon'] ?? $fallbackRow['current_icon'] ?? ''));
+            $value = $translatedRow[$valueField] ?? '';
+
+            $rows[] = [
+                'icon' => $icon,
+                $valueField => is_string($value) ? $value : '',
+            ];
+        }
+
+        return $rows;
+    };
 @endphp
 
 @if($errors->any())
@@ -89,6 +170,7 @@
 
 <input type="hidden" name="property_type" id="propertyTypeMaster" value="{{ $classificationValues['property_type'] }}">
 <input type="hidden" name="listing_type" id="listingTypeMaster" value="{{ $classificationValues['listing_type'] }}">
+<input type="hidden" name="category" id="categoryMaster" value="{{ $classificationValues['category'] }}">
 <input type="hidden" name="source_type" id="sourceTypeMaster" value="{{ $classificationValues['source_type'] }}">
 
 <div class="card bg-light border-0 mb-4 property-main-tabs-card">
@@ -124,11 +206,9 @@
                         old("translations.{$lang->code}.postal_code", $translation?->postal_code ?? ($lang->code === $fallbackLocale ? $item->postal_code ?? '' : '')),
                         old("translations.{$lang->code}.country", $translation?->country ?? ($lang->code === $fallbackLocale ? $item->country ?? '' : '')),
                     ])->filter(fn ($value) => trim((string) $value) !== '')->implode(', ');
-                    $translatedSectionRows = [
-                        'easy_to_access' => old("translations.{$lang->code}.easy_to_access", ($translation?->easy_to_access && count($translation->easy_to_access)) ? $translation->easy_to_access : [['icon' => '', 'label' => '']]),
-                        'amenities' => old("translations.{$lang->code}.amenities", ($translation?->amenities && count($translation->amenities)) ? $translation->amenities : [['icon' => '', 'name' => '']]),
-                        'property_attributes' => old("translations.{$lang->code}.property_attributes", ($translation?->property_attributes && count($translation->property_attributes)) ? $translation->property_attributes : [['icon' => '', 'name' => '']]),
-                    ];
+                    $translatedSectionRows = collect($translatedSectionMeta)
+                        ->mapWithKeys(fn ($meta, $section) => [$section => $sectionRowsForLanguage($lang->code, $section, $meta['value_field'], $translation)])
+                        ->all();
                 @endphp
                 <div class="tab-pane fade {{ $lang->code === $fallbackLocale ? 'show active' : '' }}" id="property-panel-{{ $lang->code }}" role="tabpanel">
                     <div class="row g-4 property-language-tab-layout">
@@ -171,6 +251,7 @@
                                                 @foreach([
                                                     'property_type' => ['label' => 'Property Type', 'options' => $propertyTypeOptionsByLanguage[$lang->code] ?? []],
                                                     'listing_type' => ['label' => 'Listing Type', 'options' => $listingTypeOptionsByLanguage[$lang->code] ?? []],
+                                                    'category' => ['label' => 'Category', 'options' => $categoryOptionsByLanguage[$lang->code] ?? []],
                                                 ] as $field => $meta)
                                                 <div class="col-md-4">
                                                     <label class="form-label fw-bold">{{ $meta['label'] }} <span class="text-danger">*</span></label>
@@ -193,6 +274,10 @@
                                                 <div class="col-md-4 property-custom-type-wrap {{ $classificationValues['property_type'] === 'custom' ? '' : 'd-none' }}">
                                                     <label class="form-label fw-bold">Custom Property Type <span class="text-danger">*</span></label>
                                                     <input type="text" name="custom_property_type" class="form-control" value="{{ $customPropertyTypeValue }}" placeholder="Enter custom type">
+                                                </div>
+                                                <div class="col-md-4 property-custom-category-wrap {{ $classificationValues['category'] === 'custom' ? '' : 'd-none' }}">
+                                                    <label class="form-label fw-bold">Custom Category <span class="text-danger">*</span></label>
+                                                    <input type="text" name="custom_category" class="form-control" value="{{ $customCategoryValue }}" placeholder="Enter custom category">
                                                 </div>
                                                 <div class="col-12">
                                                     <label class="form-label fw-bold">Title <span class="text-danger">*</span></label>
@@ -248,13 +333,9 @@
                                     </div>
                                 </div>
 
-                                @foreach([
-                                    'easy_to_access' => ['tab' => 'access', 'title' => 'Easy Access', 'value_field' => 'label'],
-                                    'amenities' => ['tab' => 'amenities', 'title' => 'Amenities', 'value_field' => 'name'],
-                                    'property_attributes' => ['tab' => 'attributes', 'title' => 'Property Attributes', 'value_field' => 'name'],
-                                ] as $section => $meta)
+                                @foreach($translatedSectionMeta as $section => $meta)
                                     <div class="tab-pane fade property-content-section-pane" id="property-section-{{ $meta['tab'] }}-{{ $lang->code }}" role="tabpanel">
-                                        <div class="card bg-light border-0 repeater-card" data-repeater="translations[{{ $lang->code }}][{{ $section }}]">
+                                        <div class="card bg-light border-0 repeater-card" data-repeater="translations[{{ $lang->code }}][{{ $section }}]" data-lang="{{ $lang->code }}" data-section="{{ $section }}" data-value-field="{{ $meta['value_field'] }}">
                                             <div class="card-body p-4">
                                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                                     <h6 class="fw-bold mb-1">{{ $meta['title'] }}</h6>
@@ -275,7 +356,7 @@
                                                                 <input type="file" name="translations[{{ $lang->code }}][{{ $section }}][{{ $index }}][icon_file]" class="form-control section-icon-file-input" accept="image/*">
                                                             </div>
                                                             <div class="col-md-7">
-                                                                <input type="text" name="translations[{{ $lang->code }}][{{ $section }}][{{ $index }}][{{ $meta['value_field'] }}]" class="form-control" value="{{ $row[$meta['value_field']] ?? '' }}">
+                                                                <input type="text" name="translations[{{ $lang->code }}][{{ $section }}][{{ $index }}][{{ $meta['value_field'] }}]" class="form-control section-value-input" value="{{ $row[$meta['value_field']] ?? '' }}">
                                                             </div>
                                                             <div class="col-md-2">
                                                                 <button type="button" class="btn btn-outline-danger w-100 repeater-remove">Remove</button>
@@ -362,10 +443,21 @@
                                                 <label class="form-label fw-bold">Year Built</label>
                                                 <input type="number" min="1800" name="year_built" class="form-control @error('year_built') is-invalid @enderror" value="{{ old('year_built', $details?->year_built ?? '') }}">
                                             </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label fw-bold">Virtual Tour URL</label>
+                                                <input type="url" name="virtual_tour_url" class="form-control @error('virtual_tour_url') is-invalid @enderror" value="{{ old('virtual_tour_url', $details?->virtual_tour_url ?? '') }}" placeholder="https://example.com/tour">
+                                                @error('virtual_tour_url')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                            </div>
                                             <div class="col-md-4 d-flex align-items-end">
-                                                <div class="form-check form-switch mb-2">
-                                                    <input class="form-check-input" type="checkbox" name="status" id="propertyStatus" value="1" {{ old('status', $item->status ?? true) ? 'checked' : '' }}>
-                                                    <label class="form-check-label fw-bold" for="propertyStatus">Active Status</label>
+                                                <div class="d-flex flex-column gap-2 mb-2">
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" name="status" id="propertyStatus" value="1" {{ old('status', $item->status ?? true) ? 'checked' : '' }}>
+                                                        <label class="form-check-label fw-bold" for="propertyStatus">Active Status</label>
+                                                    </div>
+                                                    <div class="form-check form-switch">
+                                                        <input class="form-check-input" type="checkbox" name="is_featured" id="propertyFeatured" value="1" {{ old('is_featured', $item->is_featured ?? false) ? 'checked' : '' }}>
+                                                        <label class="form-check-label fw-bold" for="propertyFeatured">Show Featured Tag</label>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -549,7 +641,12 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 <script>
-    const propertyClassificationMasterIds = { property_type: 'propertyTypeMaster', listing_type: 'listingTypeMaster', source_type: 'sourceTypeMaster' };
+    const propertyClassificationMasterIds = {
+        property_type: 'propertyTypeMaster',
+        listing_type: 'listingTypeMaster',
+        category: 'categoryMaster',
+        source_type: 'sourceTypeMaster',
+    };
 
     // TinyMCE Init
     if (typeof tinymce !== 'undefined') {
@@ -576,10 +673,15 @@
             input.dispatchEvent(new Event('input', { bubbles: true }));
         }
         if (dropdown.dataset.masterField === 'property_type') toggleCustomPropertyType(value === 'custom');
+        if (dropdown.dataset.masterField === 'category') toggleCustomCategory(value === 'custom');
     }
 
     function toggleCustomPropertyType(show) {
         document.querySelectorAll('.property-custom-type-wrap').forEach(el => el.classList.toggle('d-none', !show));
+    }
+
+    function toggleCustomCategory(show) {
+        document.querySelectorAll('.property-custom-category-wrap').forEach(el => el.classList.toggle('d-none', !show));
     }
 
     function syncPropertyClassification(field, value, source) {
@@ -625,6 +727,80 @@
     document.querySelectorAll('.translated-address-part').forEach(i => i.addEventListener('input', function() { updateTranslatedAddressPreview(this.dataset.lang); }));
 
     // Repeater Logic
+    const fallbackLocale = @json($fallbackLocale);
+
+    function repeaterCard(lang, section) {
+        return document.querySelector(`.repeater-card[data-lang="${lang}"][data-section="${section}"]`);
+    }
+
+    function sectionIconHtmlFromRow(row) {
+        const img = row.querySelector('.section-icon-preview');
+        return img
+            ? `<img src="${img.getAttribute('src')}" class="section-icon-preview">`
+            : '<div class="section-icon-placeholder">No Icon</div>';
+    }
+
+    function syncSectionRowsFromFallback(section) {
+        const sourceCard = repeaterCard(fallbackLocale, section);
+        if (!sourceCard) return;
+
+        const sourceRows = Array.from(sourceCard.querySelectorAll('.repeater-row'));
+        document.querySelectorAll(`.repeater-card[data-section="${section}"]`).forEach(card => {
+            if (card.dataset.lang === fallbackLocale) return;
+
+            const rowsWrap = card.querySelector('.repeater-rows');
+            const existingRows = Array.from(rowsWrap.querySelectorAll('.repeater-row'));
+            const template = existingRows[0] || sourceRows[0];
+            if (!template) return;
+
+            while (rowsWrap.querySelectorAll('.repeater-row').length < sourceRows.length) {
+                const clone = template.cloneNode(true);
+                clone.querySelectorAll('input, textarea').forEach(input => {
+                    if (input.type === 'file') {
+                        input.value = '';
+                    } else {
+                        input.value = '';
+                    }
+                });
+                rowsWrap.appendChild(clone);
+            }
+
+            while (rowsWrap.querySelectorAll('.repeater-row').length > sourceRows.length && rowsWrap.querySelectorAll('.repeater-row').length > 1) {
+                rowsWrap.lastElementChild.remove();
+            }
+
+            Array.from(rowsWrap.querySelectorAll('.repeater-row')).forEach((row, index) => {
+                const sourceRow = sourceRows[index];
+                const currentIcon = row.querySelector('input[name*="[current_icon]"]');
+                const sourceIcon = sourceRow?.querySelector('input[name*="[current_icon]"]');
+                const valueInput = row.querySelector('.section-value-input');
+
+                row.querySelector('.section-icon-preview-wrap').innerHTML = sourceRow
+                    ? sectionIconHtmlFromRow(sourceRow)
+                    : '<div class="section-icon-placeholder">No Icon</div>';
+
+                if (currentIcon) currentIcon.value = sourceIcon?.value || '';
+                row.querySelectorAll('input[type="file"]').forEach(input => { input.value = ''; });
+                if (valueInput && !valueInput.dataset.userEdited) {
+                    valueInput.value = '';
+                }
+            });
+
+            reindexRepeater(card);
+        });
+    }
+
+    document.addEventListener('input', (e) => {
+        if (e.target.classList.contains('section-value-input')) {
+            e.target.dataset.userEdited = '1';
+        }
+    });
+    document.querySelectorAll('.section-value-input').forEach(input => {
+        if (input.value.trim() !== '') {
+            input.dataset.userEdited = '1';
+        }
+    });
+
     document.querySelectorAll('.repeater-card').forEach(card => {
         const rows = card.querySelector('.repeater-rows');
         card.querySelector('.repeater-add').addEventListener('click', () => {
@@ -632,9 +808,13 @@
             if (first) {
                 const clone = first.cloneNode(true);
                 clone.querySelectorAll('input, textarea').forEach(i => i.value = '');
+                clone.querySelectorAll('.section-value-input').forEach(i => delete i.dataset.userEdited);
                 clone.querySelector('.section-icon-preview-wrap').innerHTML = '<div class="section-icon-placeholder">No Icon</div>';
                 rows.appendChild(clone);
                 reindexRepeater(card);
+                if (card.dataset.lang === fallbackLocale) {
+                    syncSectionRowsFromFallback(card.dataset.section);
+                }
             }
         });
         rows.addEventListener('click', (e) => {
@@ -645,6 +825,9 @@
                     reindexRepeater(card);
                 } else {
                     e.target.closest('.repeater-row').querySelectorAll('input, textarea').forEach(i => i.value = '');
+                }
+                if (card.dataset.lang === fallbackLocale) {
+                    syncSectionRowsFromFallback(card.dataset.section);
                 }
             }
         });
@@ -783,6 +966,10 @@
                 const reader = new FileReader();
                 reader.onload = (re) => {
                     wrap.innerHTML = `<img src="${re.target.result}" class="section-icon-preview">`;
+                    const card = e.target.closest('.repeater-card');
+                    if (card?.dataset.lang === fallbackLocale) {
+                        syncSectionRowsFromFallback(card.dataset.section);
+                    }
                 };
                 reader.readAsDataURL(e.target.files[0]);
             }

@@ -54,7 +54,6 @@ function tileConfig() {
         options: {
             maxZoom: 19,
             subdomains: 'abcd',
-            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
         },
     };
 }
@@ -175,6 +174,7 @@ onMounted(async () => {
     map.value = L.map(mapEl.value, {
         zoomControl: true,
         scrollWheelZoom: true,
+        attributionControl: false,
     });
     markerLayer.value = L.layerGroup().addTo(map.value);
 

@@ -41,6 +41,7 @@ class AgentController extends Controller
             'image' => [$isUpdate ? 'nullable' : 'nullable', 'image', 'max:' . ($imageConfig['max_size'] ?? 2048)],
             'image_alt' => ['nullable', 'string', 'max:255'],
             'experience' => ['nullable', 'string', 'max:255'],
+            'languages' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'boolean'],
         ];
 
@@ -70,6 +71,7 @@ class AgentController extends Controller
                 ->addColumn('name', function ($row) {
                     return '<div class="fw-semibold">' . e($row->getTranslation('name')) . '</div><small class="text-muted">' . e($row->email ?? '-') . '</small>';
                 })
+                ->addColumn('languages', fn ($row) => e($row->languages ?: '-'))
                 ->addColumn('status', function ($row) {
                     $checked = $row->status ? 'checked' : '';
 

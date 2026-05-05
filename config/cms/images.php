@@ -88,8 +88,8 @@ return [
     ],
     'locations' => [
         'main_image' => [
-            'width' => 851,
-            'height' => 521,
+            'width' => 1260,
+            'height' => 474,
             'max_size' => 2048, // Updated to 2MB
         ],
         'flag' => [
@@ -151,8 +151,8 @@ return [
     ],
     'agents' => [
         'image' => [
-            'width' => 600,
-            'height' => 600,
+            'width' => 60,
+            'height' => 60,
             'max_size' => 2048,
         ],
     ],

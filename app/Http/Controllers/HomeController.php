@@ -11,8 +11,8 @@ use App\Models\CmsKit\Property;
 use App\Models\CmsKit\SectionLabel;
 use App\Models\CmsKit\SiteInformation;
 use App\Models\CmsKit\SuccessfulJourney;
-use App\Support\PublicSiteViewData;
 use App\Models\CmsKit\WhyChooseUs;
+use App\Support\PublicSiteViewData;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
@@ -63,7 +63,7 @@ class HomeController extends Controller
             'about' => $this->aboutData(),
             'articlesSection' => [
                 'eyebrow' => 'News & Insights',
-                'title' => 'Browse Our Latest News & Articles',
+                'title' => 'Insights',
                 'articles' => [
                     [
                         'id' => 1,
@@ -559,20 +559,22 @@ class HomeController extends Controller
             'title' => $sectionTitle,
             'description' => $sectionDescription,
             'properties' => $properties->map(function (Property $property) use ($siteInfo) {
-                $title = $property->getTranslation('title') ?: $property->title ?: 'Property';
-                $location = collect([$property->community, $property->city, $property->country])
-                    ->filter(fn ($value) => filled($value))
-                    ->implode(', ');
+                $title = [
+                    'en' => $property->getTranslation('title', 'en') ?: $property->title ?: 'Property',
+                    'ar' => $property->getTranslation('title', 'ar') ?: ($property->getTranslation('title', 'en') ?: $property->title ?: 'Property'),
+                ];
 
-                $images = collect($property->images ?? [])
+                $imageUrls = collect($property->images ?? [])
                     ->map(function ($image) {
                         $path = (string) ($image->image ?? '');
 
                         return $path !== '' ? media_url($path) : null;
                     })
                     ->filter(fn ($url) => filled($url))
-                    ->values()
-                    ->all();
+                    ->values();
+
+                $imageCount = $imageUrls->count();
+                $images = $imageUrls->all();
 
                 if ($images === []) {
                     $images = [dre_property_placeholder_image()];
@@ -581,24 +583,96 @@ class HomeController extends Controller
                 $agentPhone = trim((string) ($property->agent?->phone ?? $siteInfo?->phone_1 ?? ''));
                 $whatsApp = trim((string) ($property->agent?->whatsapp_number ?? $siteInfo?->whatsapp_number ?? ''));
                 $email = trim((string) ($siteInfo?->email_1 ?? 'hello@distinguishedre.ae'));
+                $virtualTour = trim((string) ($property->details?->virtual_tour_url ?? ''));
+                $labels = $this->rentalPropertyClassificationLabels(
+                    (string) ($property->property_type ?? ''),
+                    (string) ($property->listing_type ?? ''),
+                    (string) ($property->category ?? ''),
+                );
 
                 return [
                     'id' => $property->id,
                     'title' => $title,
-                    'location' => $location !== '' ? $location : 'United Arab Emirates',
+                    'location' => [
+                        'en' => $this->propertyLocationForLocale($property, 'en'),
+                        'ar' => $this->propertyLocationForLocale($property, 'ar'),
+                    ],
                     'price' => (float) ($property->price ?? 0),
                     'period' => $property->listing_type === 'rent' ? ' / yr' : '',
                     'beds' => (int) ($property->bedrooms ?? 0),
                     'baths' => (int) ($property->bathrooms ?? 0),
                     'sqft' => (int) ($property->sqft ?? 0),
                     'images' => $images,
+                    'imageCount' => $imageCount,
+                    'isFeatured' => (bool) $property->is_featured,
+                    'virtualTourUrl' => $virtualTour !== '' ? $virtualTour : null,
+                    'propertyTypeLabel' => $labels['propertyType'],
+                    'listingTypeLabel' => $labels['listingType'],
+                    'categoryLabel' => $labels['category'],
                     'url' => filled($property->slug) ? route('properties.show', $property->slug) : null,
                     'phone' => $agentPhone !== '' ? 'tel:'.preg_replace('/\s+/', '', $agentPhone) : '#contact',
                     'whatsapp' => $whatsApp !== '' ? 'https://wa.me/'.preg_replace('/\D+/', '', $whatsApp) : '#contact',
-                    'inquireUrl' => 'mailto:'.rawurlencode($email).'?subject='.rawurlencode('Inquiry - '.$title),
+                    'inquireUrl' => 'mailto:'.rawurlencode($email).'?subject='.rawurlencode('Inquiry - '.$title['en']),
                 ];
             })->all(),
         ];
+    }
+
+    protected function propertyLocationForLocale(Property $property, string $locale): string
+    {
+        $location = collect([
+            $property->getTranslation('community', $locale) ?: $property->community,
+            $property->getTranslation('city', $locale) ?: $property->city,
+            $property->getTranslation('country', $locale) ?: $property->country,
+        ])
+            ->filter(fn ($value) => filled($value))
+            ->implode(', ');
+
+        if ($location !== '') {
+            return $location;
+        }
+
+        return trim((string) ($property->getTranslation('address', $locale) ?: $property->address ?: 'United Arab Emirates'));
+    }
+
+    protected function rentalPropertyClassificationLabels(string $propertyType, string $listingType, string $category = ''): array
+    {
+        return [
+            'propertyType' => $this->localizedOptionLabel(
+                config('cms-kit.database.properties.property_types', []),
+                $propertyType
+            ),
+            'listingType' => $this->localizedOptionLabel(
+                config('cms-kit.database.properties.listing_types', []),
+                $listingType
+            ),
+            'category' => $this->localizedOptionLabel(
+                config('cms-kit.database.properties.categories', []),
+                $category
+            ),
+        ];
+    }
+
+    protected function localizedOptionLabel(array $options, string $key): array
+    {
+        $key = trim($key);
+        if ($key === '') {
+            return ['en' => '', 'ar' => ''];
+        }
+
+        $option = $options[$key] ?? null;
+        if (is_array($option)) {
+            $en = trim((string) ($option['en'] ?? '')) ?: Str::headline(str_replace(['-', '_'], ' ', $key));
+            $ar = trim((string) ($option['ar'] ?? '')) ?: $en;
+
+            return ['en' => $en, 'ar' => $ar];
+        }
+
+        $label = is_string($option) && trim($option) !== ''
+            ? trim($option)
+            : Str::headline(str_replace(['-', '_'], ' ', $key));
+
+        return ['en' => $label, 'ar' => $label];
     }
 
     protected function aboutData(): array

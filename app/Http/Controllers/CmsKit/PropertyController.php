@@ -65,6 +65,16 @@ class PropertyController extends Controller
         ]);
     }
 
+    protected function categories(): array
+    {
+        return config('cms-kit.database.properties.categories', [
+            'residential' => ['en' => 'Residential', 'ar' => 'Residential'],
+            'commercial' => ['en' => 'Commercial', 'ar' => 'Commercial'],
+            'luxury' => ['en' => 'Luxury', 'ar' => 'Luxury'],
+            'off-plan' => ['en' => 'Off-plan', 'ar' => 'Off-plan'],
+        ]);
+    }
+
     protected function sourceTypes(): array
     {
         return config('cms-kit.database.properties.source_types', [
@@ -133,6 +143,19 @@ class PropertyController extends Controller
         return $propertyType;
     }
 
+    protected function resolvedCategory(Request $request): ?string
+    {
+        $category = trim((string) $request->input('category'));
+
+        if ($category === 'custom') {
+            $customCategory = trim((string) $request->input('custom_category'));
+
+            return $customCategory !== '' ? $customCategory : null;
+        }
+
+        return $category !== '' ? $category : null;
+    }
+
     protected function sanitizePropId(?string $propId, int $propertyId): string
     {
         $sanitized = preg_replace('/[^A-Za-z0-9\-]/', '-', (string) ($propId ?? ''));
@@ -163,6 +186,8 @@ class PropertyController extends Controller
             'property_type' => ['required', 'string', 'max:255'],
             'custom_property_type' => ['nullable', 'string', 'max:255', 'required_if:property_type,custom'],
             'listing_type' => ['required', Rule::in(array_keys($this->listingTypes()))],
+            'category' => ['required', 'string', 'max:255'],
+            'custom_category' => ['nullable', 'string', 'max:255', 'required_if:category,custom'],
             'source_type' => ['required', Rule::in(array_keys($this->sourceTypes()))],
         ];
 
@@ -177,10 +202,12 @@ class PropertyController extends Controller
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'status' => ['nullable', 'boolean'],
+            'is_featured' => ['nullable', 'boolean'],
             'order' => ['nullable', 'integer', 'min:1'],
             'published_at' => ['nullable', 'date'],
             'year_built' => ['nullable', 'integer', 'min:1800', 'max:'.(now()->year + 1)],
             'security_deposit' => ['nullable', 'numeric', 'min:0'],
+            'virtual_tour_url' => ['nullable', 'url', 'max:2048'],
             'direct_from_owner' => ['nullable', 'string', 'max:255'],
             'nearby_places' => ['nullable', 'array'],
             'nearby_places.*' => ['nullable', 'array'],
@@ -307,7 +334,7 @@ class PropertyController extends Controller
     {
         $translations = (array) $request->input('translations', []);
 
-        return collect($translations)
+        $normalized = collect($translations)
             ->map(function ($translation, $code) use ($request) {
                 $normalizedAddress = [
                     'address' => trim((string) ($translation['address'] ?? '')),
@@ -346,6 +373,58 @@ class PropertyController extends Controller
             })
             ->values()
             ->all();
+
+        return $this->withSharedTranslatedSectionStructure($normalized);
+    }
+
+    protected function withSharedTranslatedSectionStructure(array $translations): array
+    {
+        $fallbackLocale = config('app.fallback_locale', 'en');
+        $fallbackTranslation = collect($translations)->firstWhere('language_code', $fallbackLocale) ?? ($translations[0] ?? null);
+
+        if (! $fallbackTranslation) {
+            return $translations;
+        }
+
+        $sectionFields = [
+            'easy_to_access' => 'label',
+            'amenities' => 'name',
+            'property_attributes' => 'name',
+        ];
+
+        foreach ($translations as &$translation) {
+            if (($translation['language_code'] ?? null) === ($fallbackTranslation['language_code'] ?? null)) {
+                continue;
+            }
+
+            foreach ($sectionFields as $section => $textField) {
+                $fallbackRows = array_values((array) ($fallbackTranslation[$section] ?? []));
+                $rows = array_values((array) ($translation[$section] ?? []));
+                $rowCount = max(count($fallbackRows), count($rows));
+                $mergedRows = [];
+
+                for ($index = 0; $index < $rowCount; $index++) {
+                    $fallbackRow = is_array($fallbackRows[$index] ?? null) ? $fallbackRows[$index] : [];
+                    $row = is_array($rows[$index] ?? null) ? $rows[$index] : [];
+                    $text = trim((string) ($row[$textField] ?? ''));
+                    $icon = trim((string) ($row['icon'] ?? $fallbackRow['icon'] ?? ''));
+
+                    if ($text === '' && $icon === '') {
+                        continue;
+                    }
+
+                    $mergedRows[] = [
+                        'icon' => $icon,
+                        $textField => $text,
+                    ];
+                }
+
+                $translation[$section] = $mergedRows;
+            }
+        }
+        unset($translation);
+
+        return $translations;
     }
 
     protected function validateSectionIconUploads(Request $request): void
@@ -712,6 +791,7 @@ class PropertyController extends Controller
             $cmsUser = auth('cms')->user();
             $propertyTypes = $this->propertyTypes();
             $listingTypes = $this->listingTypes();
+            $categories = $this->categories();
             $data = Property::query()
                 ->select([
                     'id',
@@ -720,9 +800,11 @@ class PropertyController extends Controller
                     'community',
                     'property_type',
                     'listing_type',
+                    'category',
                     'price',
                     'currency',
                     'status',
+                    'is_featured',
                     'order',
                 ])
                 ->ordered();
@@ -734,6 +816,7 @@ class PropertyController extends Controller
                     return '<div><div class="fw-semibold">'.e($row->title).'</div><small class="text-muted">'.e(trim(($row->city ?: '-').($row->community ? ' / '.$row->community : ''))).'</small></div>';
                 })
                 ->addColumn('type', fn ($row) => e($this->optionLabel($propertyTypes, $row->property_type).' / '.$this->optionLabel($listingTypes, $row->listing_type)))
+                ->addColumn('category_label', fn ($row) => e($this->optionLabel($categories, $row->category)))
                 ->addColumn('price_label', function ($row) {
                     return e(trim(($row->currency ?: '').' '.($row->price ? number_format((float) $row->price, 2) : '-')));
                 })
@@ -743,6 +826,11 @@ class PropertyController extends Controller
                     return '<div class="form-check form-switch">
                                 <input class="form-check-input toggle-status" type="checkbox" data-id="'.$row->id.'" '.$checked.'>
                             </div>';
+                })
+                ->addColumn('featured', function ($row) {
+                    return $row->is_featured
+                        ? '<span class="badge bg-primary-subtle text-primary border border-primary-subtle">Featured</span>'
+                        : '<span class="text-muted">-</span>';
                 })
                 ->addColumn('order_input', function ($row) {
                     return '<input type="number" min="1" class="form-control form-control-sm reorder-input" data-id="'.$row->id.'" value="'.$row->order.'" style="width: 80px;">';
@@ -762,7 +850,7 @@ class PropertyController extends Controller
 
                     return $buttons;
                 })
-                ->rawColumns(['select_all', 'property', 'status', 'order_input', 'action'])
+                ->rawColumns(['select_all', 'property', 'status', 'featured', 'order_input', 'action'])
                 ->make(true);
         }
 
@@ -792,6 +880,7 @@ class PropertyController extends Controller
         $nearbyPlaces = $this->groupedNearbyPlaces();
         $propertyTypes = $this->propertyTypes();
         $listingTypes = $this->listingTypes();
+        $categories = $this->categories();
         $sourceTypes = $this->sourceTypes();
         $currencies = $this->currencies();
         $placeTypes = $this->placeTypes();
@@ -804,6 +893,7 @@ class PropertyController extends Controller
             'nearbyPlaces',
             'propertyTypes',
             'listingTypes',
+            'categories',
             'sourceTypes',
             'currencies',
             'placeTypes',
@@ -833,6 +923,7 @@ class PropertyController extends Controller
                 'slug' => $this->resolveSlug($request, $translations),
                 'property_type' => $this->resolvedPropertyType($request),
                 'listing_type' => $request->input('listing_type'),
+                'category' => $this->resolvedCategory($request),
                 'source_type' => $request->input('source_type', 'manual'),
                 'price' => $request->input('price'),
                 'currency' => trim((string) $request->input('currency')),
@@ -849,6 +940,7 @@ class PropertyController extends Controller
                 'longitude' => $request->input('longitude'),
                 'agent_id' => $request->input('agent_id'),
                 'status' => $request->boolean('status', true),
+                'is_featured' => $request->boolean('is_featured', false),
                 'order' => $order,
                 'published_at' => $request->input('published_at') ?: now(),
             ]);
@@ -857,6 +949,7 @@ class PropertyController extends Controller
                 'description' => $fallbackTranslation['description'] ?? '',
                 'year_built' => $request->filled('year_built') ? (int) $request->input('year_built') : null,
                 'security_deposit' => $request->filled('security_deposit') ? (float) $request->input('security_deposit') : null,
+                'virtual_tour_url' => $request->filled('virtual_tour_url') ? trim((string) $request->input('virtual_tour_url')) : null,
                 'direct_from_owner' => trim((string) $request->input('direct_from_owner')),
                 'easy_to_access' => $fallbackTranslation['easy_to_access'] ?? [],
                 'key_features' => $fallbackTranslation['key_features'] ?? [],
@@ -882,6 +975,7 @@ class PropertyController extends Controller
         $nearbyPlaces = $this->groupedNearbyPlaces();
         $propertyTypes = $this->propertyTypes();
         $listingTypes = $this->listingTypes();
+        $categories = $this->categories();
         $sourceTypes = $this->sourceTypes();
         $currencies = $this->currencies();
         $placeTypes = $this->placeTypes();
@@ -894,6 +988,7 @@ class PropertyController extends Controller
             'nearbyPlaces',
             'propertyTypes',
             'listingTypes',
+            'categories',
             'sourceTypes',
             'currencies',
             'placeTypes',
@@ -934,6 +1029,7 @@ class PropertyController extends Controller
                 'slug' => $this->resolveSlug($request, $translations, $property->id),
                 'property_type' => $this->resolvedPropertyType($request),
                 'listing_type' => $request->input('listing_type'),
+                'category' => $this->resolvedCategory($request),
                 'source_type' => $request->input('source_type', 'manual'),
                 'price' => $request->input('price'),
                 'currency' => trim((string) $request->input('currency')),
@@ -950,6 +1046,7 @@ class PropertyController extends Controller
                 'longitude' => $request->input('longitude'),
                 'agent_id' => $request->input('agent_id'),
                 'status' => $request->boolean('status', false),
+                'is_featured' => $request->boolean('is_featured', false),
                 'order' => $newOrder,
                 'published_at' => $request->input('published_at') ?: $property->published_at,
             ]);
@@ -960,6 +1057,7 @@ class PropertyController extends Controller
                     'description' => $fallbackTranslation['description'] ?? '',
                     'year_built' => $request->filled('year_built') ? (int) $request->input('year_built') : null,
                     'security_deposit' => $request->filled('security_deposit') ? (float) $request->input('security_deposit') : null,
+                    'virtual_tour_url' => $request->filled('virtual_tour_url') ? trim((string) $request->input('virtual_tour_url')) : null,
                     'direct_from_owner' => trim((string) $request->input('direct_from_owner')),
                     'easy_to_access' => $fallbackTranslation['easy_to_access'] ?? [],
                     'key_features' => $fallbackTranslation['key_features'] ?? [],

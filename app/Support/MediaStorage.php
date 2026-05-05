@@ -44,6 +44,17 @@ final class MediaStorage
     }
 
     /**
+     * True when {@see exists()} is a local filesystem check. Remote disks (Cloudinary, S3, etc.)
+     * may perform an HTTP round-trip per call and must not be used in hot paths like accessors.
+     */
+    public static function pathExistsIsCheap(): bool
+    {
+        $driver = (string) config('filesystems.disks.'.self::diskName().'.driver', 'local');
+
+        return $driver === 'local';
+    }
+
+    /**
      * Public URL for a stored path, or absolute URL passthrough.
      */
     public static function url(?string $path): ?string
@@ -68,6 +79,10 @@ final class MediaStorage
             if ($directCloudinaryUrl !== null) {
                 return $directCloudinaryUrl;
             }
+
+            // Misconfigured Cloudinary (e.g. missing CLOUDINARY_CLOUD_NAME): Flysystem/SDK URL resolution
+            // can block the request on outbound HTTP (Guzzle) until max_execution_time.
+            return null;
         }
 
         if (str_starts_with($path, '/storage/')) {

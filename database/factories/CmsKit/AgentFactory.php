@@ -24,6 +24,7 @@ class AgentFactory extends Factory
             'whatsapp_number' => $this->faker->phoneNumber(),
             'designation' => $this->faker->jobTitle(),
             'experience' => $this->faker->numberBetween(1, 20).' years',
+            'languages' => 'English, Arabic',
             'description' => $this->faker->paragraph(),
             'status' => true,
         ];

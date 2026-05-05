@@ -1200,7 +1200,9 @@
     align-items: stretch;
     border-top: 1px solid #E6E9F2;
     border-bottom: 1px solid #E6E9F2;
-    margin-top: auto;
+    // Do not use margin-top: auto here: in a grid row, columns stretch to equal height
+    // and auto would absorb all free space above specs, so shorter titles look “broken”.
+    margin-top: 0;
 }
 
 .property-details__item {

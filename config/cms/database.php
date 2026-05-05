@@ -92,7 +92,7 @@ return [
             'subject' => true,
             'created_at' => true,
         ],
-       
+
     ],
     'testimonials' => [
         'section' => [
@@ -133,7 +133,7 @@ return [
             'video_file' => false, // New: for video file uploads
             'image_alt' => true,
             'buttons' => true, // New: JSON array of buttons
-            'additional_buttons'=> false, // New: toggle for additional buttons
+            'additional_buttons' => false, // New: toggle for additional buttons
             'google_review_text' => false, // New
             'google_rating' => false, // New
             'google_review_count' => false, // New
@@ -187,6 +187,18 @@ return [
         'custom_head_script' => true,
         'custom_body_script' => true,
         'extra_fields' => [
+            'colour_logo' => [
+                'type' => 'file',
+                'label' => 'Colour Logo',
+                'section' => 'visual_assets',
+                'storage_name' => 'colour-logo',
+                'directory' => 'site-info',
+                'mimes' => ['jpg', 'jpeg', 'png', 'webp', 'gif', 'svg'],
+                'max_size' => 2048,
+                'recommended_size' => '200x60px',
+                'helpText' => 'Recommended size: 200x60px (PNG/SVG). Stored as colour-logo.',
+                'translatable' => false,
+            ],
             'cookie_policy' => [
                 'type' => 'textarea',
                 'label' => 'Cookie Policy',
@@ -200,25 +212,25 @@ return [
     'locations' => [
         'section' => [
             'title' => true,
-            'description' => true,
+            'description' => false,
             'status' => true,
             'extra_fields' => [],
         ],
         'items' => [
-            'title' => true,
+            'title' => false,
             'image' => true,
-            'flag' => true,
+            'flag' => false,
             'phone' => true,
             'whatsapp' => true,
             'fax' => true,
             'emails' => true,
             'address' => true,
-            'country' => true,
+            'country' => false,
             'map_link' => true,
             'order' => true,
             'status' => true,
             'extra_fields' => [],
-            'required' => ['title', 'address'],
+            'required' => ['address'],
 
         ],
     ],
@@ -260,13 +272,12 @@ return [
             'image_4_alt' => true,
             'order' => true,
             'status' => true,
-            'extra_fields' => 
-            [ 'published_by' => [
-                    'type' => 'text',
-                    'label' => 'Published By',
-                    'placeholder' => 'Dist3Admin',
-                    'translatable' => true,
-                ],
+            'extra_fields' => ['published_by' => [
+                'type' => 'text',
+                'label' => 'Published By',
+                'placeholder' => 'Dist3Admin',
+                'translatable' => true,
+            ],
                 'type' => [
                     'type' => 'text',
                     'label' => 'Type',
@@ -280,7 +291,7 @@ return [
                     'editor' => 'tinymce',
                     'translatable' => true,
                     'column_class' => 'col-12',
-                ]
+                ],
             ],
             'required' => ['title', 'content', 'published_at', 'feature_image', 'feature_image_alt'],
         ],
@@ -421,6 +432,13 @@ return [
             'sale' => ['en' => 'Sale', 'ar' => 'بيع'],
         ],
 
+        'categories' => [
+            'residential' => ['en' => 'Residential', 'ar' => 'Residential'],
+            'commercial' => ['en' => 'Commercial', 'ar' => 'Commercial'],
+            'luxury' => ['en' => 'Luxury', 'ar' => 'Luxury'],
+            'off-plan' => ['en' => 'Off-plan', 'ar' => 'Off-plan'],
+        ],
+
         'currencies' => [
             'AED' => 'AED',
             'USD' => 'USD',
@@ -450,5 +468,3 @@ return [
         ],
     ],
 ];
-
-

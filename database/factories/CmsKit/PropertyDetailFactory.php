@@ -22,6 +22,7 @@ class PropertyDetailFactory extends Factory
             'description' => '<div>'.$this->faker->paragraphs(3, true).'</div>',
             'year_built' => $this->faker->numberBetween(2000, 2025),
             'security_deposit' => $this->faker->randomFloat(2, 1000, 50000),
+            'virtual_tour_url' => $this->faker->optional()->url(),
             'direct_from_owner' => $this->faker->randomElement(['Yes, Owner Listed', 'No', 'Exclusive Owner Unit']),
             'easy_to_access' => [
                 ['icon' => 'fas fa-road', 'label' => 'Main Road Access'],

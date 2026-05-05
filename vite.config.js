@@ -7,7 +7,7 @@ import { fileURLToPath, URL } from 'node:url';
 export default defineConfig({
     plugins: [
         laravel({
-            hotFile: 'storage/vite.hot',
+            // Default: public/hot (matches Laravel Vite::hotFile(), gitignored, removed when dev server exits).
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',

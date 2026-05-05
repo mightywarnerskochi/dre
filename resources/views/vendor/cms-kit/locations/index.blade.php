@@ -131,7 +131,8 @@
                                     <input type="checkbox" class="form-check-input" id="selectAll">
                                 </th>
                                 <th style="width: 40px;">#</th>
-                                <th>Title</th>
+                                <!-- <th>Location Title</th> -->
+                                <th>Address</th>
                                 <th>Image</th>
                                 <th style="width: 100px;">Order</th>
                                 <th class="text-center">Status</th>
@@ -163,13 +164,14 @@
             columns: [
                 {data: 'select_all', name: 'select_all', orderable: false, searchable: false},
                 {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
-                {data: 'title', name: 'title'},
+                // {data: 'title', name: 'title'},
+                {data: 'address', name: 'address'},
                 {data: 'image', name: 'image', orderable: false, searchable: false},
                 {data: 'order', name: 'order', className: 'text-center'},
                 {data: 'status', name: 'status', className: 'text-center'},
                 {data: 'action', name: 'action', orderable: false, searchable: false}
             ],
-            order: [[4, 'asc']],
+            order: [[5, 'asc']],
             drawCallback: function() {
                 updateBulkVisibility();
             }

@@ -2,9 +2,16 @@
     <header>
         <div class="container-ctn">
             <div class="d-flex flex-wrap align-items-center justify-content-between">
-                <RouterLink :to="{ name: 'home' }" class="brand">
+                <RouterLink :to="{ name: 'home' }" class="brand" :aria-label="t('brand.logoAria')">
                     <picture>
-                        <img :src="asset('public/images/logo.png')" width="320" height="50" class="img-fluid" alt="Cariox" />
+                        <img
+                            :src="logoSrc"
+                            width="320"
+                            height="50"
+                            class="img-fluid"
+                            :alt="t('brand.logoAlt')"
+                            loading="eager"
+                        />
                     </picture>
                 </RouterLink>
 
@@ -73,16 +80,35 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import { RouterLink } from 'vue-router';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { RouterLink, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
 
 const { locale, t } = useI18n({ useScope: 'global' });
+const route = useRoute();
+const isScrolled = ref(false);
 
 const displayCode = computed(() => (locale.value === 'ar' ? 'AR' : 'ENG'));
 
 const flagSrc = computed(() => asset(locale.value === 'ar' ? 'public/images/arabic.jpg' : 'public/images/english.jpg'));
+const logoSrc = computed(() => {
+    const isHomeTop = route.name === 'home' && !isScrolled.value;
+    return asset(isHomeTop ? 'public/images/logo.png' : 'public/images/logo-blue.png');
+});
+
+function updateScrolled() {
+    isScrolled.value = window.scrollY > 20;
+}
+
+onMounted(() => {
+    updateScrolled();
+    window.addEventListener('scroll', updateScrolled, { passive: true });
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('scroll', updateScrolled);
+});
 
 function setLang(code) {
     const safe = code === 'ar' ? 'ar' : 'en';

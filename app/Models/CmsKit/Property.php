@@ -27,6 +27,7 @@ class Property extends Model
         'slug',
         'property_type',
         'listing_type',
+        'category',
         'source_type',
         'price',
         'currency',
@@ -43,6 +44,7 @@ class Property extends Model
         'longitude',
         'agent_id',
         'status',
+        'is_featured',
         'order',
         'published_at',
         'images_directory',
@@ -54,6 +56,7 @@ class Property extends Model
         'latitude' => 'decimal:7',
         'longitude' => 'decimal:7',
         'status' => 'boolean',
+        'is_featured' => 'boolean',
         'published_at' => 'datetime',
     ];
 
@@ -105,9 +108,12 @@ class Property extends Model
 
             $primaryPath = "{$this->images_directory}/property_{$sanitizedPropId}_{$index}.jpg";
             $fallbackPath = "{$this->images_directory}/property_{$this->id}_{$index}.jpg";
-            $resolvedPath = MediaStorage::exists($primaryPath)
-                ? $primaryPath
-                : (MediaStorage::exists($fallbackPath) ? $fallbackPath : $primaryPath);
+            // Remote disks: Storage::exists() hits the API (Guzzle) per file — deadly in loops.
+            $resolvedPath = MediaStorage::pathExistsIsCheap()
+                ? (MediaStorage::exists($primaryPath)
+                    ? $primaryPath
+                    : (MediaStorage::exists($fallbackPath) ? $fallbackPath : $primaryPath))
+                : $primaryPath;
 
             $images[] = (object) [
                 'id' => $index,

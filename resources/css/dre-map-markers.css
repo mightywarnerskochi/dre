@@ -1,0 +1,172 @@
+/* Leaflet map price bubbles + sidebar (MapContent.vue). Loaded via Vite so markers are never unstyled. */
+
+.dre-map-price-pin-wrap {
+    background: transparent !important;
+    border: none !important;
+}
+
+.dre-map-price-pin {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+    max-width: 160px;
+    padding: 0 10px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: #1f4a93;
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.1;
+    text-align: center;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(16, 48, 93, 0.4);
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.dre-map-price-pin::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 7px 7px 0 7px;
+    border-style: solid;
+    border-color: #1f4a93 transparent transparent transparent;
+}
+
+.dre-map-price-pin.is-active {
+    background: #102f66;
+    box-shadow: 0 6px 18px rgba(16, 48, 93, 0.55);
+    z-index: 2;
+}
+
+.dre-map-price-pin.is-active::after {
+    border-top-color: #102f66;
+}
+
+.map-page-hero__sidebar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: min(400px, 100%);
+    max-width: 100%;
+    z-index: 800;
+    background: #fff;
+    box-shadow: -8px 0 32px rgba(15, 35, 70, 0.18);
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #e8edf5;
+}
+
+.map-page-hero__sidebar-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid #eef1f6;
+}
+
+.map-page-hero__sidebar-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #12284c;
+    line-height: 1.25;
+}
+
+.map-page-hero__sidebar-sub {
+    margin: 6px 0 0;
+    font-size: 0.8rem;
+    color: #5c6b82;
+}
+
+.map-page-hero__sidebar-close {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 10px;
+    background: #f0f4fa;
+    color: #2f3f58;
+    cursor: pointer;
+    font-size: 1.25rem;
+    line-height: 1;
+}
+
+.map-page-hero__sidebar-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 14px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.map-page-hero__sidebar-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e8edf5;
+    background: #fafbfd;
+    transition: box-shadow 0.15s ease;
+}
+
+.map-page-hero__sidebar-card:hover {
+    box-shadow: 0 8px 24px rgba(15, 35, 70, 0.1);
+}
+
+.map-page-hero__sidebar-card img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    display: block;
+}
+
+.map-page-hero__sidebar-card-body {
+    padding: 10px 12px 12px;
+}
+
+.map-page-hero__sidebar-card-type {
+    margin: 0 0 4px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #6b7c94;
+    text-transform: uppercase;
+}
+
+.map-page-hero__sidebar-card-title {
+    margin: 0 0 6px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #12284c;
+    line-height: 1.3;
+}
+
+.map-page-hero__sidebar-card-price {
+    margin: 0 0 4px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #2a559c;
+}
+
+.map-page-hero__sidebar-card-meta {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #5c6b82;
+}
+
+@media (max-width: 640px) {
+    .map-page-hero__sidebar {
+        width: 100%;
+    }
+}

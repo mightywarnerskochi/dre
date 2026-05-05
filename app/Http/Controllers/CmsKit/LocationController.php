@@ -126,7 +126,12 @@ class LocationController extends Controller
                     return '<input type="checkbox" class="row-checkbox form-check-input" value="' . $row->id . '">';
                 })
                 ->addColumn('title', function ($row) {
-                    return $row->getTranslation('title');
+                    return e((string) $row->getTranslation('title'));
+                })
+                ->addColumn('address', function ($row) {
+                    $address = trim(strip_tags((string) $row->getTranslation('address')));
+
+                    return $address !== '' ? e($address) : '-';
                 })
                 ->addColumn('image', function ($row) {
                     if ($row->image) {
@@ -379,5 +384,4 @@ class LocationController extends Controller
         return response()->json(['success' => true]);
     }
 }
-
 

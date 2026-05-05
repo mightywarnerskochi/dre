@@ -6,8 +6,10 @@ use App\Models\CmsKit\Banner;
 use App\Models\CmsKit\Property;
 use App\Models\CmsKit\SiteInformation;
 use App\Support\PublicSiteViewData;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -71,16 +73,12 @@ class PropertyPageController extends Controller
     }
 
     /**
-     * API: List properties with filters and pagination.
+     * Apply the same filters as the public listing / map search.
+     *
+     * @param  Builder<Property>  $query
      */
-    public function apiList(Request $request): JsonResponse
+    protected function applyPublishedPropertyFilters(Request $request, $query): void
     {
-        $query = Property::query()
-            ->with(['agent', 'translations'])
-            ->where('status', true)
-            ->ordered();
-
-        // Filtering
         if ($request->filled('location')) {
             $location = $request->query('location');
             $query->where(function ($q) use ($location) {
@@ -94,6 +92,10 @@ class PropertyPageController extends Controller
             $query->where('property_type', $request->query('type'));
         }
 
+        if ($request->filled('category')) {
+            $query->where('category', $request->query('category'));
+        }
+
         if ($request->filled('beds')) {
             $query->where('bedrooms', '>=', (int) $request->query('beds'));
         }
@@ -102,19 +104,39 @@ class PropertyPageController extends Controller
             $query->where('bathrooms', '>=', (int) $request->query('baths'));
         }
 
-        if ($request->filled('price_min')) {
-            $query->where('price', '>=', (float) $request->query('price_min'));
+        $priceMin = $request->query('price_min', $request->query('min_price'));
+        $priceMax = $request->query('price_max', $request->query('max_price'));
+        if (filled($priceMin) && is_numeric($priceMin)) {
+            $query->where('price', '>=', (float) $priceMin);
         }
 
-        if ($request->filled('price_max')) {
-            $query->where('price', '<=', (float) $request->query('price_max'));
+        if (filled($priceMax) && is_numeric($priceMax)) {
+            $query->where('price', '<=', (float) $priceMax);
         }
 
         if ($request->filled('price')) {
             $this->applyPriceRangeFilter($query, (string) $request->query('price'));
         }
+    }
 
-        $properties = $query->paginate(12);
+    /**
+     * API: List properties with filters and pagination.
+     */
+    public function apiList(Request $request): JsonResponse
+    {
+        $this->setRequestLocale($request);
+
+        $query = Property::query()
+            ->with(['agent', 'translations', 'details'])
+            ->where('status', true)
+            ->ordered();
+
+        $this->applyPublishedPropertyFilters($request, $query);
+
+        $perPage = (int) $request->query('per_page', 6);
+        $perPage = max(1, min(48, $perPage));
+
+        $properties = $query->paginate($perPage)->withQueryString();
 
         $siteInfo = $this->getSiteInfo();
         $properties->getCollection()->transform(function ($property) use ($siteInfo) {
@@ -130,15 +152,141 @@ class PropertyPageController extends Controller
      */
     public function apiDetail(int $id): JsonResponse
     {
+        $this->setRequestLocale(request());
+
         $property = Property::query()
             ->with(['agent', 'details', 'translations', 'nearbyPlaces'])
             ->where('status', true)
             ->findOrFail($id);
 
+        return response()->json($this->propertyDetailPayload($property));
+    }
+
+    /**
+     * API: Property detail resolved by public slug (SPA route).
+     */
+    public function apiDetailBySlug(string $slug): JsonResponse
+    {
+        $this->setRequestLocale(request());
+
+        $property = Property::query()
+            ->with(['agent', 'details', 'translations', 'nearbyPlaces'])
+            ->where('slug', $slug)
+            ->where('status', true)
+            ->firstOrFail();
+
+        return response()->json($this->propertyDetailPayload($property));
+    }
+
+    /**
+     * API: Map markers for all published properties with coordinates.
+     *
+     * @return array{markers: array<int, array<string, mixed>>}
+     */
+    public function apiMapMarkers(Request $request): JsonResponse
+    {
+        $this->setRequestLocale($request);
+
+        $siteInfo = $this->getSiteInfo();
+        $query = Property::query()
+            ->with(['agent', 'translations', 'details'])
+            ->where('status', true)
+            ->ordered();
+
+        $this->applyPublishedPropertyFilters($request, $query);
+
+        $markers = $query
+            ->get()
+            ->filter(function (Property $property) {
+                $lat = (float) $property->latitude;
+                $lng = (float) $property->longitude;
+
+                return abs($lat) > 1e-7 || abs($lng) > 1e-7;
+            })
+            ->map(function (Property $property) use ($siteInfo) {
+                $row = $this->formatProperty($property, false, $siteInfo);
+                $row['latitude'] = (float) $property->latitude;
+                $row['longitude'] = (float) $property->longitude;
+
+                return $row;
+            })
+            ->values();
+
+        return response()->json(['markers' => $markers]);
+    }
+
+    /**
+     * API: Distinct property_type / category values from published properties with CMS labels.
+     *
+     * @return array{property_types: array<int, array{value: string, label: string}>, categories: array<int, array{value: string, label: string}>}
+     */
+    public function apiFilterOptions(Request $request): JsonResponse
+    {
+        $this->setRequestLocale($request);
+
+        $typeConfig = config('cms-kit.database.properties.property_types', []);
+        $catConfig = config('cms-kit.database.properties.categories', []);
+
+        $typesUsed = Property::query()
+            ->where('status', true)
+            ->whereNotNull('property_type')
+            ->where('property_type', '!=', '')
+            ->distinct()
+            ->orderBy('property_type')
+            ->pluck('property_type');
+
+        if ($typesUsed->isEmpty()) {
+            $typesUsed = collect(array_keys($typeConfig));
+        }
+
+        $propertyTypes = $typesUsed
+            ->map(function (string $key) use ($typeConfig) {
+                $key = trim($key);
+
+                return [
+                    'value' => $key,
+                    'label' => $this->optionLabel($typeConfig, $key) ?: $key,
+                ];
+            })
+            ->values();
+
+        $categoriesUsed = Property::query()
+            ->where('status', true)
+            ->whereNotNull('category')
+            ->where('category', '!=', '')
+            ->distinct()
+            ->orderBy('category')
+            ->pluck('category');
+
+        if ($categoriesUsed->isEmpty()) {
+            $categoriesUsed = collect(array_keys($catConfig));
+        }
+
+        $categories = $categoriesUsed
+            ->map(function (string $key) use ($catConfig) {
+                $key = trim($key);
+
+                return [
+                    'value' => $key,
+                    'label' => $this->optionLabel($catConfig, $key) ?: $key,
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'property_types' => $propertyTypes,
+            'categories' => $categories,
+        ]);
+    }
+
+    /**
+     * @return array{property: array<string, mixed>, similar: Collection}
+     */
+    protected function propertyDetailPayload(Property $property): array
+    {
         $siteInfo = $this->getSiteInfo();
         $formatted = $this->formatProperty($property, true, $siteInfo);
 
-        // Similar Listings
         $similarListings = Property::query()
             ->where('id', '!=', $property->id)
             ->where('status', true)
@@ -151,10 +299,10 @@ class PropertyPageController extends Controller
                 return $this->formatProperty($p, false, $siteInfo);
             });
 
-        return response()->json([
+        return [
             'property' => $formatted,
             'similar' => $similarListings,
-        ]);
+        ];
     }
 
     protected function formatProperty(Property $property, bool $full = false, ?SiteInformation $siteInfo = null): array
@@ -175,29 +323,26 @@ class PropertyPageController extends Controller
         }
 
         $title = $property->getTranslation('title') ?: $property->title ?: 'Property';
-        $location = collect([$property->community, $property->city, $property->country])
-            ->filter(fn ($value) => filled($value))
-            ->implode(', ');
-        if ($location === '') {
-            $location = trim((string) ($property->getTranslation('address') ?: $property->address ?: ''));
-        }
-        if ($location === '') {
-            $location = 'United Arab Emirates';
-        }
+        $location = $this->propertyLocationForLocale($property, app()->getLocale());
 
         $agentPhone = trim((string) ($property->agent?->phone ?? $siteInfo?->phone_1 ?? ''));
         $whatsApp = trim((string) ($property->agent?->whatsapp_number ?? $siteInfo?->whatsapp_number ?? ''));
         $email = trim((string) ($siteInfo?->email_1 ?? 'hello@distinguishedre.ae'));
         $whatsAppHref = $whatsApp !== '' ? 'https://wa.me/'.preg_replace('/\D+/', '', $whatsApp) : '#';
 
+        $slug = trim((string) ($property->slug ?? ''));
+        $detailPath = $slug !== '' ? '/property-details/'.$slug : '/our-property';
+
         $data = [
             'id' => $property->id,
             'title' => $title,
             'slug' => $property->slug,
-            'url' => route('properties.show', $property->slug),
+            'url' => $detailPath,
             'price' => (float) $property->price,
             'currency' => $property->currency ?: 'AED',
             'location' => $location,
+            'latitude' => (float) $property->latitude,
+            'longitude' => (float) $property->longitude,
             'bedrooms' => (int) $property->bedrooms,
             'bathrooms' => (int) $property->bathrooms,
             'beds' => (int) $property->bedrooms,
@@ -206,15 +351,23 @@ class PropertyPageController extends Controller
             'period' => $property->listing_type === 'rent' ? ' / yr' : '',
             'property_type' => $property->property_type,
             'listing_type' => $property->listing_type,
+            'category' => $property->category,
+            'categoryLabel' => $this->optionLabel(config('cms-kit.database.properties.categories', []), (string) $property->category),
             'images' => $images->all(),
+            'image_count' => $images->count(),
             'featured_image' => $images->first(),
+            'virtual_tour_url' => trim((string) ($property->details?->virtual_tour_url ?? '')) ?: null,
+            'isFeatured' => (bool) $property->is_featured,
+            'is_featured' => (bool) $property->is_featured,
             'phone' => $agentPhone !== '' ? 'tel:'.preg_replace('/\s+/', '', $agentPhone) : '#contact',
             'whatsapp' => $whatsAppHref,
             'inquireUrl' => 'mailto:'.rawurlencode($email).'?subject='.rawurlencode('Inquiry - '.$title),
             'agent' => $property->agent ? [
                 'name' => $property->agent->name,
                 'designation' => $property->agent->designation,
-                'image' => $property->agent->image ? media_url((string) $property->agent->image) : asset('images/dre/agent-placeholder.jpg'),
+                'experience' => $property->agent->experience,
+                'languages' => $property->agent->languages,
+                'image' => $property->agent->image ? media_url((string) $property->agent->image) : asset('images/dre/agent-placeholder.svg'),
                 'phone' => $property->agent->phone ? 'tel:'.preg_replace('/\s+/', '', (string) $property->agent->phone) : '#',
                 'whatsapp' => $whatsAppHref,
             ] : null,
@@ -222,29 +375,25 @@ class PropertyPageController extends Controller
 
         if ($full) {
             $data['description'] = $property->getTranslation('description') ?: $property->details?->description;
-            $data['details_grid'] = $property->details?->property_attributes ?: [];
-            $data['amenities'] = $property->details?->amenities ?: [];
+            $data['year_built'] = $property->details?->year_built;
+            $deposit = $property->details?->security_deposit;
+            $data['security_deposit'] = $deposit !== null && $deposit !== '' ? (float) $deposit : null;
+            $data['direct_from_owner'] = trim((string) ($property->details?->direct_from_owner ?? '')) ?: null;
+            $data['details_grid'] = $this->localizedPropertySectionRows($property, 'property_attributes', 'name');
+            $data['amenities'] = $this->localizedPropertySectionRows($property, 'amenities', 'name');
             $data['features'] = $property->details?->key_features ?: [];
-            $locale = app()->getLocale();
-            $fallbackLocale = config('app.fallback_locale', 'en');
-            $translation = $property->translations->firstWhere('language_code', $locale)
-                ?? $property->translations->firstWhere('language_code', $fallbackLocale)
-                ?? $property->translations->first();
 
-            $cmsEasyRows = is_array($translation?->easy_to_access) ? $translation->easy_to_access : [];
-            $cmsEasyCards = collect($cmsEasyRows)
+            $cmsEasyCards = collect($this->localizedPropertySectionRows($property, 'easy_to_access', 'label'))
                 ->map(function ($row) {
                     $label = trim((string) ($row['label'] ?? ''));
                     if ($label === '') {
                         return null;
                     }
-                    $iconPath = trim((string) ($row['icon'] ?? ''));
-                    $iconUrl = $iconPath !== '' ? media_url($iconPath) : null;
 
                     return [
                         'name' => $label,
                         'distance' => null,
-                        'icon' => filled($iconUrl) ? $iconUrl : null,
+                        'icon' => $row['icon'] ?? null,
                     ];
                 })
                 ->filter()
@@ -292,6 +441,139 @@ class PropertyPageController extends Controller
         }
 
         return $data;
+    }
+
+    protected function localizedPropertySectionRows(Property $property, string $section, string $textField): array
+    {
+        $locale = app()->getLocale();
+        $fallbackLocale = config('app.fallback_locale', 'en');
+        $translations = $property->relationLoaded('translations')
+            ? $property->translations
+            : $property->translations()->get();
+
+        $localeRows = (array) ($translations->firstWhere('language_code', $locale)?->{$section} ?? []);
+        $fallbackRows = $this->firstSectionRowsWithContent([
+            (array) ($translations->firstWhere('language_code', $fallbackLocale)?->{$section} ?? []),
+            (array) ($property->details?->{$section} ?? []),
+        ], $textField);
+
+        if ($locale === $fallbackLocale) {
+            return $this->normalizedDisplaySectionRows($fallbackRows ?: $localeRows, $textField);
+        }
+
+        $rowCount = max(count($localeRows), count($fallbackRows));
+        $mergedRows = [];
+
+        for ($index = 0; $index < $rowCount; $index++) {
+            $localeRow = is_array($localeRows[$index] ?? null) ? $localeRows[$index] : [];
+            $fallbackRow = is_array($fallbackRows[$index] ?? null) ? $fallbackRows[$index] : [];
+            $localeText = $this->sectionRowText($localeRow, $textField);
+            $fallbackText = $this->sectionRowText($fallbackRow, $textField);
+            $icon = trim((string) ($localeRow['icon'] ?? $fallbackRow['icon'] ?? ''));
+
+            $mergedRows[] = [
+                $textField => $localeText !== '' ? $localeText : $fallbackText,
+                'icon' => $icon,
+            ];
+        }
+
+        return $this->normalizedDisplaySectionRows($mergedRows, $textField);
+    }
+
+    protected function firstSectionRowsWithContent(array $candidates, string $textField): array
+    {
+        foreach ($candidates as $rows) {
+            $normalized = $this->normalizedDisplaySectionRows(is_array($rows) ? $rows : [], $textField);
+            if ($normalized !== []) {
+                return is_array($rows) ? array_values($rows) : [];
+            }
+        }
+
+        return [];
+    }
+
+    protected function sectionRowText(array $row, string $textField): string
+    {
+        return trim((string) ($row[$textField] ?? $row['label'] ?? $row['name'] ?? $row['title'] ?? $row['value'] ?? ''));
+    }
+
+    protected function normalizedDisplaySectionRows(array $rows, string $textField): array
+    {
+        return collect($rows)
+            ->map(function ($row) use ($textField) {
+                if (is_string($row)) {
+                    $text = trim($row);
+                    $icon = '';
+                } else {
+                    $row = is_array($row) ? $row : [];
+                    $text = trim((string) ($row[$textField] ?? $row['label'] ?? $row['name'] ?? $row['title'] ?? $row['value'] ?? ''));
+                    $icon = trim((string) ($row['icon'] ?? ''));
+                }
+
+                if ($text === '') {
+                    return null;
+                }
+
+                $iconUrl = $icon !== '' ? media_url($icon) : null;
+
+                return [
+                    'label' => $text,
+                    'name' => $text,
+                    'title' => $text,
+                    'value' => $text,
+                    'icon' => filled($iconUrl) ? $iconUrl : null,
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    protected function setRequestLocale(Request $request): void
+    {
+        $requestedLang = strtolower((string) $request->query('lang', ''));
+        if (in_array($requestedLang, ['en', 'ar'], true)) {
+            app()->setLocale($requestedLang);
+        }
+    }
+
+    protected function propertyLocationForLocale(Property $property, string $locale): string
+    {
+        $location = collect([
+            $property->getTranslation('community', $locale) ?: $property->community,
+            $property->getTranslation('city', $locale) ?: $property->city,
+            $property->getTranslation('country', $locale) ?: $property->country,
+        ])
+            ->filter(fn ($value) => filled($value))
+            ->implode(', ');
+
+        if ($location !== '') {
+            return $location;
+        }
+
+        return trim((string) ($property->getTranslation('address', $locale) ?: $property->address ?: 'United Arab Emirates'));
+    }
+
+    protected function optionLabel(array $options, string $key): string
+    {
+        $key = trim($key);
+        if ($key === '') {
+            return '';
+        }
+
+        $option = $options[$key] ?? null;
+        if (is_array($option)) {
+            $locale = app()->getLocale();
+            $fallback = config('app.fallback_locale', 'en');
+
+            return trim((string) ($option[$locale] ?? $option[$fallback] ?? reset($option) ?: Str::headline(str_replace(['-', '_'], ' ', $key))));
+        }
+
+        if (is_string($option) && trim($option) !== '') {
+            return trim($option);
+        }
+
+        return Str::headline(str_replace(['-', '_'], ' ', $key));
     }
 
     protected function getSiteInfo()
@@ -361,6 +643,19 @@ class PropertyPageController extends Controller
                         ['value' => 'apartment', 'label' => 'Apartment'],
                         ['value' => 'villa', 'label' => 'Villa'],
                         ['value' => 'townhouse', 'label' => 'Townhouse'],
+                    ],
+                ],
+                [
+                    'key' => 'category',
+                    'label' => 'Category',
+                    'uiType' => 'dropdown',
+                    'queryParam' => 'category',
+                    'options' => [
+                        ['value' => '', 'label' => 'Category'],
+                        ['value' => 'residential', 'label' => 'Residential'],
+                        ['value' => 'commercial', 'label' => 'Commercial'],
+                        ['value' => 'luxury', 'label' => 'Luxury'],
+                        ['value' => 'off-plan', 'label' => 'Off-plan'],
                     ],
                 ],
                 [

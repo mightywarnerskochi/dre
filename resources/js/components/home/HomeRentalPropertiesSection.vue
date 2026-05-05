@@ -49,6 +49,15 @@ function formatSqft(value) {
     return `${number.toLocaleString(locale.value === 'ar' ? 'ar-AE' : 'en-US')} ft²`;
 }
 
+/** Used by global script.js card click handler (data-property-url). */
+function propertyCardDetailUrl(property) {
+    const fromBoot = property?.url && String(property.url).trim();
+    if (fromBoot) return fromBoot;
+    const slug = property?.slug && String(property.slug).trim();
+    if (slug) return `/property-details/${slug}`;
+    return null;
+}
+
 function tickAutoSlides() {
     rentalProperties.value.forEach((property) => {
         const images = getImages(property);
@@ -92,10 +101,16 @@ onUnmounted(() => {
         <div class="container-fluid p-0">
             <div class="property-slider-wrap">
                 <div class="property-slider">
-                    <article v-for="property in rentalProperties" :key="property.id" class="property-card">
+                    <article
+                        v-for="property in rentalProperties"
+                        :key="property.id"
+                        class="property-card"
+                        :data-property-url="propertyCardDetailUrl(property)"
+                    >
                         <div class="property-card__ghost" aria-hidden="true"></div>
                         <div class="property-card__inner">
                             <div class="property-card__media">
+                                <span v-if="property.isFeatured" class="property-card__badge">Featured</span>
                                 <picture>
                                     <img
                                         :key="`${property.id}-${getActiveIndex(property)}`"
@@ -116,7 +131,14 @@ onUnmounted(() => {
                                         @click="setActiveImage(property.id, idx)"
                                     />
                                 </div>
-                                <span class="property-card__360" title="360° virtual tour">360°</span>
+                                <a
+                                    v-if="property.virtualTourUrl"
+                                    class="property-card__360"
+                                    :href="property.virtualTourUrl"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    title="360° virtual tour"
+                                >360°</a>
                             </div>
 
                             <div class="property-card__body">
@@ -135,12 +157,12 @@ onUnmounted(() => {
                                     <div class="property-card__price-row">
                                         <div class="property-card__price">{{ formatPrice(property.price) }}</div>
                                         <div class="property-card__photos">
-                                            {{ getImages(property).length }} {{ t('home.rentals.card.photos') }}
+                                            {{ property.imageCount }} {{ t('home.rentals.card.photos') }}
                                         </div>
                                     </div>
                                     <div class="property-card__tags">
-                                        <span class="property-tag property-tag--fill">{{ t('home.rentals.card.propertyType') }}</span>
-                                        <span class="property-tag property-tag--outline">{{ t('home.rentals.card.rentals') }}</span>
+                                        <span class="property-tag property-tag--fill">{{ property.propertyTypeLabel || '-' }}</span>
+                                        <span class="property-tag property-tag--outline">{{ property.listingTypeLabel || '-' }}</span>
                                     </div>
                                 </div>
 
@@ -205,9 +227,19 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
+.property-card {
+    max-width: 100%;
+}
+
+.property-card__inner {
+    min-width: 0;
+}
+
 .property-card__media {
     position: relative;
     width: 100%;
+    max-width: 100%;
+    flex: 0 0 auto;
     aspect-ratio: 427 / 260;
     overflow: hidden;
 }
@@ -246,9 +278,43 @@ onUnmounted(() => {
     background: #ffffff;
 }
 
+.property-card__meta {
+    flex-wrap: wrap;
+}
+
+.property-card__price-row {
+    flex: 1 1 250px;
+    min-width: 0;
+    justify-content: flex-start;
+}
+
+.property-card__price {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.property-card__photos {
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.property-card__tags {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.property-tag {
+    max-width: 100%;
+    white-space: nowrap;
+}
+
 @media (max-width: 768px) {
     .property-card__media {
         aspect-ratio: 16 / 10;
+    }
+
+    .property-card__tags {
+        justify-content: flex-start;
     }
 }
 </style>

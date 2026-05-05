@@ -1,5 +1,6 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import DrePageHero from '../components/layout/DrePageHero.vue';
 import PropertyFilters from '../components/properties/PropertyFilters.vue';
 import Footer from '../components/Footer.vue';
@@ -10,6 +11,7 @@ const props = defineProps({
     pageData: { type: Object, default: () => ({}) },
 });
 
+const { locale } = useI18n({ useScope: 'global' });
 const d = props.pageData;
 const properties = ref([]);
 const pagination = ref({});
@@ -32,7 +34,7 @@ const heroImage = computed(() => d.hero?.backgroundImage || '/images/dre/hero-du
 
 function buildQueryParams(extra = {}) {
     const filters = d.search?.filters || [];
-    const q = { page: filterValues.page || 1, ...extra };
+    const q = { page: filterValues.page || 1, lang: locale.value || 'en', ...extra };
     for (const f of filters) {
         const val = filterValues[f.key];
         if (val === '' || val === null || val === undefined) {
@@ -106,6 +108,11 @@ onMounted(() => {
     fetchProperties();
 });
 
+watch(locale, () => {
+    filterValues.page = 1;
+    fetchProperties();
+});
+
 function propertyImage(property) {
     const list = Array.isArray(property?.images) ? property.images : [];
     const first = list.find((item) => typeof item === 'string' && item.trim() !== '');
@@ -119,9 +126,14 @@ function propertyUrl(property) {
     return '#';
 }
 
+function propertyCardDataPropertyUrl(property) {
+    const u = propertyUrl(property);
+    return u && u !== '#' ? u : null;
+}
+
 function formatPrice(value) {
     const number = Number(value || 0);
-    return Number.isFinite(number) ? number.toLocaleString('en-AE') : '0';
+    return Number.isFinite(number) ? number.toLocaleString(locale.value === 'ar' ? 'ar-AE' : 'en-AE') : '0';
 }
 </script>
 
@@ -187,10 +199,16 @@ function formatPrice(value) {
             </div>
 
             <div v-else class="dre-property-grid-figma">
-                <article v-for="p in properties" :key="p.id" class="property-card">
+                <article
+                    v-for="p in properties"
+                    :key="p.id"
+                    class="property-card"
+                    :data-property-url="propertyCardDataPropertyUrl(p)"
+                >
                     <div class="property-card__ghost" aria-hidden="true"></div>
                     <div class="property-card__inner">
                         <div class="property-card__media">
+                            <span v-if="p.isFeatured || p.is_featured" class="property-card__badge">Featured</span>
                             <img :src="propertyImage(p)" :alt="p.title || 'Property'" loading="lazy" @error="dreOnPropertyImgError">
                         </div>
                         <div class="property-card__body">

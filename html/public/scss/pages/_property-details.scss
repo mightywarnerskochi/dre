@@ -1162,6 +1162,10 @@ $calc-hoa: #FF513A;
     overflow: hidden;
 
     &__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
         padding: 13px 15px 12px;
         border-bottom: 1px solid #e8ecf0;
         @include min(768){padding: 14px 18px 14px;}
@@ -1188,6 +1192,17 @@ $calc-hoa: #FF513A;
         overflow: hidden;
         background: #dbe4f0;
         border: 1px solid #e4e9f0;
+    }
+
+    &__leaflet {
+        width: 100%;
+        min-height: min(420px, 55vh);
+    }
+
+    &__leaflet .leaflet-container {
+        width: 100%;
+        height: min(420px, 55vh);
+        font-family: inherit;
     }
 
     &__img {
@@ -1271,6 +1286,31 @@ $calc-hoa: #FF513A;
         &--attraction {
             background: #7c3aed;
         }
+
+        &--leaflet {
+            position: relative;
+            left: auto !important;
+            top: auto !important;
+            transform: none;
+
+            &:hover,
+            &:focus-visible {
+                transform: scale(1.08);
+            }
+        }
+
+        .property-detail-map-card__poi-glyph {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+
+            svg {
+                display: block;
+            }
+        }
     }
 
     &__pin {
@@ -1281,6 +1321,14 @@ $calc-hoa: #FF513A;
         z-index: 2;
         pointer-events: none;
         filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+
+        &--leaflet {
+            position: relative;
+            left: auto;
+            bottom: auto;
+            transform: none;
+            pointer-events: auto;
+        }
     }
 
     &__pin-dot {
@@ -1422,6 +1470,15 @@ $calc-hoa: #FF513A;
             color: #2f3f58;
         }
 
+        &:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        &:disabled:hover {
+            color: inherit;
+        }
+
         &:focus-visible {
             outline: 2px solid $primaryColor;
             outline-offset: 2px;
@@ -1522,6 +1579,33 @@ $calc-hoa: #FF513A;
 
     &__slider-outer {
         position: relative;
+    }
+
+    // Before Slick inits (or if JS fails): horizontal row instead of full-width stacked cards
+    .js-property-detail-similar-slider:not(.slick-initialized) {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: clamp(16px, 2vw, 28px);
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -10px;
+        padding-bottom: 8px;
+        scroll-snap-type: x proximity;
+
+        .property-detail-similar__slide {
+            flex: 0 0 clamp(260px, 78vw, 360px);
+            max-width: 100%;
+            margin-right: 0;
+            scroll-snap-align: start;
+        }
+
+        .property-card--listing {
+            height: auto;
+        }
+
+        .property-card__ghost {
+            display: none;
+        }
     }
 
     &__controls {

@@ -96,6 +96,7 @@ class SiteInformationController extends Controller
                     }
                 }
             }
+
         }
 
         return $rules;
@@ -155,7 +156,6 @@ class SiteInformationController extends Controller
             [],
             $this->getValidationAttributes()
         );
-
         // Handle File Uploads
         if ($request->hasFile('logo')) {
             if ($siteInfo->logo) {
@@ -207,5 +207,3 @@ class SiteInformationController extends Controller
         return redirect()->route('cms.site-information.index')->with('success', 'Site Information updated successfully.');
     }
 }
-
-
