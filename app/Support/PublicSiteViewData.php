@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\CmsKit\Language;
 use App\Models\CmsKit\SiteInformation;
 use Illuminate\Support\Facades\Schema;
 
@@ -77,6 +78,22 @@ class PublicSiteViewData
             ->values()
             ->all();
 
+        $languages = [];
+        if (Schema::hasTable('languages')) {
+            $languages = Language::query()
+                ->active()
+                ->get()
+                ->map(fn ($lang) => [
+                    'name' => $lang->name,
+                    'code' => $lang->code,
+                    'flagImage' => filled($lang->flag_image) ? self::mediaPathUrl($lang->flag_image) : null,
+                    'flagAlt' => $lang->flag_alt,
+                    'isDefault' => (bool) $lang->is_default,
+                ])
+                ->values()
+                ->all();
+        }
+
         return [
             'phone1' => self::nonEmptyString($info->phone_1 ?? null),
             'phone2' => self::nonEmptyString($info->phone_2 ?? null),
@@ -87,6 +104,7 @@ class PublicSiteViewData
             'social' => $social,
             'legalPages' => self::legalPages($info),
             'tracking' => self::tracking($info),
+            'languages' => $languages,
         ];
     }
 
@@ -104,7 +122,8 @@ class PublicSiteViewData
      *     gtmContainerIds: array{},
      *     customHeadScript: null,
      *     customBodyScript: null
-     *   }
+     *   },
+     *   languages: array{}
      * }
      */
     public static function empty(): array
@@ -123,6 +142,7 @@ class PublicSiteViewData
                 'customHeadScript' => null,
                 'customBodyScript' => null,
             ],
+            'languages' => [],
         ];
     }
 

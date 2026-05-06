@@ -476,15 +476,11 @@ jQuery(function () {
     const priceText = priceField.querySelector(".selected-text");
     const hiddenMinPrice = document.getElementById("hiddenMinPrice");
     const hiddenMaxPrice = document.getElementById("hiddenMaxPrice");
-    const minLabelEl = priceField.querySelector(".js-price-min-label");
-    const maxLabelEl = priceField.querySelector(".js-price-max-label");
+    const slider = document.getElementById("priceRangeSlider");
+    const minInput = priceField.querySelector(".js-slider-min-input");
+    const maxInput = priceField.querySelector(".js-slider-max-input");
     let minPriceVal = "";
     let maxPriceVal = "";
-
-    function formatPillAmount(val) {
-      if (!val) return "";
-      return Number(val).toLocaleString("en-US");
-    }
 
     function updatePriceLabel() {
       if (!priceText) return;
@@ -500,27 +496,58 @@ jQuery(function () {
       }
     }
 
-    priceField.querySelectorAll(".js-price-min-opt").forEach((btn) => {
-      btn.addEventListener("click", function () {
-        minPriceVal = this.getAttribute("data-value") || "";
+    if (slider && typeof noUiSlider !== "undefined") {
+      noUiSlider.create(slider, {
+        start: [0, 500000],
+        connect: true,
+        range: {
+          min: 0,
+          max: 1000000,
+        },
+        step: 5000,
+        format: {
+          to: (v) => Math.round(v),
+          from: (v) => Number(v),
+        },
+      });
+
+      slider.noUiSlider.on("update", function (values, handle) {
+        const minVal = values[0];
+        const maxVal = values[1];
+
+        minPriceVal = minVal == 0 ? "" : minVal;
+        maxPriceVal = maxVal == 1000000 ? "" : maxVal;
+
         if (hiddenMinPrice) hiddenMinPrice.value = minPriceVal;
-        if (minLabelEl) minLabelEl.textContent = minPriceVal ? formatPillAmount(minPriceVal) : "No Min";
-        updatePriceLabel();
-      });
-    });
-
-    priceField.querySelectorAll(".js-price-max-opt").forEach((btn) => {
-      btn.addEventListener("click", function () {
-        maxPriceVal = this.getAttribute("data-value") || "";
         if (hiddenMaxPrice) hiddenMaxPrice.value = maxPriceVal;
-        if (maxLabelEl) maxLabelEl.textContent = maxPriceVal ? formatPillAmount(maxPriceVal) : "No Max";
+
+        if (handle === 0 && minInput && !minInput.matches(":focus")) {
+          minInput.value = Number(minVal).toLocaleString("en-US");
+        }
+        if (handle === 1 && maxInput && !maxInput.matches(":focus")) {
+          maxInput.value = Number(maxVal).toLocaleString("en-US");
+        }
+
         updatePriceLabel();
       });
-    });
 
-    priceField.querySelectorAll(".price-range-pill-dd__toggle").forEach((t) => {
-      t.addEventListener("click", (e) => e.stopPropagation());
-    });
+      [minInput, maxInput].forEach((input, index) => {
+        if (!input) return;
+        input.addEventListener("change", function () {
+          let val = this.value.replace(/,/g, "");
+          if (isNaN(val) || val === "") val = index === 0 ? 0 : 1000000;
+
+          let newValues = [null, null];
+          newValues[index] = val;
+          slider.noUiSlider.set(newValues);
+        });
+
+        input.addEventListener("blur", function () {
+          let val = this.value.replace(/,/g, "");
+          this.value = Number(val).toLocaleString("en-US");
+        });
+      });
+    }
   }
 
   // --- Property card media inner slider ---

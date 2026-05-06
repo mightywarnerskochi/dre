@@ -94,7 +94,7 @@
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                             <path d="M12 2.00012C7.6 2.00012 4 5.60012 4 10.0001C4 15.4001 11 21.5001 11.3 21.8001C11.5 21.9001 11.8 22.0001 12 22.0001C12.2 22.0001 12.5 21.9001 12.7 21.8001C13 21.5001 20 15.4001 20 10.0001C20 5.60012 16.4 2.00012 12 2.00012ZM12 19.7001C9.9 17.7001 6 13.4001 6 10.0001C6 6.70012 8.7 4.00012 12 4.00012C15.3 4.00012 18 6.70012 18 10.0001C18 13.3001 14.1 17.7001 12 19.7001ZM12 6.00012C9.8 6.00012 8 7.80012 8 10.0001C8 12.2001 9.8 14.0001 12 14.0001C14.2 14.0001 16 12.2001 16 10.0001C16 7.80012 14.2 6.00012 12 6.00012ZM12 12.0001C10.9 12.0001 10 11.1001 10 10.0001C10 8.90012 10.9 8.00012 12 8.00012C13.1 8.00012 14 8.90012 14 10.0001C14 11.1001 13.1 12.0001 12 12.0001Z" fill="#2F3F58"/>
                         </svg>
-                            <span>{{ property.location }}</span>
+                            <span>{{ detailAddressText }}</span>
                         </p>
                         <div class="property-detail-stats property-detail-stats--divided property-detail-stats--stacked">
                             <div class="property-detail-stat property-detail-stat--stacked">
@@ -260,8 +260,10 @@
                         </div>
                     </template>
                 </section>
+                
+                <MortgageCalculator :property-price="Number(property.price)" />
 
-                <div v-if="showMortgageCalculator" class="property-detail-calc-outer">
+                <div v-if="false && showMortgageCalculator" class="property-detail-calc-outer">
                     <section class="property-detail-section property-detail-section--flush" aria-labelledby="pd-calc-heading">
                         <div class="property-detail-calc js-payment-calc">
                             <p id="pd-calc-heading" class="property-detail-calc__heading">Payment Calculator</p>
@@ -469,6 +471,7 @@
 
 <script setup>
 import PropertyDetailMap from '@/components/properties/PropertyDetailMap.vue';
+import MortgageCalculator from '@/components/properties/MortgageCalculator.vue';
 import { asset } from '@/utils/asset';
 import {
     DRE_AGENT_PLACEHOLDER_IMAGE,
@@ -538,6 +541,10 @@ const listingOutlineLabel = computed(() => {
     if (t === 'sale') return 'For Sale';
 
     return 'Rentals';
+});
+
+const detailAddressText = computed(() => {
+    return property.value?.full_address || property.value?.address || property.value?.location || '';
 });
 
 const agentName = computed(() => property.value?.agent?.name || 'DRE Team');

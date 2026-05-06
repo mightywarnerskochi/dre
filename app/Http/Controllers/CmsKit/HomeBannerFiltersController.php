@@ -28,7 +28,7 @@ class HomeBannerFiltersController extends Controller
             'filter' => [
                 'required',
                 'string',
-                'in:property_type,location,bedrooms,bathrooms,bed_and_baths,price',
+                'in:property_type,category,location,bedrooms,bathrooms,bed_and_baths,price',
                 Rule::unique('home_banner_filter_definitions', 'key')->ignore($id),
             ],
             'ui_type' => ['required', 'in:dropdown,text,integer'],
@@ -69,12 +69,19 @@ class HomeBannerFiltersController extends Controller
                 ]) : ($columns ?: 'property_type'),
             ],
 
+            'category' => [
+                'properties',
+                $columns && $columns !== 'category' ? throw ValidationException::withMessages([
+                    'columns' => ['Invalid column for Category filter. Allowed: category.'],
+                ]) : ($columns ?: 'category'),
+            ],
+
             'location' => [
                 'properties',
-                in_array($columns ?: 'city,community', ['city', 'community', 'city,community'], true)
-                    ? ($columns ?: 'city,community')
+                in_array($columns ?: 'city,community,address,title', ['city', 'community', 'address', 'title', 'city,community', 'city,community,address', 'city,community,address,title'], true)
+                    ? ($columns ?: 'city,community,address,title')
                     : throw ValidationException::withMessages([
-                        'columns' => ['Invalid column for Location filter. Allowed: city, community, or city,community.'],
+                        'columns' => ['Invalid column for Location filter. Allowed: city, community, address, title or combinations.'],
                     ]),
             ],
 
@@ -161,6 +168,7 @@ class HomeBannerFiltersController extends Controller
             ->get();
 
         $propertyTypeLabels = config('cms-kit.database.properties.property_types', []);
+        $categoryLabels = config('cms-kit.database.properties.categories', []);
         $activeLanguages = $this->activeLanguages();
         $fallbackLocale = config('app.fallback_locale', 'en');
 
@@ -194,9 +202,25 @@ class HomeBannerFiltersController extends Controller
                     ->filter(fn ($v) => $v !== '')
                     ->values()
                     ->all();
+            } elseif ($definition->key === 'category') {
+                $rows = DB::table('properties')
+                    ->selectRaw('TRIM(category) as value')
+                    ->where('category', '<>', '')
+                    ->whereNotNull('category')
+                    ->where('status', true)
+                    ->whereNotNull('published_at')
+                    ->distinct()
+                    ->orderBy('value')
+                    ->get();
+
+                $computedValues = collect($rows)
+                    ->map(fn ($r) => trim((string) $r->value))
+                    ->filter(fn ($v) => $v !== '')
+                    ->values()
+                    ->all();
             } elseif ($definition->key === 'location') {
                 $columns = array_values(array_filter(array_map('trim', explode(',', (string) $definition->source_column))));
-                $allowedColumns = ['city', 'community'];
+                $allowedColumns = ['city', 'community', 'address', 'title'];
                 $columns = array_values(array_intersect($columns, $allowedColumns));
 
                 if (! $columns) {
@@ -296,9 +320,11 @@ class HomeBannerFiltersController extends Controller
             // Prebuild translation lookup for location.
             $locationCityMapByLang = [];
             $locationCommunityMapByLang = [];
+            $locationAddressMapByLang = [];
+            $locationTitleMapByLang = [];
             if ($definition->key === 'location') {
                 $columns = array_values(array_filter(array_map('trim', explode(',', (string) $definition->source_column))));
-                $columns = array_values(array_intersect($columns, ['city', 'community']));
+                $columns = array_values(array_intersect($columns, ['city', 'community', 'address', 'title']));
 
                 foreach ($activeLanguages as $lang) {
                     if (in_array('city', $columns, true)) {
@@ -328,6 +354,34 @@ class HomeBannerFiltersController extends Controller
 
                         $locationCommunityMapByLang[$lang->code] = $rows->pluck('label', 'value')->toArray();
                     }
+
+                    if (in_array('address', $columns, true)) {
+                        $rows = DB::table('properties as p')
+                            ->join('property_translations as pt', 'pt.property_id', '=', 'p.id')
+                            ->selectRaw('p.address as value, pt.address as label')
+                            ->where('pt.language_code', $lang->code)
+                            ->whereIn('p.address', $computedValues)
+                            ->where('p.address', '<>', '')
+                            ->whereNotNull('p.address')
+                            ->distinct()
+                            ->get();
+
+                        $locationAddressMapByLang[$lang->code] = $rows->pluck('label', 'value')->toArray();
+                    }
+
+                    if (in_array('title', $columns, true)) {
+                        $rows = DB::table('properties as p')
+                            ->join('property_translations as pt', 'pt.property_id', '=', 'p.id')
+                            ->selectRaw('p.title as value, pt.title as label')
+                            ->where('pt.language_code', $lang->code)
+                            ->whereIn('p.title', $computedValues)
+                            ->where('p.title', '<>', '')
+                            ->whereNotNull('p.title')
+                            ->distinct()
+                            ->get();
+
+                        $locationTitleMapByLang[$lang->code] = $rows->pluck('label', 'value')->toArray();
+                    }
                 }
             }
 
@@ -342,16 +396,60 @@ class HomeBannerFiltersController extends Controller
                         $label = $propertyTypeLabels[$value][$lang->code]
                             ?? $propertyTypeLabels[$value][$fallbackLocale]
                             ?? $value;
+                    } elseif ($definition->key === 'category') {
+                        $label = $categoryLabels[$value][$lang->code]
+                            ?? $categoryLabels[$value][$fallbackLocale]
+                            ?? $value;
                     } elseif ($definition->key === 'location') {
                         $columns = array_values(array_filter(array_map('trim', explode(',', (string) $definition->source_column))));
-                        $columns = array_values(array_intersect($columns, ['city', 'community']));
+                        $columns = array_values(array_intersect($columns, ['city', 'community', 'address', 'title']));
 
-                        // Prefer community label when both are enabled.
-                        if (in_array('community', $columns, true) && isset($locationCommunityMapByLang[$lang->code][$value])) {
+                        $type = '';
+                        $subtitle = '';
+
+                        // Determine type and subtitle based on which column matched the value
+                        $prop = DB::table('properties')
+                            ->where(function($q) use ($value, $columns) {
+                                foreach($columns as $c) $q->orWhere($c, $value);
+                            })
+                            ->where('status', true)
+                            ->first();
+
+                        if ($prop) {
+                            $country = 'United Arab Emirates';
+                            if ($prop->title === $value) {
+                                $type = 'Building';
+                                $subtitle = $prop->full_address ?: ($prop->address ?: '');
+                            } elseif ($prop->address === $value) {
+                                $type = 'Address';
+                                $parts = array_filter([$prop->city, $country]);
+                                $subtitle = implode(', ', $parts);
+                            } elseif ($prop->community === $value) {
+                                $type = 'Community';
+                                $parts = array_filter([$prop->city, $country]);
+                                $subtitle = implode(', ', $parts);
+                            } elseif ($prop->city === $value) {
+                                $type = 'City';
+                                $parts = array_filter([$prop->community, $country]);
+                                $subtitle = implode(', ', $parts);
+                            }
+                        }
+
+                        if (in_array('title', $columns, true) && isset($locationTitleMapByLang[$lang->code][$value])) {
+                            $label = $locationTitleMapByLang[$lang->code][$value] ?: $value;
+                        } elseif (in_array('address', $columns, true) && isset($locationAddressMapByLang[$lang->code][$value])) {
+                            $label = $locationAddressMapByLang[$lang->code][$value] ?: $value;
+                        } elseif (in_array('community', $columns, true) && isset($locationCommunityMapByLang[$lang->code][$value])) {
                             $label = $locationCommunityMapByLang[$lang->code][$value] ?: $value;
                         } elseif (in_array('city', $columns, true) && isset($locationCityMapByLang[$lang->code][$value])) {
                             $label = $locationCityMapByLang[$lang->code][$value] ?: $value;
                         }
+
+                        $translations[$lang->code] = [
+                            'label' => (string) $label,
+                            'subtitle' => $subtitle,
+                            'type' => $type,
+                        ];
                     } elseif ($definition->key === 'bedrooms' || $definition->key === 'bathrooms') {
                         // Numeric labels are the same across languages.
                         $label = $value;
@@ -371,9 +469,11 @@ class HomeBannerFiltersController extends Controller
                         }
                     }
 
-                    $translations[$lang->code] = [
-                        'label' => (string) $label,
-                    ];
+                    if (! isset($translations[$lang->code])) {
+                        $translations[$lang->code] = [
+                            'label' => (string) $label,
+                        ];
+                    }
 
                     if ($lang->code === $fallbackLocale) {
                         $labelFallback = (string) $label;
@@ -487,7 +587,7 @@ class HomeBannerFiltersController extends Controller
 
         return redirect()
             ->route('cms.home-banner-filters.index')
-            ->with('success', 'Home banner filter created successfully.');
+            ->with('success', 'Site filter created successfully.');
     }
 
     public function edit(int $id)
@@ -531,7 +631,7 @@ class HomeBannerFiltersController extends Controller
 
         return redirect()
             ->route('cms.home-banner-filters.index')
-            ->with('success', 'Home banner filter updated successfully.');
+            ->with('success', 'Site filter updated successfully.');
     }
 
     public function destroy(int $id)
@@ -541,7 +641,7 @@ class HomeBannerFiltersController extends Controller
 
         return redirect()
             ->route('cms.home-banner-filters.index')
-            ->with('success', 'Home banner filter deleted successfully.');
+            ->with('success', 'Site filter deleted successfully.');
     }
 
     public function toggleDefinitionStatus(Request $request, int $id)

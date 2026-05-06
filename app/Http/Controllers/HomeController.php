@@ -785,12 +785,24 @@ class HomeController extends Controller
                 ->orderBy('sort_order')
                 ->get(['value', 'label', 'translations']);
 
-            $options = $values->map(fn ($v) => [
-                'value' => (string) $v->value,
-                'label' => data_get($v->translations, $currentLocale.'.label') !== null
-                    ? (string) data_get($v->translations, $currentLocale.'.label')
-                    : ($v->label ? (string) $v->label : (string) $v->value),
-            ])->values()->all();
+            $options = $values->map(function ($v) use ($currentLocale, $definition) {
+                $trans = data_get($v->translations, $currentLocale, []);
+                $label = data_get($trans, 'label') !== null
+                    ? (string) data_get($trans, 'label')
+                    : ($v->label ? (string) $v->label : (string) $v->value);
+
+                $option = [
+                    'value' => (string) $v->value,
+                    'label' => $label,
+                ];
+
+                if ((string) $definition->key === 'location') {
+                    $option['subtitle'] = (string) data_get($trans, 'subtitle', '');
+                    $option['type'] = (string) data_get($trans, 'type', '');
+                }
+
+                return $option;
+            })->values()->all();
 
             $label = data_get($definition->translations, $currentLocale.'.label')
                 ?: (string) $definition->label;
@@ -811,7 +823,7 @@ class HomeController extends Controller
                         : ($definition->ui_type ?: $this->fallbackUiTypeForFilter((string) $definition->key))
                 ),
                 'queryParam' => $queryParam,
-                'options' => (string) $definition->key === 'location' ? [] : $options,
+                'options' => $options,
             ];
         }
 

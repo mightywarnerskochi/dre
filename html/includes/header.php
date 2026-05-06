@@ -57,6 +57,7 @@ $h = function ($s) {
     <link rel="stylesheet" href="public/css/lib/slick-full.css" />
     <link rel="stylesheet" href="public/css/lib/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css" />
     <link rel="stylesheet" href="public/scss/style.css?v=<?php echo $h($style_version); ?>">
     <?php if (strpos($body_class, 'property-details-page') !== false) : ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.css" crossorigin="anonymous" />

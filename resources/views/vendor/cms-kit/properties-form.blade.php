@@ -77,7 +77,7 @@
             return [$value => ['label' => $localized !== '' ? $localized : $english, 'english' => $english]];
         })->all();
         $categoryOptionsByLanguage[$lang->code]['custom'] = [
-            'label' => $lang->code === 'ar' ? 'Ø£Ø®Ø±Ù‰ / Ù…Ø®ØµØµ' : 'Other / Custom',
+            'label' => $lang->code === 'ar' ? 'أخرى / مخصص' : 'Other / Custom',
             'english' => 'Other / Custom',
         ];
 

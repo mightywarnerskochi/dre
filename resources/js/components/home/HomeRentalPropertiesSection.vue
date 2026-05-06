@@ -225,36 +225,7 @@ onUnmounted(() => {
         </div>
     </section>
 </template>
-
 <style scoped>
-.property-card {
-    max-width: 100%;
-}
-
-.property-card__inner {
-    min-width: 0;
-}
-
-.property-card__media {
-    position: relative;
-    width: 100%;
-    max-width: 100%;
-    flex: 0 0 auto;
-    aspect-ratio: 427 / 260;
-    overflow: hidden;
-}
-
-.property-card__media picture,
-.property-card__media img {
-    display: block;
-    width: 100%;
-    height: 100%;
-}
-
-.property-card__media img {
-    object-fit: cover;
-}
-
 .property-card__dots {
     position: absolute;
     left: 14px;
@@ -263,7 +234,6 @@ onUnmounted(() => {
     gap: 6px;
     z-index: 2;
 }
-
 .property-card__dots button {
     width: 9px;
     height: 9px;
@@ -278,43 +248,4 @@ onUnmounted(() => {
     background: #ffffff;
 }
 
-.property-card__meta {
-    flex-wrap: wrap;
-}
-
-.property-card__price-row {
-    flex: 1 1 250px;
-    min-width: 0;
-    justify-content: flex-start;
-}
-
-.property-card__price {
-    min-width: 0;
-    overflow-wrap: anywhere;
-}
-
-.property-card__photos {
-    flex: 0 0 auto;
-    white-space: nowrap;
-}
-
-.property-card__tags {
-    min-width: 0;
-    max-width: 100%;
-}
-
-.property-tag {
-    max-width: 100%;
-    white-space: nowrap;
-}
-
-@media (max-width: 768px) {
-    .property-card__media {
-        aspect-ratio: 16 / 10;
-    }
-
-    .property-card__tags {
-        justify-content: flex-start;
-    }
-}
 </style>

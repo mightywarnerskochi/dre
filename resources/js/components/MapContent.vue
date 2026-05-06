@@ -245,6 +245,7 @@
             </aside>
         </div>
     </section>
+    <ListingMobileExtras />
 </template>
 
 <script setup>
@@ -255,6 +256,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
+import ListingMobileExtras from '@/components/ListingMobileExtras.vue';
 import { dreOnPropertyImgError } from '@/utils/propertyImages';
 
 const DUBAI_CENTER = [25.2048, 55.2708];

@@ -83,7 +83,8 @@
             object-fit: cover;
             position: relative;
             z-index: 0;
-            @include max(575){
+
+            @include max(575) {
                 height: 540px;
                 object-fit: cover;
             }
@@ -213,12 +214,15 @@
         width: 100%;
         max-width: 100%;
         margin-top: 4px;
-        @include min(1200){
+
+        @include min(1200) {
             max-width: 87.679%;
         }
-        @include min(1350){
+
+        @include min(1350) {
             max-width: 72.679%;
         }
+
         @include max(991) {
             max-width: 100%;
         }
@@ -251,6 +255,7 @@
             input,
             .selected-text {
                 width: 100%;
+
                 &::placeholder {
                     color: #4B5C77;
 
@@ -328,9 +333,11 @@
             padding: 0;
             gap: 8px;
             position: relative;
-            @include min(768){
+
+            @include min(768) {
                 padding: 0 24px;
             }
+
             &:not(:last-child) {
                 border-right: 1px solid #E5E7EB;
 
@@ -357,7 +364,7 @@
                     background: rgba(255, 255, 255, 0.98);
                     border: 1px solid #e8eaed !important;
                     padding: 11px 10px !important;
-    
+
                     margin: 0;
                 }
             }
@@ -365,7 +372,8 @@
             svg {
                 color: #6B7280;
                 flex-shrink: 0;
-                @include max(991){
+
+                @include max(991) {
                     width: 18px;
                     height: 18px;
                     margin-right: 5px;
@@ -397,8 +405,9 @@
             padding: 12px;
             border-radius: 0px 0px 12px 12px;
             box-shadow: 1px 12px 10px 0px rgba(0, 0, 0, 0.25) !important;
-            transform: translate(0px, 40px) !important;
-            @include max(991){
+            transform: translate(0px, 37px) !important;
+
+            @include max(991) {
                 border-radius: 12px;
             }
 
@@ -469,8 +478,9 @@
         .dropdown-section-title {
             margin: 10px 0px;
             font-weight: 400;
-            @include max(991){
-                margin: 8px 0px  10px 0px;
+
+            @include max(991) {
+                margin: 8px 0px 10px 0px;
             }
         }
 
@@ -539,7 +549,8 @@
                 align-items: center;
                 justify-content: center;
                 margin: 0;
-                @include max(991){
+
+                @include max(991) {
                     padding: 4px 10px;
                     font-size: 12px;
                 }
@@ -630,9 +641,7 @@
             }
 
             .search-field--location {
-                .search-field__lead-icon {
-                    display: none;
-                }
+
 
                 input {
                     padding: 0px 6px 0px 0;
@@ -678,6 +687,110 @@
             .search-field {
                 padding-left: 0;
                 padding-right: 0;
+            }
+        }
+
+        .search-results-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 89%;
+            background: $white;
+            border-radius: 0px 0px 12px 12px;
+            // box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            margin-top: 17px;
+            z-index: 100;
+            display: none;
+            overflow: hidden;
+            padding: 20px 0;
+            text-align: left;
+
+            &.show {
+                display: block;
+            }
+
+            @include max(991) {
+                border-radius: 12px;
+                margin-top: 0px;
+                width: 100%;
+            }
+
+            .search-results-title {
+                padding: 0 24px 8px;
+                font-size: 16px;
+                font-weight: 600;
+                color: #1F2937;
+            }
+
+            .search-results-list {
+                max-height: 280px;
+                overflow-y: auto;
+
+                &.custom-scrollbar {
+                    &::-webkit-scrollbar {
+                        width: 6px;
+                    }
+
+                    &::-webkit-scrollbar-track {
+                        background: transparent;
+                    }
+
+                    &::-webkit-scrollbar-thumb {
+                        background: #D1D5DB;
+                        border-radius: 10px;
+                    }
+
+                    &::-webkit-scrollbar-thumb:hover {
+                        background: #9CA3AF;
+                    }
+                }
+            }
+
+            .search-results-item {
+                padding: 8px 24px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                cursor: pointer;
+                transition: background 0.2s ease;
+
+                &:hover {
+                    background: #F9FAFB;
+                }
+            }
+
+            .search-results-icon {
+                flex-shrink: 0;
+                width: 32px;
+                height: 32px;
+                background: #F3F4F6;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                svg {
+                    width: 18px;
+                    height: 18px;
+                }
+            }
+
+            .search-results-content {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .search-results-name {
+                font-size: 15px;
+                font-weight: 500;
+                color: #1F2937;
+                margin-bottom: 2px;
+            }
+
+            .search-results-city {
+                font-size: 13px;
+                color: #6B7280;
             }
         }
     }
@@ -919,7 +1032,7 @@
     .slick-slide {
         padding-right: clamp(14px, 1.266vw, 27px);
         height: auto;
-  
+
 
         @include min(576) {
             margin-right: 15px;
@@ -945,19 +1058,22 @@
 .property-card {
     position: relative;
     // padding: 0 0.75rem 0.75rem 0;
-    
+
     height: 100%;
     transition: 0.5s ease all;
-    @include min(992){
-        
+
+    @include min(992) {
+
         padding-right: clamp(10px, 2.1vw, 20px);
     }
-    @include max(991){
+
+    @include max(991) {
         margin-right: 20px;
         margin-left: 20px;
     }
-    &:hover{
-        .property-card__inner{
+
+    &:hover {
+        .property-card__inner {
             box-shadow: 10px 55px 41px -30px #99AED0;
             transition: 0.5s ease all;
             transform: translateY(-5px);
@@ -1006,15 +1122,14 @@
 
     img {
         width: 100%;
-        height: 100%;
+        height: clamp(190px, 12.1875vw, 260px);
         object-fit: cover;
         display: block;
         padding: 0 !important;
         transition: transform 0.5s ease;
     }
-    .slick-slide {
-     
-    }
+
+    .slick-slide {}
 }
 
 .property-card__dots {
@@ -1087,7 +1202,8 @@
     align-items: flex-start;
     gap: 0.35rem;
     margin-bottom: clamp(16px, 1.667vw, 22px);
-    span{
+
+    span {
         font-size: clamp(13px, 1.5vw, 16px);
     }
 
@@ -1107,7 +1223,8 @@
     display: flex;
     // flex-direction: column;
     gap: 0.75rem;
-    margin-bottom:15px;
+    margin-bottom: 15px;
+
     @include min(1200) {
         flex-direction: row;
         align-items: flex-start;
@@ -1167,19 +1284,24 @@
     line-height: 177.778%;
     padding: 0px 5px;
     transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
-    @include min(992){
+
+    @include min(992) {
         padding: 0px 4px;
     }
-    @include min(1200){
+
+    @include min(1200) {
         padding: 0px 5px;
     }
-    @include min(1440){
+
+    @include min(1440) {
         padding: 0px 6px;
     }
-    @include min(1600){
+
+    @include min(1600) {
         padding: 0px 7px;
     }
-    @include min(1900){
+
+    @include min(1900) {
         padding: 0px 8px;
     }
 
@@ -1200,9 +1322,7 @@
     align-items: stretch;
     border-top: 1px solid #E6E9F2;
     border-bottom: 1px solid #E6E9F2;
-    // Do not use margin-top: auto here: in a grid row, columns stretch to equal height
-    // and auto would absorb all free space above specs, so shorter titles look “broken”.
-    margin-top: 0;
+    margin-top: auto;
 }
 
 .property-details__item {
@@ -1267,24 +1387,29 @@
     text-align: center;
     text-decoration: none;
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-    font-size:14px;
-    @include min(992){
+    font-size: 14px;
+
+    @include min(992) {
         height: 35px;
         padding: 4px 9px;
     }
-    @include min(1440){
-    font-size:15px;
 
-}
-    @include min(1600){
-    font-size:14px;
+    @include min(1440) {
+        font-size: 15px;
 
-}
-    @include min(1900){
-    font-size:16px;
-    padding: 5px 10px;
+    }
 
-}
+    @include min(1600) {
+        font-size: 14px;
+
+    }
+
+    @include min(1900) {
+        font-size: 16px;
+        padding: 5px 10px;
+
+    }
+
     &--primary {
         background: $primaryColor;
         color: $white;
@@ -1308,7 +1433,7 @@
     &--outline {
         color: $primaryColor;
         border: 1px solid rgba($primaryColor, 0.25);
-        
+
 
         &:hover {
             background: $white;
@@ -1790,8 +1915,9 @@
                 min-height: 200px;
                 display: block;
                 object-fit: cover;
+
                 // box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-                @include max(575){
+                @include max(575) {
                     height: 300px;
                 }
             }
@@ -1819,7 +1945,7 @@
                 align-self: center;
                 box-sizing: border-box;
                 min-height: 36px;
-                line-height:normal;
+                line-height: normal;
                 font-size: clamp(12px, 1vw, 16px);
                 padding: clamp(4px, 0.417vw, 8px) clamp(6px, 0.521vw, 10px);
                 border-radius: 5px;

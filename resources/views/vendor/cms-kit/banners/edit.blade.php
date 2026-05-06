@@ -116,10 +116,12 @@
                                 </div>
                                 @endforeach
                             </div>
+                            @if(config('cms-kit.database.banners.items.additional_buttons', true))
                             <button type="button" class="btn btn-sm btn-primary mt-2 add-button rounded-pill px-3 shadow-sm" data-lang="{{ $lang->code }}">
                                 <i class="fas fa-plus me-1"></i> Add Another Button
                             </button>
                             <div class="form-text mt-2">Add or update call-to-action buttons for this banner.</div>
+                            @endif
                         </div>
                         @endif
 

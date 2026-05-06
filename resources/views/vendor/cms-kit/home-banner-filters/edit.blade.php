@@ -1,7 +1,7 @@
 @extends('cms-kit::layouts.cms')
 
 @section('breadcrumbs')
-    <li class="breadcrumb-item"><a href="{{ route('cms.home-banner-filters.index') }}">Home Banner Filters</a></li>
+    <li class="breadcrumb-item"><a href="{{ route('cms.home-banner-filters.index') }}">Site Filters</a></li>
     <li class="breadcrumb-item active" aria-current="page">Edit</li>
 @endsection
 

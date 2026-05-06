@@ -432,6 +432,49 @@ jQuery(function () {
     }
   }
 
+  // Location Search Results Dropdown
+  function initLocationSearch(inputId, dropdownId) {
+    const locationInput = document.getElementById(inputId);
+    const searchResults = document.getElementById(dropdownId);
+    
+    if (locationInput && searchResults) {
+      locationInput.addEventListener('input', function() {
+        if (this.value.trim().length > 0) {
+          searchResults.classList.add('show');
+        } else {
+          searchResults.classList.remove('show');
+        }
+      });
+
+      locationInput.addEventListener('focus', function() {
+        if (this.value.trim().length > 0) {
+          searchResults.classList.add('show');
+        }
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!locationInput.contains(e.target) && !searchResults.contains(e.target)) {
+          searchResults.classList.remove('show');
+        }
+      });
+
+      // Selection logic
+      searchResults.querySelectorAll('.search-results-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const name = this.querySelector('.search-results-name').textContent;
+          const city = this.querySelector('.search-results-city').textContent;
+          locationInput.value = name + ', ' + city;
+          searchResults.classList.remove('show');
+        });
+      });
+    }
+  }
+
+  // Initialize for homepage and listing page
+  initLocationSearch('locationInput', 'searchResults');
+  initLocationSearch('listingLocationInput', 'listingSearchResults');
+
   const categoriesField = document.getElementById("categoriesField");
   if (categoriesField) {
     const categoriesMenu = categoriesField.querySelector(".dropdown-menu");
@@ -464,15 +507,11 @@ jQuery(function () {
     const priceText = priceField.querySelector(".selected-text");
     const hiddenMinPrice = document.getElementById("hiddenMinPrice");
     const hiddenMaxPrice = document.getElementById("hiddenMaxPrice");
-    const minLabelEl = priceField.querySelector(".js-price-min-label");
-    const maxLabelEl = priceField.querySelector(".js-price-max-label");
+    const slider = document.getElementById("priceRangeSlider");
+    const minInput = priceField.querySelector(".js-slider-min-input");
+    const maxInput = priceField.querySelector(".js-slider-max-input");
     let minPriceVal = "";
     let maxPriceVal = "";
-
-    function formatPillAmount(val) {
-      if (!val) return "";
-      return Number(val).toLocaleString("en-US");
-    }
 
     function updatePriceLabel() {
       if (!priceText) return;
@@ -488,27 +527,58 @@ jQuery(function () {
       }
     }
 
-    priceField.querySelectorAll(".js-price-min-opt").forEach((btn) => {
-      btn.addEventListener("click", function () {
-        minPriceVal = this.getAttribute("data-value") || "";
+    if (slider && typeof noUiSlider !== "undefined") {
+      noUiSlider.create(slider, {
+        start: [0, 500000],
+        connect: true,
+        range: {
+          min: 0,
+          max: 1000000,
+        },
+        step: 5000,
+        format: {
+          to: (v) => Math.round(v),
+          from: (v) => Number(v),
+        },
+      });
+
+      slider.noUiSlider.on("update", function (values, handle) {
+        const minVal = values[0];
+        const maxVal = values[1];
+
+        minPriceVal = minVal == 0 ? "" : minVal;
+        maxPriceVal = maxVal == 1000000 ? "" : maxVal;
+
         if (hiddenMinPrice) hiddenMinPrice.value = minPriceVal;
-        if (minLabelEl) minLabelEl.textContent = minPriceVal ? formatPillAmount(minPriceVal) : "No Min";
-        updatePriceLabel();
-      });
-    });
-
-    priceField.querySelectorAll(".js-price-max-opt").forEach((btn) => {
-      btn.addEventListener("click", function () {
-        maxPriceVal = this.getAttribute("data-value") || "";
         if (hiddenMaxPrice) hiddenMaxPrice.value = maxPriceVal;
-        if (maxLabelEl) maxLabelEl.textContent = maxPriceVal ? formatPillAmount(maxPriceVal) : "No Max";
+
+        if (handle === 0 && minInput && !minInput.matches(":focus")) {
+          minInput.value = Number(minVal).toLocaleString("en-US");
+        }
+        if (handle === 1 && maxInput && !maxInput.matches(":focus")) {
+          maxInput.value = Number(maxVal).toLocaleString("en-US");
+        }
+
         updatePriceLabel();
       });
-    });
 
-    priceField.querySelectorAll(".price-range-pill-dd__toggle").forEach((t) => {
-      t.addEventListener("click", (e) => e.stopPropagation());
-    });
+      [minInput, maxInput].forEach((input, index) => {
+        if (!input) return;
+        input.addEventListener("change", function () {
+          let val = this.value.replace(/,/g, "");
+          if (isNaN(val) || val === "") val = index === 0 ? 0 : 1000000;
+
+          let newValues = [null, null];
+          newValues[index] = val;
+          slider.noUiSlider.set(newValues);
+        });
+
+        input.addEventListener("blur", function () {
+          let val = this.value.replace(/,/g, "");
+          this.value = Number(val).toLocaleString("en-US");
+        });
+      });
+    }
   }
 
   // --- Property card media inner slider ---
@@ -544,7 +614,7 @@ jQuery(function () {
 
   // --- Property card click-to-open ---
   (function initPropertyCardNavigation() {
-    const DETAIL_URL = "/our-property";
+    const DETAIL_URL = "properties-details.php";
     const INTERACTIVE_SELECTOR = [
       "a",
       "button",
@@ -599,318 +669,121 @@ jQuery(function () {
   // --- Property detail: similar listings row ---
   // Nested Slick (card media fade) + row Slick: inline heights on .slick-list / track / slides
   // can balloon; strip them so the row only wraps real content height.
-  // Exposed for Vue SPA: similar markup mounts after API fetch (after this ready handler runs).
-  if (typeof window.dreInitPropertyDetailSimilarSlider !== "function") {
-    window.dreClearSlickListTrackSlideHeights = function ($sliderRoots) {
-      $sliderRoots.each(function () {
-        const list = this.querySelector(":scope > .slick-list");
-        if (!list) return;
-        list.style.removeProperty("height");
-        list.style.removeProperty("min-height");
-        const track = list.querySelector(":scope > .slick-track");
-        if (!track) return;
-        track.style.removeProperty("height");
-        track.style.removeProperty("min-height");
-        Array.prototype.forEach.call(track.children, function (child) {
-          if (child.classList && child.classList.contains("slick-slide")) {
-            child.style.removeProperty("height");
-            child.style.removeProperty("min-height");
-          }
-        });
+  function clearSlickListTrackSlideHeights($sliderRoots) {
+    $sliderRoots.each(function () {
+      const list = this.querySelector(":scope > .slick-list");
+      if (!list) return;
+      list.style.removeProperty("height");
+      list.style.removeProperty("min-height");
+      const track = list.querySelector(":scope > .slick-track");
+      if (!track) return;
+      track.style.removeProperty("height");
+      track.style.removeProperty("min-height");
+      Array.prototype.forEach.call(track.children, function (child) {
+        if (child.classList && child.classList.contains("slick-slide")) {
+          child.style.removeProperty("height");
+          child.style.removeProperty("min-height");
+        }
       });
-    };
+    });
+  }
 
-    window.dreRefreshSimilarListingsLayout = function ($row, $section) {
-      if (!$row || !$row.length || !$row.hasClass("slick-initialized")) return;
-      requestAnimationFrame(function () {
-        $section.find(".property-card__media.slick-initialized").each(function () {
-          window.dreClearSlickListTrackSlideHeights($(this));
-        });
-        window.dreClearSlickListTrackSlideHeights($row);
-        $row.slick("setPosition");
-        requestAnimationFrame(function () {
-          window.dreClearSlickListTrackSlideHeights($row);
-        });
-      });
-    };
-
-    window.dreDestroyPropertyDetailSimilarSlider = function () {
-      if (typeof jQuery === "undefined") return;
-      const $row = jQuery(".js-property-detail-similar-slider");
-      if (!$row.length) return;
-      const $section = $row.closest(".property-detail-similar");
-      jQuery(window).off(".dreSimilarDetail");
-      $row.off(".dreSimilarDetail");
+  function refreshSimilarListingsLayout($row, $section) {
+    if (!$row.length || !$row.hasClass("slick-initialized")) return;
+    requestAnimationFrame(function () {
       $section.find(".property-card__media.slick-initialized").each(function () {
-        try {
-          jQuery(this).slick("unslick");
-        } catch (e) {
-          /* ignore */
-        }
+        clearSlickListTrackSlideHeights($(this));
       });
-      if ($row.hasClass("slick-initialized")) {
-        try {
-          $row.slick("unslick");
-        } catch (e) {
-          /* ignore */
-        }
+      clearSlickListTrackSlideHeights($row);
+      $row.slick("setPosition");
+      requestAnimationFrame(function () {
+        clearSlickListTrackSlideHeights($row);
+      });
+    });
+  }
+
+  const $similarDetailSlider = $(".js-property-detail-similar-slider");
+  if ($similarDetailSlider.length) {
+    const $similarSection = $similarDetailSlider.closest(".property-detail-similar");
+    const $similarFill = $similarSection.find(".property-slider__progress-fill");
+    const $similarBar = $similarSection.find(".property-slider__progress");
+
+    function updateSimilarDetailProgress(currentSlide, slideCount) {
+      const n = slideCount || 1;
+      const i = typeof currentSlide === "number" ? currentSlide : 0;
+      const pct = n <= 1 ? 100 : ((i + 1) / n) * 100;
+      $similarFill.css("width", Math.max(0, Math.min(100, pct)) + "%");
+      if ($similarBar.length) $similarBar.attr("aria-valuenow", Math.round(pct));
+    }
+
+    function isThisSimilarRowSlick(slick) {
+      return slick && slick.$slider && slick.$slider[0] === $similarDetailSlider[0];
+    }
+
+    $similarDetailSlider.on("init reInit", function (event, slick) {
+      if (isThisSimilarRowSlick(slick)) {
+        updateSimilarDetailProgress(slick.currentSlide, slick.slideCount);
       }
-    };
+      refreshSimilarListingsLayout($similarDetailSlider, $similarSection);
+    });
+    $similarDetailSlider.on("afterChange", function (event, slick, currentSlide) {
+      if (!isThisSimilarRowSlick(slick)) return;
+      updateSimilarDetailProgress(currentSlide, slick.slideCount);
+    });
 
-    window.dreInitPropertyDetailSimilarSlider = function () {
-      if (typeof jQuery === "undefined" || !jQuery.fn || !jQuery.fn.slick) return;
-      const $similarDetailSlider = jQuery(".js-property-detail-similar-slider");
-      if (!$similarDetailSlider.length) return;
-      if (!$similarDetailSlider.children(".property-detail-similar__slide").length) return;
+    var similarListingsResizeTimer;
+    $(window).on("resize", function () {
+      if (!$similarDetailSlider.hasClass("slick-initialized")) return;
+      clearTimeout(similarListingsResizeTimer);
+      similarListingsResizeTimer = setTimeout(function () {
+        refreshSimilarListingsLayout($similarDetailSlider, $similarSection);
+      }, 150);
+    });
 
-      window.dreDestroyPropertyDetailSimilarSlider();
-
-      const $similarSection = $similarDetailSlider.closest(".property-detail-similar");
-      const $similarFill = $similarSection.find(".property-slider__progress-fill");
-      const $similarBar = $similarSection.find(".property-slider__progress");
-
-      function updateSimilarDetailProgress(currentSlide, slideCount) {
-        const n = slideCount || 1;
-        const i = typeof currentSlide === "number" ? currentSlide : 0;
-        const pct = n <= 1 ? 100 : ((i + 1) / n) * 100;
-        $similarFill.css("width", Math.max(0, Math.min(100, pct)) + "%");
-        if ($similarBar.length) $similarBar.attr("aria-valuenow", Math.round(pct));
-      }
-
-      function isThisSimilarRowSlick(slick) {
-        return slick && slick.$slider && slick.$slider[0] === $similarDetailSlider[0];
-      }
-
-      $similarDetailSlider.on("init.dreSimilarDetail reInit.dreSimilarDetail", function (event, slick) {
-        if (isThisSimilarRowSlick(slick)) {
-          updateSimilarDetailProgress(slick.currentSlide, slick.slideCount);
-        }
-        window.dreRefreshSimilarListingsLayout($similarDetailSlider, $similarSection);
-      });
-      $similarDetailSlider.on("afterChange.dreSimilarDetail", function (event, slick, currentSlide) {
-        if (!isThisSimilarRowSlick(slick)) return;
-        updateSimilarDetailProgress(currentSlide, slick.slideCount);
-      });
-
-      var similarListingsResizeTimer;
-      jQuery(window).on("resize.dreSimilarDetail", function () {
-        if (!$similarDetailSlider.hasClass("slick-initialized")) return;
-        clearTimeout(similarListingsResizeTimer);
-        similarListingsResizeTimer = setTimeout(function () {
-          window.dreRefreshSimilarListingsLayout($similarDetailSlider, $similarSection);
-        }, 150);
-      });
-
-      $similarDetailSlider.slick({
-        slidesToShow: 4,
-        slidesToScroll: 1,
-        infinite: true,
-        arrows: false,
-        dots: false,
-        autoplay: true,
-        autoplaySpeed: 4000,
-        speed: 450,
-        responsive: [
-          {
-            breakpoint: 1400,
-            settings: {
-              slidesToShow: 3,
-              slidesToScroll: 1,
-            },
+    $similarDetailSlider.slick({
+      slidesToShow: 4,
+      slidesToScroll: 1,
+      infinite: true,
+      arrows: false,
+      dots: false,
+      autoplay: true,
+      autoplaySpeed: 4000,
+      speed: 450,
+      responsive: [
+        {
+          breakpoint: 1400,
+          settings: {
+            slidesToShow: 3,
+            slidesToScroll: 1,
           },
-          {
-            breakpoint: 992,
-            settings: {
-              slidesToShow: 2,
-              slidesToScroll: 1,
-            },
+        },
+        {
+          breakpoint: 992,
+          settings: {
+            slidesToShow: 2,
+            slidesToScroll: 1,
           },
-          {
-            breakpoint: 576,
-            settings: {
-              slidesToShow: 1,
-              slidesToScroll: 1,
-            },
-          },
-        ],
-      });
-
-      jQuery(window).on("load.dreSimilarDetail", function () {
-        window.dreRefreshSimilarListingsLayout($similarDetailSlider, $similarSection);
-      });
-
-      $similarSection
-        .find(".property-slider__arrow--prev")
-        .off("click.dreSimilarDetail")
-        .on("click.dreSimilarDetail", function () {
-          $similarDetailSlider.slick("slickPrev");
-        });
-      $similarSection
-        .find(".property-slider__arrow--next")
-        .off("click.dreSimilarDetail")
-        .on("click.dreSimilarDetail", function () {
-          $similarDetailSlider.slick("slickNext");
-        });
-
-      jQuery(".property-detail-similar .property-card__media").each(function () {
-        const $this = jQuery(this);
-        if ($this.hasClass("slick-initialized")) return;
-        let $slides = $this.children(".property-card__media-slide");
-        let slideSelector = ".property-card__media-slide";
-        if ($slides.length === 0) {
-          $slides = $this.children("picture");
-          slideSelector = "picture";
-        }
-        if ($slides.length > 1) {
-          $this.slick({
-            infinite: true,
+        },
+        {
+          breakpoint: 576,
+          settings: {
             slidesToShow: 1,
             slidesToScroll: 1,
-            arrows: false,
-            dots: true,
-            autoplay: true,
-            autoplaySpeed: 3500,
-            fade: true,
-            cssEase: "linear",
-            speed: 300,
-            appendDots: $this.find(".property-card__dots").empty(),
-            customPaging: function () {
-              return "<span></span>";
-            },
-            slide: slideSelector,
-          });
-        }
-      });
+          },
+        },
+      ],
+    });
 
-      window.dreRefreshSimilarListingsLayout($similarDetailSlider, $similarSection);
-    };
-  }
+    $(window).on("load", function () {
+      refreshSimilarListingsLayout($similarDetailSlider, $similarSection);
+    });
 
-  if (typeof window.dreInitPropertyDetailSimilarSlider === "function") {
-    window.dreInitPropertyDetailSimilarSlider();
-  }
-
-  // --- Property detail: main gallery Slick (Vue SPA mounts slides after API; jQuery.ready is too early) ---
-  if (typeof window.dreDestroyPropertyDetailGallerySlider !== "function") {
-    window.dreDestroyPropertyDetailGallerySlider = function () {
-      if (typeof jQuery === "undefined") return;
-      const $slider = jQuery(".js-property-detail-slider");
-      if (!$slider.length) return;
-      const sliderEl = $slider[0];
-      if (sliderEl && sliderEl.__dreGalleryNavHandler && sliderEl.__dreGalleryNavRoot) {
-        sliderEl.__dreGalleryNavRoot.removeEventListener("click", sliderEl.__dreGalleryNavHandler, true);
-        delete sliderEl.__dreGalleryNavHandler;
-        delete sliderEl.__dreGalleryNavRoot;
-      }
-      if (sliderEl && sliderEl.__dreFancyboxHandler) {
-        const btn = sliderEl.closest(".property-detail-gallery")?.querySelector(".js-property-gallery-fancybox");
-        if (btn) {
-          btn.removeEventListener("click", sliderEl.__dreFancyboxHandler);
-        }
-        delete sliderEl.__dreFancyboxHandler;
-      }
-      if ($slider.hasClass("slick-initialized")) {
-        try {
-          $slider.slick("unslick");
-        } catch (e) {
-          /* ignore */
-        }
-      }
-    };
-
-    window.dreInitPropertyDetailGallerySlider = function () {
-      if (typeof jQuery === "undefined" || !jQuery.fn || !jQuery.fn.slick) return;
-      window.dreDestroyPropertyDetailGallerySlider();
-      const $slider = jQuery(".js-property-detail-slider");
-      if (!$slider.length) return;
-      const slideSel = ".property-detail-gallery__slide";
-      if (!$slider.children(slideSel).length) return;
-      const sliderEl = $slider[0];
-      const galleryRoot = sliderEl.closest(".property-detail-gallery");
-
-      $slider.slick({
-        variableWidth: true,
-        infinite: true,
-        arrows: false,
-        dots: false,
-        slidesToShow: 1,
-        slidesToScroll: 1,
-        autoplay: true,
-        autoplaySpeed: 3500,
-        speed: 400,
-        centerMode: true,
-        swipeToSlide: true,
-        accessibility: false,
-        focusOnChange: false,
-        pauseOnFocus: false,
-      });
-
-      if (galleryRoot) {
-        const navHandler = function (e) {
-          const btn = e.target && e.target.closest && e.target.closest("[data-gallery-prev], [data-gallery-next]");
-          if (!btn || !galleryRoot.contains(btn)) return;
-          e.preventDefault();
-          try {
-            if (btn.hasAttribute("data-gallery-prev")) {
-              jQuery(sliderEl).slick("slickPrev");
-            } else {
-              jQuery(sliderEl).slick("slickNext");
-            }
-          } catch (err) {
-            /* noop */
-          }
-        };
-        galleryRoot.addEventListener("click", navHandler, true);
-        sliderEl.__dreGalleryNavHandler = navHandler;
-        sliderEl.__dreGalleryNavRoot = galleryRoot;
-      }
-
-      const fancyBtn = galleryRoot && galleryRoot.querySelector(".js-property-gallery-fancybox");
-      if (fancyBtn && typeof Fancybox !== "undefined") {
-        const fancyHandler = function (e) {
-          e.preventDefault();
-          const slider = galleryRoot.querySelector(".js-property-detail-slider");
-          if (!slider) return;
-          const imgs = slider.querySelectorAll(".slick-slide:not(.slick-cloned) img");
-          const slides = [];
-          imgs.forEach(function (img) {
-            const src = img.currentSrc || img.getAttribute("src");
-            if (!src) return;
-            const alt = (img.getAttribute("alt") || "").trim();
-            const item = { src: src, type: "image" };
-            if (alt) item.caption = alt;
-            slides.push(item);
-          });
-          if (!slides.length) return;
-          let startIndex = 0;
-          if (typeof jQuery !== "undefined" && jQuery.fn.slick && jQuery(slider).hasClass("slick-initialized")) {
-            try {
-              startIndex = jQuery(slider).slick("slickCurrentSlide") || 0;
-            } catch (err) {
-              startIndex = 0;
-            }
-          }
-          Fancybox.show(slides, {
-            startIndex: startIndex,
-            Carousel: { infinite: true },
-          });
-        };
-        fancyBtn.addEventListener("click", fancyHandler);
-        sliderEl.__dreFancyboxHandler = fancyHandler;
-      }
-
-      requestAnimationFrame(function () {
-        try {
-          $slider.slick("setPosition");
-        } catch (e) {
-          /* noop */
-        }
-      });
-    };
-  }
-
-  if (typeof window.dreInitPropertyDetailGallerySlider === "function") {
-    window.dreInitPropertyDetailGallerySlider();
+    $similarSection.find(".property-slider__arrow--prev").on("click", function () {
+      $similarDetailSlider.slick("slickPrev");
+    });
+    $similarSection.find(".property-slider__arrow--next").on("click", function () {
+      $similarDetailSlider.slick("slickNext");
+    });
   }
 
   // --- Enquiry Modal logic ---

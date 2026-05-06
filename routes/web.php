@@ -198,6 +198,8 @@ Route::get('/{any?}', function () {
             'styleVersion' => '15',
             'sitePublic' => PublicSiteViewData::forSpa(),
             'contentPublic' => [
+                'hero' => PublicContentViewData::heroDataForSpa(),
+                'search' => PublicContentViewData::homeSearchFiltersForSpa(),
                 'rentalSection' => PublicContentViewData::rentalSectionForSpa(),
                 'neighborhoods' => PublicContentViewData::neighborhoodsForSpa(),
                 'newsInsights' => PublicContentViewData::newsAndInsightsForSpa(),

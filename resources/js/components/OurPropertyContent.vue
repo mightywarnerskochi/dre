@@ -33,11 +33,31 @@
                         class="search-form search-form--listing"
                         @submit.prevent="onListingSearch"
                     >
-                        <div class="search-field search-field--location">
+                        <div class="search-field search-field--location position-relative">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
                                 <path d="M9 1.5C5.7 1.5 3 4.2 3 7.5C3 11.55 8.25 16.125 8.475 16.35C8.625 16.425 8.85 16.5 9 16.5C9.15 16.5 9.375 16.425 9.525 16.35C9.75 16.125 15 11.55 15 7.5C15 4.2 12.3 1.5 9 1.5ZM9 14.775C7.425 13.275 4.5 10.05 4.5 7.5C4.5 5.025 6.525 3 9 3C11.475 3 13.5 5.025 13.5 7.5C13.5 9.975 10.575 13.275 9 14.775ZM9 4.5C7.35 4.5 6 5.85 6 7.5C6 9.15 7.35 10.5 9 10.5C10.65 10.5 12 9.15 12 7.5C12 5.85 10.65 4.5 9 4.5ZM9 9C8.175 9 7.5 8.325 7.5 7.5C7.5 6.675 8.175 6 9 6C9.825 6 10.5 6.675 10.5 7.5C10.5 8.325 9.825 9 9 9Z" fill="#4B5C77"/>
                               </svg>
-                                <input type="text" name="location" :placeholder="t('listing.locationPlaceholder')" autocomplete="address-level2">
+                                <input type="text" name="location" v-model="locationQuery" :placeholder="t('listing.locationPlaceholder')" autocomplete="off" @focus="locationDropdownOpen = true" @blur="closeLocationDropdown" @input="locationDropdownOpen = true">
+                               <div v-if="locationDropdownOpen && locationSuggestions.length > 0" class="search-results-dropdown show" id="listingSearchResults">
+                                <div class="search-results-title">Popular locations</div>
+                                <div class="search-results-list custom-scrollbar">
+                                    <button
+                                        v-for="suggestion in locationSuggestions"
+                                        :key="suggestion.value"
+                                        type="button"
+                                        class="search-results-item"
+                                        @mousedown.prevent="selectLocation(suggestion.value)"
+                                    >
+                                        <div class="search-results-icon">
+                                            <svg class="search-field__lead-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"> <path d="M9 1.5C5.7 1.5 3 4.2 3 7.5C3 11.55 8.25 16.125 8.475 16.35C8.625 16.425 8.85 16.5 9 16.5C9.15 16.5 9.375 16.425 9.525 16.35C9.75 16.125 15 11.55 15 7.5C15 4.2 12.3 1.5 9 1.5ZM9 14.775C7.425 13.275 4.5 10.05 4.5 7.5C4.5 5.025 6.525 3 9 3C11.475 3 13.5 5.025 13.5 7.5C13.5 9.975 10.575 13.275 9 14.775ZM9 4.5C7.35 4.5 6 5.85 6 7.5C6 9.15 7.35 10.5 9 10.5C10.65 10.5 12 9.15 12 7.5C12 5.85 10.65 4.5 9 4.5ZM9 9C8.175 9 7.5 8.325 7.5 7.5C7.5 6.675 8.175 6 9 6C9.825 6 10.5 6.675 10.5 7.5C10.5 8.325 9.825 9 9 9Z" fill="#4B5C77"></path> </svg>
+                                        </div>
+                                        <div class="search-results-content">
+                                            <div class="search-results-name">{{ locationOptionName(suggestion) }}</div>
+                                            <div v-if="locationOptionSubtitle(suggestion)" class="search-results-city">{{ locationOptionSubtitle(suggestion) }}</div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
                             </div>
                         <div class="search-field dropdown-field dropdown search-field--filter" id="propertyTypeField">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -45,7 +65,7 @@
                                 <path d="M6 4.5H7.5M6 6.75H7.5M6 9H7.5" stroke="#4B5C77" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M8.625 16.5V13.5C8.625 12.7927 8.625 12.4395 8.40525 12.2197C8.1855 12 7.83225 12 7.125 12H6.375C5.66775 12 5.3145 12 5.09475 12.2197C4.875 12.4395 4.875 12.7927 4.875 13.5V16.5" stroke="#4B5C77" stroke-width="1.125" stroke-linejoin="round"/>
                               </svg>
-                            <button type="button" class="dropdown-trigger bg-transparent border-0 w-100 text-start" data-bs-toggle="dropdown" aria-expanded="false">
+                            <button type="button" class="dropdown-trigger bg-transparent border-0 w-100 text-start" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                                 <span class="selected-text">{{ propertyTypeTriggerText }}</span>
                             </button>
                             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -75,7 +95,7 @@
                                     </div>
                                 </div>
                                 <div v-if="propertyTypeOptions.length > 5" class="dropdown-footer">
-                                    <button type="button" class="view-more" @click.prevent="propertyTypesExpanded = !propertyTypesExpanded">
+                                    <button type="button" class="view-more" @click.stop="propertyTypesExpanded = !propertyTypesExpanded">
                                         {{ propertyTypesExpanded ? t('listing.viewLess') : t('listing.viewMore') }}
                                     </button>
                                 </div>
@@ -87,8 +107,8 @@
                                 <path d="M1.6875 14.625V10.6875C1.68926 10.0913 1.92688 9.52003 2.34846 9.09846C2.77003 8.67688 3.3413 8.43926 3.9375 8.4375H14.0625C14.6587 8.43926 15.23 8.67688 15.6515 9.09846C16.0731 9.52003 16.3107 10.0913 16.3125 10.6875V14.625M13.5 8.4375H3.375V4.78125C3.37611 4.40863 3.52463 4.05159 3.78811 3.78811C4.05159 3.52463 4.40863 3.37611 4.78125 3.375H13.2188C13.5914 3.37611 13.9484 3.52463 14.2119 3.78811C14.4754 4.05159 14.6239 4.40863 14.625 4.78125V8.4375H13.5Z" stroke="#4B5C77" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/>
                                 <path d="M1.6875 14.625V14.3438C1.68815 14.1202 1.77725 13.9059 1.93535 13.7478C2.09344 13.5898 2.30767 13.5006 2.53125 13.5H15.4688C15.6923 13.5006 15.9066 13.5898 16.0647 13.7478C16.2227 13.9059 16.3119 14.1202 16.3125 14.3438V14.625M3.9375 8.4375V7.875C3.93833 7.57689 4.05713 7.29122 4.26793 7.08043C4.47872 6.86963 4.76439 6.75083 5.0625 6.75H7.875C8.17311 6.75083 8.45878 6.86963 8.66957 7.08043C8.88037 7.29122 8.99917 7.57689 9 7.875M9 7.875V8.4375M9 7.875C9.00083 7.57689 9.11963 7.29122 9.33043 7.08043C9.54122 6.86963 9.82689 6.75083 10.125 6.75H12.9375C13.2356 6.75083 13.5213 6.86963 13.7321 7.08043C13.9429 7.29122 14.0617 7.57689 14.0625 7.875V8.4375" stroke="#4B5C77" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/>
                               </svg>
-                            <button type="button" class="dropdown-trigger bg-transparent border-0 w-100 text-start" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span class="selected-text">{{ t('listing.selectBedsBaths') }}</span>
+                            <button type="button" class="dropdown-trigger bg-transparent border-0 w-100 text-start" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                                <span class="selected-text">{{ bedsBathsTriggerText }}</span>
                             </button>
                             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                 <path d="M16.1595 5.95463C15.9485 5.74373 15.6624 5.62525 15.3641 5.62525C15.0658 5.62525 14.7797 5.74373 14.5688 5.95463L9.00001 11.5234L3.43126 5.95463C3.21908 5.7497 2.9349 5.63631 2.63993 5.63887C2.34496 5.64144 2.06279 5.75975 1.85421 5.96834C1.64563 6.17692 1.52731 6.45908 1.52475 6.75406C1.52219 7.04903 1.63558 7.3332 1.84051 7.54538L8.20463 13.9095C8.4156 14.1204 8.7017 14.2389 9.00001 14.2389C9.29832 14.2389 9.58441 14.1204 9.79538 13.9095L16.1595 7.54538C16.3704 7.33441 16.4889 7.04832 16.4889 6.75001C16.4889 6.4517 16.3704 6.1656 16.1595 5.95463Z" fill="#4B5C77"/>
@@ -97,26 +117,25 @@
                                 <div class="dropdown-section">
                                     <div class="dropdown-section-title">{{ t('listing.bedrooms') }}</div>
                                     <div class="option-buttons" data-type="bedrooms">
-                                        <label class="custom-check-btn"><input type="checkbox" class="btn-check bed-check" value="Studio" id="pl-bed-studio">{{ t('listing.studio') }}</label>
-                                        <label class="custom-check-btn"><input type="checkbox" class="btn-check bed-check" value="1" id="pl-bed-1">1</label>
-                                        <label class="custom-check-btn"><input type="checkbox" class="btn-check bed-check" value="2" id="pl-bed-2">2</label>
-                                        <label class="custom-check-btn"><input type="checkbox" class="btn-check bed-check" value="3" id="pl-bed-3">3</label>
+                                        <button v-for="val in bedroomOptions" :key="'bed-' + val" type="button" :class="{ active: selectedBeds.includes(val) }" @click="toggleBed(val)">
+                                            {{ val === 'Studio' ? t('listing.studio') : val }}
+                                        </button>
                                     </div>
                                 </div>
                                 <div class="dropdown-section">
                                     <div class="dropdown-section-title">{{ t('listing.bathrooms') }}</div>
                                     <div class="option-buttons" data-type="bathrooms">
-                                        <label class="custom-check-btn"><input type="checkbox" class="btn-check bath-check" value="1" id="pl-bath-1">1</label>
-                                        <label class="custom-check-btn"><input type="checkbox" class="btn-check bath-check" value="2" id="pl-bath-2">2</label>
-                                        <label class="custom-check-btn"><input type="checkbox" class="btn-check bath-check" value="3" id="pl-bath-3">3</label>
+                                        <button v-for="val in bathroomOptions" :key="'bath-' + val" type="button" :class="{ active: selectedBaths.includes(val) }" @click="toggleBath(val)">
+                                            {{ val }}
+                                        </button>
                                     </div>
                                 </div>
                                 <div class="dropdown-footer">
-                                    <button type="button" class="clear-filters">{{ t('listing.clearFilters') }}</button>
+                                    <button type="button" class="clear-filters" @click="clearBedsBaths">{{ t('listing.clearFilters') }}</button>
                                 </div>
                             </div>
-                            <input type="hidden" name="bedrooms" id="hiddenBedrooms">
-                            <input type="hidden" name="bathrooms" id="hiddenBathrooms">
+                            <input type="hidden" name="bedrooms" id="hiddenBedrooms" :value="selectedBeds.join(',')">
+                            <input type="hidden" name="bathrooms" id="hiddenBathrooms" :value="selectedBaths.join(',')">
                         </div>
                         <div class="search-field dropdown-field dropdown search-field--filter" id="categoriesField">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
@@ -154,55 +173,49 @@
                                 <path d="M3.5459 12.1029C2.38715 10.9434 1.8074 10.3644 1.59215 9.61218C1.37615 8.85993 1.56065 8.06118 1.92965 6.46443L2.1419 5.54343C2.45165 4.19943 2.6069 3.52743 3.06665 3.06693C3.5264 2.60643 4.19915 2.45193 5.54315 2.14218L6.46415 1.92918C8.06165 1.56093 8.85965 1.37643 9.6119 1.59168C10.3641 1.80768 10.9431 2.38743 12.1019 3.54618L13.4744 4.91868C15.4926 6.93618 16.4999 7.94418 16.4999 9.19668C16.4999 10.4499 15.4919 11.4579 13.4751 13.4747C11.4576 15.4922 10.4496 16.5002 9.1964 16.5002C7.9439 16.5002 6.93515 15.4922 4.9184 13.4754L3.5459 12.1029Z" stroke="#4B5C77" stroke-width="1.125"/>
                                 <path d="M11.5443 11.5443C11.983 11.1041 12.0422 10.4516 11.6762 10.0848C11.3102 9.71806 10.657 9.77806 10.2175 10.2176C9.77875 10.6571 9.1255 10.7163 8.7595 10.3503C8.3935 9.98431 8.45275 9.33106 8.89225 8.89231M8.89225 8.89231L8.62675 8.62681M8.89225 8.89231C9.1405 8.64331 9.457 8.51731 9.75175 8.51956M11.809 11.8091L11.5435 11.5436C11.2435 11.8443 10.8422 11.9673 10.5017 11.8968" stroke="#4B5C77" stroke-width="1.125" stroke-linecap="round"/>
                                 <path d="M7.51792 7.72082C8.1037 7.13503 8.1037 6.18528 7.51792 5.5995C6.93213 5.01371 5.98238 5.01371 5.3966 5.5995C4.81081 6.18528 4.81081 7.13503 5.3966 7.72082C5.98238 8.3066 6.93213 8.3066 7.51792 7.72082Z" stroke="#4B5C77" stroke-width="1.125"/>
-                              </svg>
+                            </svg>
                             <button type="button" class="dropdown-trigger bg-transparent border-0 w-100 text-start" data-bs-toggle="dropdown" aria-expanded="false">
-                                <span class="selected-text">{{ t('listing.pricePlaceholder') }}</span>
+                                <span class="selected-text">{{ priceTriggerText }}</span>
                             </button>
                             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                 <path d="M16.1595 5.95463C15.9485 5.74373 15.6624 5.62525 15.3641 5.62525C15.0658 5.62525 14.7797 5.74373 14.5688 5.95463L9.00001 11.5234L3.43126 5.95463C3.21908 5.7497 2.9349 5.63631 2.63993 5.63887C2.34496 5.64144 2.06279 5.75975 1.85421 5.96834C1.64563 6.17692 1.52731 6.45908 1.52475 6.75406C1.52219 7.04903 1.63558 7.3332 1.84051 7.54538L8.20463 13.9095C8.4156 14.1204 8.7017 14.2389 9.00001 14.2389C9.29832 14.2389 9.58441 14.1204 9.79538 13.9095L16.1595 7.54538C16.3704 7.33441 16.4889 7.04832 16.4889 6.75001C16.4889 6.4517 16.3704 6.1656 16.1595 5.95463Z" fill="#4B5C77"/>
                             </svg>
                             <div class="dropdown-menu price-range-dropdown price-range-dropdown--listing border-0">
-                                <div class="price-range-dropdown__grid">
-                                    <div class="price-range-dropdown__cell">
-                                        <span class="price-range-dropdown__heading">{{ t('listing.minPrice') }}</span>
-                                        <div class="dropdown price-range-pill-dd">
-                                            <button type="button" class="price-range-pill-dd__toggle dropdown-toggle" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="true" aria-expanded="false">
-                                                <span class="js-price-min-label">{{ t('listing.noMin') }}</span>
-                                                <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                                    <path d="M16.1595 5.95463C15.9485 5.74373 15.6624 5.62525 15.3641 5.62525C15.0658 5.62525 14.7797 5.74373 14.5688 5.95463L9.00001 11.5234L3.43126 5.95463C3.21908 5.7497 2.9349 5.63631 2.63993 5.63887C2.34496 5.64144 2.06279 5.75975 1.85421 5.96834C1.64563 6.17692 1.52731 6.45908 1.52475 6.75406C1.52219 7.04903 1.63558 7.3332 1.84051 7.54538L8.20463 13.9095C8.4156 14.1204 8.7017 14.2389 9.00001 14.2389C9.29832 14.2389 9.58441 14.1204 9.79538 13.9095L16.1595 7.54538C16.3704 7.33441 16.4889 7.04832 16.4889 6.75001C16.4889 6.4517 16.3704 6.1656 16.1595 5.95463Z" fill="#4B5C77"/>
-                                                </svg>
-                                            </button>
-                                            <ul class="dropdown-menu price-range-pill-dd__menu">
-                                                <li><button type="button" class="dropdown-item js-price-min-opt" data-value="">{{ t('listing.noMin') }}</button></li>
-                                                <li><button type="button" class="dropdown-item js-price-min-opt" data-value="25000">25,000</button></li>
-                                                <li><button type="button" class="dropdown-item js-price-min-opt" data-value="50000">50,000</button></li>
-                                                <li><button type="button" class="dropdown-item js-price-min-opt" data-value="100000">100,000</button></li>
-                                                <li><button type="button" class="dropdown-item js-price-min-opt" data-value="250000">250,000</button></li>
-                                            </ul>
+                                <div class="price-range-slider-container">
+                                    <div id="priceRangeSlider" ref="priceSliderRef" class="price-range-slider"></div>
+                                    <div class="price-range-slider-display">
+                                        <div class="price-range-slider-display__field">
+                                            <input
+                                                type="text"
+                                                class="js-slider-min-input"
+                                                :value="formatPriceInput(priceMinValue || 0)"
+                                                aria-label="Minimum price"
+                                                inputmode="numeric"
+                                                @change="setPriceInput('min', $event)"
+                                                @blur="normalizePriceInput('min', $event)"
+                                                @keydown.enter.prevent="setPriceInput('min', $event)"
+                                            >
+                                            <span class="currency">AED</span>
                                         </div>
-                                    </div>
-                                    <div class="price-range-dropdown__cell">
-                                        <span class="price-range-dropdown__heading">{{ t('listing.maxPrice') }}</span>
-                                        <div class="dropdown price-range-pill-dd">
-                                            <button type="button" class="price-range-pill-dd__toggle dropdown-toggle" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="true" aria-expanded="false">
-                                                <span class="js-price-max-label">{{ t('listing.noMax') }}</span>
-                                                <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                                    <path d="M16.1595 5.95463C15.9485 5.74373 15.6624 5.62525 15.3641 5.62525C15.0658 5.62525 14.7797 5.74373 14.5688 5.95463L9.00001 11.5234L3.43126 5.95463C3.21908 5.7497 2.9349 5.63631 2.63993 5.63887C2.34496 5.64144 2.06279 5.75975 1.85421 5.96834C1.64563 6.17692 1.52731 6.45908 1.52475 6.75406C1.52219 7.04903 1.63558 7.3332 1.84051 7.54538L8.20463 13.9095C8.4156 14.1204 8.7017 14.2389 9.00001 14.2389C9.29832 14.2389 9.58441 14.1204 9.79538 13.9095L16.1595 7.54538C16.3704 7.33441 16.4889 7.04832 16.4889 6.75001C16.4889 6.4517 16.3704 6.1656 16.1595 5.95463Z" fill="#4B5C77"/>
-                                                </svg>
-                                            </button>
-                                            <ul class="dropdown-menu price-range-pill-dd__menu">
-                                                <li><button type="button" class="dropdown-item js-price-max-opt" data-value="">{{ t('listing.noMax') }}</button></li>
-                                                <li><button type="button" class="dropdown-item js-price-max-opt" data-value="100000">100,000</button></li>
-                                                <li><button type="button" class="dropdown-item js-price-max-opt" data-value="250000">250,000</button></li>
-                                                <li><button type="button" class="dropdown-item js-price-max-opt" data-value="500000">500,000</button></li>
-                                                <li><button type="button" class="dropdown-item js-price-max-opt" data-value="1000000">1,000,000</button></li>
-                                            </ul>
+                                        <span class="slider-sep">-</span>
+                                        <div class="price-range-slider-display__field">
+                                            <input
+                                                type="text"
+                                                class="js-slider-max-input"
+                                                :value="formatPriceInput(priceMaxValue || PRICE_MAX)"
+                                                aria-label="Maximum price"
+                                                inputmode="numeric"
+                                                @change="setPriceInput('max', $event)"
+                                                @blur="normalizePriceInput('max', $event)"
+                                                @keydown.enter.prevent="setPriceInput('max', $event)"
+                                            >
+                                            <span class="currency">AED</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <input type="hidden" name="min_price" id="hiddenMinPrice" value="">
-                            <input type="hidden" name="max_price" id="hiddenMaxPrice" value="">
+                            <input type="hidden" name="min_price" id="hiddenMinPrice" :value="priceMinValue">
+                            <input type="hidden" name="max_price" id="hiddenMaxPrice" :value="priceMaxValue">
                         </div>
                         <button type="submit" class="search-btn search-btn--listing" :aria-label="t('listing.searchAria')">
                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 15 15" fill="none" aria-hidden="true">
@@ -228,6 +241,27 @@
                           </svg>
                         {{ t('listing.map') }}
                     </RouterLink>
+                    <div class="dropdown">
+                        <button type="button" class="listing-toolbar__btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M4 6H20M8 12H16M10 18H14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M6 4V8M18 10V14M12 16V20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                            {{ activeSortLabel }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end custom-dropdown-menu custom-dropdown-menu--toolbar">
+                            <li v-for="option in sortOptions" :key="option.value">
+                                <button
+                                    type="button"
+                                    class="dropdown-item"
+                                    :class="{ active: selectedSort === option.value }"
+                                    @click="selectSort(option.value)"
+                                >
+                                    {{ option.label }}
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
                     <div class="listing-toolbar__views" role="group" :aria-label="t('listing.layoutAria')">
                         <button type="button" class="listing-toolbar__view-btn" data-listing-view="list" :aria-label="t('listing.listViewAria')" aria-pressed="false">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -246,32 +280,165 @@
             <OurPropertyListingGrid ref="listingGridRef" />
         </div>
     </section>
+    <ListingMobileExtras
+        :sort-options="sortOptions"
+        :active-sort="selectedSort"
+        @sort-change="selectSort"
+    />
 
 
 
 </template>
 
 <script setup>
-import { computed, onMounted, provide, ref, watch } from 'vue';
-import { RouterLink } from 'vue-router';
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
+import { RouterLink, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
+import ListingMobileExtras from '@/components/ListingMobileExtras.vue';
 import OurPropertyListingGrid from '@/components/OurPropertyListingGrid.vue';
 
 const { locale, t } = useI18n({ useScope: 'global' });
 
 const listingGridRef = ref(null);
+const route = useRoute();
 const propertyTypeOptions = ref([]);
 const categoryOptions = ref([]);
-const selectedPropertyType = ref('');
-const selectedCategory = ref('');
+const locationOptions = ref([]);
+const selectedPropertyType = ref(route.query.type || '');
+const selectedCategory = ref(route.query.category || '');
+const selectedSort = ref(route.query.sort || 'newest');
+const PRICE_MIN = 0;
+const PRICE_MAX = 1000000;
+const PRICE_STEP = 5000;
+const priceMinValue = ref(normalizePriceNumber(route.query.min_price, PRICE_MIN));
+const priceMaxValue = ref(normalizePriceNumber(route.query.max_price, PRICE_MAX));
+const selectedBeds = ref(route.query.beds ? route.query.beds.split(',').map(b => {
+    if (b === '0') return 'Studio';
+    if (b === '7') return '7+';
+    return b;
+}) : []);
+const selectedBaths = ref(route.query.baths ? route.query.baths.split(',').map(b => {
+    if (b === '7') return '7+';
+    return b;
+}) : []);
+const locationQuery = ref(route.query.location || '');
+const locationDropdownOpen = ref(false);
 const propertyTypesExpanded = ref(false);
+const priceSliderRef = ref(null);
+let priceSliderRetry = null;
+
+const bedroomOptions = ['Studio', '1', '2', '3', '4', '5', '6', '7', '7+'];
+const bathroomOptions = ['1', '2', '3', '4', '5', '6', '7', '7+'];
+const sortOptions = [
+    { value: 'newest', label: 'Newest first' },
+    { value: 'price_asc', label: 'Price: low to high' },
+    { value: 'price_desc', label: 'Price: high to low' },
+    { value: 'area_desc', label: 'Largest area' },
+];
+
+function locationOptionMeta(option) {
+    const raw = option?.label;
+    if (raw && typeof raw === 'object') {
+        const localized = raw[locale.value] || raw.en || raw;
+        return localized && typeof localized === 'object' ? localized : { label: localized };
+    }
+
+    return {
+        label: raw || option?.value || '',
+        subtitle: option?.subtitle || option?.city || '',
+        type: option?.type || '',
+    };
+}
+
+function locationOptionName(option) {
+    return String(locationOptionMeta(option).label || option?.value || '');
+}
+
+function locationOptionSubtitle(option) {
+    const meta = locationOptionMeta(option);
+    return String(meta.subtitle || meta.city || meta.type || '');
+}
+
+const locationSuggestions = computed(() => {
+    const search = locationQuery.value.trim().toLowerCase();
+    if (!search) return locationOptions.value.slice(0, 10);
+
+    return locationOptions.value.filter(opt => {
+        const haystack = [
+            locationOptionName(opt),
+            locationOptionSubtitle(opt),
+            opt.value,
+        ].join(' ').toLowerCase();
+
+        return haystack.includes(search);
+    }).slice(0, 10);
+});
+
+function selectLocation(val) {
+    const opt = locationOptions.value.find(o => o.value === val);
+    if (opt) {
+        locationQuery.value = locationOptionName(opt);
+    } else {
+        locationQuery.value = val;
+    }
+    locationDropdownOpen.value = false;
+}
+
+function highlightMatch(text, search) {
+    if (!search || !text) return text;
+    const regex = new RegExp(`(${search})`, 'gi');
+    return text.replace(regex, '<strong>$1</strong>');
+}
+
+function closeLocationDropdown() {
+    locationDropdownOpen.value = false;
+}
 
 const dreVueListingFilters = computed(() => ({
     property_type: selectedPropertyType.value,
     categories: selectedCategory.value,
+    bedrooms: selectedBeds.value.join(','),
+    bathrooms: selectedBaths.value.join(','),
+    location: locationQuery.value,
+    sort: selectedSort.value,
+    min_price: priceMinValue.value > PRICE_MIN ? String(priceMinValue.value) : '',
+    max_price: priceMaxValue.value < PRICE_MAX ? String(priceMaxValue.value) : '',
 }));
 provide('dreVueListingFilters', dreVueListingFilters);
+
+const activeSortLabel = computed(() => {
+    return sortOptions.find((option) => option.value === selectedSort.value)?.label || 'Sort';
+});
+
+const priceTriggerText = computed(() => {
+    const minActive = priceMinValue.value > PRICE_MIN;
+    const maxActive = priceMaxValue.value < PRICE_MAX;
+    if (minActive && maxActive) {
+        return `${formatPriceInput(priceMinValue.value)} - ${formatPriceInput(priceMaxValue.value)} د.إ`;
+    }
+    if (minActive) {
+        return `From ${formatPriceInput(priceMinValue.value)} د.إ`;
+    }
+    if (maxActive) {
+        return `Up to ${formatPriceInput(priceMaxValue.value)} د.إ`;
+    }
+    return t('listing.pricePlaceholder');
+});
+
+const bedsBathsTriggerText = computed(() => {
+    if (selectedBeds.value.length === 0 && selectedBaths.value.length === 0) {
+        return t('listing.selectBedsBaths');
+    }
+    const parts = [];
+    if (selectedBeds.value.length > 0) {
+        parts.push(`${selectedBeds.value.join(', ')} Beds`);
+    }
+    if (selectedBaths.value.length > 0) {
+        parts.push(`${selectedBaths.value.join(', ')} Baths`);
+    }
+    return parts.join(' | ');
+});
 
 const propertyTypeTriggerText = computed(() => {
     const o = propertyTypeOptions.value.find((x) => x.value === selectedPropertyType.value);
@@ -291,6 +458,108 @@ function selectCategory(opt) {
     selectedCategory.value = selectedCategory.value === opt.value ? '' : opt.value;
 }
 
+function toggleBed(val) {
+    const idx = selectedBeds.value.indexOf(val);
+    if (idx > -1) selectedBeds.value.splice(idx, 1);
+    else selectedBeds.value.push(val);
+}
+
+function toggleBath(val) {
+    const idx = selectedBaths.value.indexOf(val);
+    if (idx > -1) selectedBaths.value.splice(idx, 1);
+    else selectedBaths.value.push(val);
+}
+
+function clearBedsBaths() {
+    selectedBeds.value = [];
+    selectedBaths.value = [];
+}
+
+function normalizePriceNumber(value, fallback) {
+    const raw = String(value ?? '').replace(/,/g, '').trim();
+    if (raw === '') return fallback;
+
+    const n = Number(raw);
+    if (!Number.isFinite(n)) return fallback;
+    return Math.min(PRICE_MAX, Math.max(PRICE_MIN, Math.round(n / PRICE_STEP) * PRICE_STEP));
+}
+
+function formatPriceInput(value) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n.toLocaleString('en-US') : '';
+}
+
+function syncPriceSlider() {
+    const slider = priceSliderRef.value;
+    if (!slider?.noUiSlider) return;
+    slider.noUiSlider.set([priceMinValue.value, priceMaxValue.value]);
+}
+
+function setPriceRange(min, max, syncSlider = false) {
+    let nextMin = normalizePriceNumber(min, PRICE_MIN);
+    let nextMax = normalizePriceNumber(max, PRICE_MAX);
+    if (nextMin > nextMax) {
+        if (syncSlider) {
+            nextMin = Math.min(nextMin, nextMax);
+        } else {
+            [nextMin, nextMax] = [nextMax, nextMin];
+        }
+    }
+    priceMinValue.value = nextMin;
+    priceMaxValue.value = nextMax;
+    if (syncSlider) syncPriceSlider();
+}
+
+function setPriceInput(kind, event) {
+    const raw = event?.target?.value ?? '';
+    const value = normalizePriceNumber(raw, kind === 'min' ? PRICE_MIN : PRICE_MAX);
+    if (kind === 'min') {
+        setPriceRange(value, priceMaxValue.value, true);
+    } else {
+        setPriceRange(priceMinValue.value, value, true);
+    }
+}
+
+function normalizePriceInput(kind, event) {
+    setPriceInput(kind, event);
+    if (event?.target) {
+        event.target.value = formatPriceInput(kind === 'min' ? priceMinValue.value : priceMaxValue.value);
+    }
+}
+
+function initPriceSlider() {
+    const slider = priceSliderRef.value;
+    if (!slider) return;
+    if (typeof window.noUiSlider === 'undefined') {
+        priceSliderRetry = window.setTimeout(initPriceSlider, 100);
+        return;
+    }
+    if (slider.noUiSlider) {
+        slider.noUiSlider.destroy();
+    }
+    window.noUiSlider.create(slider, {
+        start: [priceMinValue.value, priceMaxValue.value],
+        connect: true,
+        range: {
+            min: PRICE_MIN,
+            max: PRICE_MAX,
+        },
+        step: PRICE_STEP,
+        format: {
+            to: (v) => Math.round(v),
+            from: (v) => Number(v),
+        },
+    });
+    slider.noUiSlider.on('update', (values) => {
+        setPriceRange(values[0], values[1], false);
+    });
+}
+
+async function selectSort(value) {
+    selectedSort.value = value || 'newest';
+    await listingGridRef.value?.loadFirstPage?.();
+}
+
 async function loadFilterOptions() {
     try {
         const { data } = await window.axios.get('/api/properties/filter-options', {
@@ -298,10 +567,12 @@ async function loadFilterOptions() {
         });
         propertyTypeOptions.value = Array.isArray(data.property_types) ? data.property_types : [];
         categoryOptions.value = Array.isArray(data.categories) ? data.categories : [];
+        locationOptions.value = Array.isArray(data.locations) ? data.locations.filter(o => o.value !== '') : [];
     } catch (e) {
         console.error(e);
         propertyTypeOptions.value = [];
         categoryOptions.value = [];
+        locationOptions.value = [];
     }
     if (selectedPropertyType.value && !propertyTypeOptions.value.some((x) => x.value === selectedPropertyType.value)) {
         selectedPropertyType.value = '';
@@ -315,6 +586,20 @@ async function onListingSearch() {
     await listingGridRef.value?.loadFirstPage?.();
 }
 
-onMounted(loadFilterOptions);
+onMounted(async () => {
+    loadFilterOptions();
+    await nextTick();
+    initPriceSlider();
+});
 watch(locale, loadFilterOptions);
+
+onBeforeUnmount(() => {
+    if (priceSliderRetry) {
+        window.clearTimeout(priceSliderRetry);
+        priceSliderRetry = null;
+    }
+    if (priceSliderRef.value?.noUiSlider) {
+        priceSliderRef.value.noUiSlider.destroy();
+    }
+});
 </script>

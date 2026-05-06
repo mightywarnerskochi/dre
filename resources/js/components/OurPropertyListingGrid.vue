@@ -3,15 +3,22 @@
         <p v-if="listError" class="w-100 text-danger py-4">{{ t(listError) }}</p>
         <template v-for="prop in properties" :key="prop.id">
             <div class="properties-col">
-                <article class="property-card property-card--listing" :data-property-url="listingCardDetailUrl(prop)">
+                <article
+                    class="property-card property-card--listing"
+                    :data-property-url="listingCardDetailUrl(prop)"
+                    role="link"
+                    tabindex="0"
+                    @click="openListingCard(prop, $event)"
+                    @keydown.enter.prevent="openListingCard(prop, $event)"
+                >
                     <div class="property-card__ghost" aria-hidden="true"></div>
                     <div class="property-card__inner">
                         <div class="property-card__media">
                             <span v-if="prop.is_featured" class="property-card__badge">{{ t('listing.featured') }}</span>
                             <picture>
                                 <img
-                                    :key="`${prop.id}-${activeSlide[prop.id] ?? 0}`"
-                                    :src="cardImages(prop)[activeSlide[prop.id] ?? 0]"
+                                    :key="`${prop.id}-${getActiveImageIndex(prop)}`"
+                                    :src="getActiveImage(prop)"
                                     :alt="prop.title"
                                     width="427"
                                     height="260"
@@ -21,12 +28,12 @@
                             </picture>
                             <div class="property-card__dots" role="tablist" :aria-label="t('listing.photoGalleryAria')">
                                 <button
-                                    v-for="(img, idx) in cardImages(prop)"
+                                    v-for="(img, idx) in cardSliderImages(prop)"
                                     :key="`${prop.id}-dot-${idx}`"
                                     type="button"
-                                    :class="{ 'is-active': idx === (activeSlide[prop.id] ?? 0) }"
+                                    :class="{ 'is-active': idx === getActiveImageIndex(prop) }"
                                     :aria-label="t('listing.photoNumberAria', { n: idx + 1 })"
-                                    @click="activeSlide[prop.id] = idx"
+                                    @click.stop="setActiveImage(prop.id, idx)"
                                 />
                             </div>
                             <a
@@ -111,6 +118,17 @@
                 </article>
             </div>
         </template>
+        <div v-if="!listLoading && !listError && properties.length === 0" class="property-listing-empty w-100" role="status">
+            <div class="property-listing-empty__icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 24 24" fill="none">
+                    <path d="M10.5 18C14.6421 18 18 14.6421 18 10.5C18 6.35786 14.6421 3 10.5 3C6.35786 3 3 6.35786 3 10.5C3 14.6421 6.35786 18 10.5 18Z" stroke="currentColor" stroke-width="1.8" />
+                    <path d="M16 16L21 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    <path d="M8.25 9H12.75M8.25 12H11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
+            </div>
+            <h3 class="property-listing-empty__title">{{ t('listing.noResultsTitle') }}</h3>
+            <p class="property-listing-empty__text">{{ t('listing.noResultsText') }}</p>
+        </div>
         <div v-if="listLoading" class="w-100 text-center py-5" role="status">{{ t('listing.loading') }}</div>
         <div ref="loadMoreSentinel" class="w-100" style="height: 1px;" aria-hidden="true" />
     </div>
@@ -118,6 +136,7 @@
 
 <script setup>
 import { inject, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import {
     dreNormalizePropertyImages,
@@ -126,6 +145,8 @@ import {
 } from '@/utils/propertyImages';
 
 const { locale, t } = useI18n({ useScope: 'global' });
+const route = useRoute();
+const router = useRouter();
 
 /** Vue-managed type/category (parent); FormData alone can miss :value hiddens or wrong .search-form--listing. */
 const dreVueListingFilters = inject('dreVueListingFilters', null);
@@ -139,6 +160,19 @@ const nextPageUrl = ref(null);
 const filterParams = ref({});
 
 let observer = null;
+let autoSlideTimer = null;
+const CARD_INTERACTIVE_SELECTOR = [
+    'a',
+    'button',
+    'input',
+    'select',
+    'textarea',
+    'label',
+    '[role="button"]',
+    '[data-bs-toggle]',
+    '.slick-dots',
+    '.property-card__dots',
+].join(', ');
 
 function detailLink(slug) {
     return { name: 'property-details', params: { slug } };
@@ -153,8 +187,43 @@ function listingCardDetailUrl(prop) {
     return null;
 }
 
+function openListingCard(prop, event) {
+    const target = event?.target;
+    if (target?.closest?.(CARD_INTERACTIVE_SELECTOR)) return;
+
+    const slug = prop?.slug && String(prop.slug).trim();
+    if (slug) {
+        router.push(detailLink(slug));
+        return;
+    }
+
+    const url = listingCardDetailUrl(prop);
+    if (url) {
+        window.location.href = url;
+    }
+}
+
 function cardImages(prop) {
     return dreNormalizePropertyImages(prop?.images);
+}
+
+function cardSliderImages(prop) {
+    return cardImages(prop).slice(0, 3);
+}
+
+function getActiveImageIndex(prop) {
+    const images = cardSliderImages(prop);
+    const index = Number(activeSlide[prop.id] ?? 0);
+    return Number.isInteger(index) && index >= 0 && index < images.length ? index : 0;
+}
+
+function getActiveImage(prop) {
+    const images = cardSliderImages(prop);
+    return images[getActiveImageIndex(prop)] || cardImages(prop)[0];
+}
+
+function setActiveImage(propertyId, index) {
+    activeSlide[propertyId] = index;
 }
 
 function photoCount(prop) {
@@ -202,16 +271,38 @@ function collectFilterParamsFromDom() {
     const categoryFromVue = typeof provided?.categories === 'string' ? provided.categories.trim() : '';
     const categoryFromDom = String(fd.get('categories') || '').trim();
     const categoryRaw = categoryFromVue || categoryFromDom;
+    const sort = typeof provided?.sort === 'string' ? provided.sort.trim() : '';
     const beds = String(fd.get('bedrooms') || '').trim();
     const baths = String(fd.get('bathrooms') || '').trim();
-    const minPrice = String(fd.get('min_price') || fd.get('price_min') || '').trim();
-    const maxPrice = String(fd.get('max_price') || fd.get('price_max') || '').trim();
-    const out = {};
+    const hasVueMinPrice = provided && Object.prototype.hasOwnProperty.call(provided, 'min_price');
+    const hasVueMaxPrice = provided && Object.prototype.hasOwnProperty.call(provided, 'max_price');
+    const minPrice = hasVueMinPrice
+        ? String(provided.min_price || '').trim()
+        : String(fd.get('min_price') || fd.get('price_min') || '').trim();
+    const maxPrice = hasVueMaxPrice
+        ? String(provided.max_price || '').trim()
+        : String(fd.get('max_price') || fd.get('price_max') || '').trim();
+    const out = { ...route.query };
     if (location) out.location = location;
     if (type) out.type = type;
     if (categoryRaw) out.category = categoryRaw;
-    if (beds && beds !== 'Studio') out.beds = beds.replace(/\D/g, '') || beds;
-    if (baths) out.baths = baths.replace(/\D/g, '') || baths;
+    if (sort) out.sort = sort;
+    if (beds) {
+        // Map UI values to numeric for API if needed
+        const bedArr = beds.split(',').map(b => {
+            if (b === 'Studio') return 0;
+            if (b === '7+') return 7;
+            return b;
+        });
+        out.beds = bedArr.join(',');
+    }
+    if (baths) {
+        const bathArr = baths.split(',').map(b => {
+            if (b === '7+') return 7;
+            return b;
+        });
+        out.baths = bathArr.join(',');
+    }
     if (minPrice) out.min_price = minPrice;
     if (maxPrice) out.max_price = maxPrice;
     return out;
@@ -275,8 +366,22 @@ function setupObserver() {
     if (loadMoreSentinel.value) observer.observe(loadMoreSentinel.value);
 }
 
+function tickCardSliders() {
+    properties.value.forEach((prop) => {
+        const images = cardSliderImages(prop);
+        if (images.length <= 1) return;
+        setActiveImage(prop.id, (getActiveImageIndex(prop) + 1) % images.length);
+    });
+}
+
+function startCardSliders() {
+    if (autoSlideTimer) window.clearInterval(autoSlideTimer);
+    autoSlideTimer = window.setInterval(tickCardSliders, 3500);
+}
+
 onMounted(async () => {
     await loadFirstPage();
+    startCardSliders();
     window.addEventListener('dre:page-mounted', onPageMounted);
 });
 
@@ -289,6 +394,10 @@ function onPageMounted() {
 onBeforeUnmount(() => {
     window.removeEventListener('dre:page-mounted', onPageMounted);
     if (observer) observer.disconnect();
+    if (autoSlideTimer) {
+        window.clearInterval(autoSlideTimer);
+        autoSlideTimer = null;
+    }
 });
 
 watch(
@@ -303,3 +412,75 @@ watch(locale, () => {
     loadFirstPage();
 });
 </script>
+
+<style scoped>
+.property-card--listing {
+    cursor: pointer;
+}
+
+.property-card--listing:focus-visible {
+    outline: 3px solid rgba(42, 85, 156, 0.35);
+    outline-offset: 6px;
+}
+
+.property-card__dots {
+    position: absolute;
+    left: 14px;
+    bottom: 12px;
+    z-index: 2;
+    display: inline-flex;
+    gap: 7px;
+}
+
+.property-card__dots button {
+    width: 14px;
+    height: 14px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.78);
+    cursor: pointer;
+}
+
+.property-card__dots button.is-active {
+    background: #ffffff;
+}
+
+.property-listing-empty {
+    display: flex;
+    min-height: 220px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 20px 64px;
+    color: #2f3f58;
+    text-align: center;
+}
+
+.property-listing-empty__icon {
+    display: inline-flex;
+    width: 68px;
+    height: 68px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+    border-radius: 50%;
+    background: #eef3f9;
+    color: #2a559c;
+}
+
+.property-listing-empty__title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.25;
+}
+
+.property-listing-empty__text {
+    max-width: 460px;
+    margin: 10px 0 0;
+    color: #64748b;
+    font-size: 15px;
+    line-height: 1.6;
+}
+</style>

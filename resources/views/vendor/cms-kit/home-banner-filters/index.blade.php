@@ -1,7 +1,7 @@
 @extends('cms-kit::layouts.cms')
 
 @section('breadcrumbs')
-    <li class="breadcrumb-item active" aria-current="page">Home Banner Filters</li>
+    <li class="breadcrumb-item active" aria-current="page">Site Filters</li>
 @endsection
 
 @section('content')
@@ -13,7 +13,7 @@
 
     <div class="card">
         <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-            <h5 class="mb-0">Home Banner Filters</h5>
+            <h5 class="mb-0">Site Filters</h5>
             <div class="d-flex gap-2">
                 @if($canDelete)
                 <div class="dropdown" id="bulkActions" style="display:none;">

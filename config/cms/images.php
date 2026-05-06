@@ -73,9 +73,9 @@ return [
     ],
     'banners' => [
         'main_image' => [
-            'max_size' => 2048,
-            'width' => 4096,
-            'height' => 2731,
+            'max_size' => 3048,
+            'width' => 1920,
+            'height' => 1060,
         ],
         'client_avatar' => [
             'width' => 100,

@@ -437,10 +437,10 @@ return [
         ],
 
         'categories' => [
-            'residential' => ['en' => 'Residential', 'ar' => 'Residential'],
-            'commercial' => ['en' => 'Commercial', 'ar' => 'Commercial'],
-            'luxury' => ['en' => 'Luxury', 'ar' => 'Luxury'],
-            'off-plan' => ['en' => 'Off-plan', 'ar' => 'Off-plan'],
+            'residential' => ['en' => 'Residential', 'ar' => 'سكني'],
+            'commercial' => ['en' => 'Commercial', 'ar' => 'تجاري'],
+            'luxury' => ['en' => 'Luxury', 'ar' => 'فاخر'],
+            'off-plan' => ['en' => 'Off-plan', 'ar' => 'على الخارطة'],
         ],
 
         'currencies' => [

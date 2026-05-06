@@ -27,7 +27,7 @@
                         >
                             <img
                                 :src="flagSrc"
-                                :alt="locale === 'ar' ? t('lang.arFlagAlt') : t('lang.enFlagAlt')"
+                                :alt="currentLang?.flagAlt || currentLang?.name"
                                 class="lang-switcher__flag"
                                 width="22"
                                 height="16"
@@ -38,28 +38,16 @@
                             </svg>
                         </button>
                         <ul class="dropdown-menu lang-switcher__menu" aria-labelledby="langSwitcherMenu">
-                            <li>
+                            <li v-for="lang in activeLanguages" :key="lang.code">
                                 <button
                                     class="dropdown-item"
                                     type="button"
-                                    :class="{ active: locale === 'en' }"
-                                    :aria-pressed="locale === 'en' ? 'true' : 'false'"
-                                    @click="setLang('en')"
+                                    :class="{ active: locale === lang.code }"
+                                    :aria-pressed="locale === lang.code ? 'true' : 'false'"
+                                    @click="setLang(lang.code)"
                                 >
-                                    <img :src="asset('public/images/english.jpg')" alt="" width="22" height="16" />
-                                    <span>{{ t('lang.english') }}</span>
-                                </button>
-                            </li>
-                            <li>
-                                <button
-                                    class="dropdown-item"
-                                    type="button"
-                                    :class="{ active: locale === 'ar' }"
-                                    :aria-pressed="locale === 'ar' ? 'true' : 'false'"
-                                    @click="setLang('ar')"
-                                >
-                                    <img :src="asset('public/images/arabic.jpg')" alt="" width="22" height="16" />
-                                    <span>{{ t('lang.arabic') }}</span>
+                                    <img :src="lang.flagImage || asset('public/images/' + (lang.code === 'ar' ? 'arabic.jpg' : 'english.jpg'))" alt="" width="22" height="16" />
+                                    <span>{{ lang.name }}</span>
                                 </button>
                             </li>
                         </ul>
@@ -94,9 +82,18 @@ const dreSite = injectedSite ?? computed(() => getPublicSiteBoot());
 
 const isInnerPage = computed(() => route.name !== 'home');
 
-const displayCode = computed(() => (locale.value === 'ar' ? 'AR' : 'ENG'));
+const activeLanguages = computed(() => {
+    const langs = dreSite.value?.languages || [];
+    return langs.length > 0 ? langs : [
+        { code: 'en', name: 'English', flagImage: asset('public/images/english.jpg'), flagAlt: 'English Flag' },
+        { code: 'ar', name: 'العربية', flagImage: asset('public/images/arabic.jpg'), flagAlt: 'Arabic Flag' }
+    ];
+});
 
-const flagSrc = computed(() => asset(locale.value === 'ar' ? 'public/images/arabic.jpg' : 'public/images/english.jpg'));
+const currentLang = computed(() => activeLanguages.value.find(l => l.code === locale.value) || activeLanguages.value[0]);
+const displayCode = computed(() => currentLang.value?.code.toUpperCase() === 'AR' ? 'AR' : 'ENG');
+const flagSrc = computed(() => currentLang.value?.flagImage || asset(locale.value === 'ar' ? 'public/images/arabic.jpg' : 'public/images/english.jpg'));
+
 const logoAltText = computed(() => dreSite.value?.logoAlt || t('brand.logoAlt'));
 const cmsColourLogoSrc = computed(() => dreSite.value?.colourLogoUrl || null);
 const homeLogoSrc = computed(
@@ -106,9 +103,6 @@ const innerLogoSrc = computed(
     () => dreSite.value?.colourLogoUrl || dreSite.value?.logoUrl || asset('public/images/logo-blue.png'),
 );
 const logoSrc = computed(() => {
-    if (cmsColourLogoSrc.value) {
-        return cmsColourLogoSrc.value;
-    }
     const isHomeTop = route.name === 'home' && !isScrolled.value;
     return isHomeTop ? homeLogoSrc.value : innerLogoSrc.value;
 });
@@ -138,7 +132,7 @@ onBeforeUnmount(() => {
 });
 
 function setLang(code) {
-    const safe = code === 'ar' ? 'ar' : 'en';
+    const safe = code;
     locale.value = safe;
     document.documentElement.setAttribute('lang', safe);
     document.documentElement.setAttribute('dir', safe === 'ar' ? 'rtl' : 'ltr');

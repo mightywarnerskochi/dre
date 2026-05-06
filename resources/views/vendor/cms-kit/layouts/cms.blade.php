@@ -127,11 +127,6 @@
                                     Banner
                                 </a>
 
-                                @if(config('cms-kit.common.modules.home-banner-filters', true) && $cmsUser->can('home-banner-filters.view'))
-                                    <a class="nav-link py-2 @if(request()->routeIs('cms.home-banner-filters.*')) active @endif" href="{{ route('cms.home-banner-filters.index') }}">
-                                        Filters
-                                    </a>
-                                @endif
 
                                 @if(config('cms-kit.common.modules.neighborhoods', true) && $cmsUser->can('neighborhoods.view'))
                                 <a class="nav-link py-2 @if(request()->routeIs('cms.neighborhoods.*')) active @endif" href="{{ route('cms.neighborhoods.index') }}">
@@ -141,6 +136,11 @@
                             </nav>
                         </div>
                     </div>
+                    @endif
+                    @if(config('cms-kit.common.modules.home-banner-filters', true) && $cmsUser->can('home-banner-filters.view'))
+                    <a class="nav-link @if(Route::is('cms.home-banner-filters.*')) active @endif" href="{{ route('cms.home-banner-filters.index') }}">
+                        <i class="fas fa-filter"></i> Site Filters
+                    </a>
                     @endif
 
                     @if(

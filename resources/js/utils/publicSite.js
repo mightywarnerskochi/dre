@@ -9,7 +9,8 @@
  *   colourLogoUrl: string|null,
  *   logoAlt: string|null,
  *   social: Array<{ network: string, href: string }>,
- *   legalPages: Record<string, { title: Record<string, string>, content: Record<string, string> }>
+ *   legalPages: Record<string, { title: Record<string, string>, content: Record<string, string> }>,
+ *   languages: Array<{ name: string, code: string, flagImage: string|null, flagAlt: string|null, isDefault: boolean }>
  * }}
  */
 export function getPublicSiteBoot() {
@@ -23,6 +24,7 @@ export function getPublicSiteBoot() {
             logoAlt: null,
             social: [],
             legalPages: {},
+            languages: [],
         };
     }
     const raw = window.__DRE_SITE__;
@@ -36,10 +38,12 @@ export function getPublicSiteBoot() {
             logoAlt: null,
             social: [],
             legalPages: {},
+            languages: [],
         };
     }
     const social = Array.isArray(raw.social) ? raw.social : [];
     const legalPages = raw.legalPages && typeof raw.legalPages === 'object' ? raw.legalPages : {};
+    const languages = Array.isArray(raw.languages) ? raw.languages : [];
 
     return {
         phone1: typeof raw.phone1 === 'string' && raw.phone1.trim() !== '' ? raw.phone1.trim() : null,
@@ -50,6 +54,7 @@ export function getPublicSiteBoot() {
         logoAlt: typeof raw.logoAlt === 'string' && raw.logoAlt.trim() !== '' ? raw.logoAlt.trim() : null,
         social: social.filter((row) => row && typeof row.href === 'string' && row.href.trim() !== '' && row.network),
         legalPages,
+        languages,
     };
 }
 

@@ -3,9 +3,11 @@
 namespace App\Support;
 
 use App\Models\CmsKit\About;
+use App\Models\CmsKit\Banner;
 use App\Models\CmsKit\Blog;
 use App\Models\CmsKit\Career;
 use App\Models\CmsKit\CareerDepartment;
+use App\Models\CmsKit\HomeBannerFilterDefinition;
 use App\Models\CmsKit\Location;
 use App\Models\CmsKit\MissionVision;
 use App\Models\CmsKit\Neighborhood;
@@ -1256,5 +1258,242 @@ class PublicContentViewData
             })
             ->values()
             ->all();
+    }
+
+    public static function heroDataForSpa(): array
+    {
+        $fallbackSlide = [
+            'line1' => 'Discover Your',
+            'line2' => 'Perfect Living Spot',
+            'backgroundImage' => asset('images/dre/hero-dubai.jpg'),
+            'primaryActionLabel' => 'Explore Rentals',
+            'primaryActionUrl' => '#rentals',
+        ];
+
+        if (! Schema::hasTable('banners')) {
+            return ['slides' => [$fallbackSlide]];
+        }
+
+        $banners = Banner::query()
+            ->where('status', true)
+            ->orderBy('order_index')
+            ->get();
+
+        if ($banners->isEmpty()) {
+            return ['slides' => [$fallbackSlide]];
+        }
+
+        $slides = $banners->map(function (Banner $banner) use ($fallbackSlide) {
+            $line1En = trim((string) ($banner->getTranslation('line_1', 'en') ?? ''));
+            $line2En = trim((string) ($banner->getTranslation('line_2', 'en') ?? ''));
+            $line1Ar = trim((string) ($banner->getTranslation('line_1', 'ar') ?? ''));
+            $line2Ar = trim((string) ($banner->getTranslation('line_2', 'ar') ?? ''));
+
+            if ($line1En === '' && $line2En === '') {
+                $line1En = $fallbackSlide['line1'];
+                $line2En = $fallbackSlide['line2'];
+            } elseif ($line2En === '') {
+                $words = preg_split('/\s+/', $line1En, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                $midpoint = max(1, (int) ceil(count($words) / 2));
+                $line1En = implode(' ', array_slice($words, 0, $midpoint));
+                $line2En = implode(' ', array_slice($words, $midpoint));
+            }
+
+            if ($line1Ar === '' && $line2Ar === '') {
+                $line1Ar = $line1En;
+                $line2Ar = $line2En;
+            } elseif ($line2Ar === '') {
+                $words = preg_split('/\s+/', $line1Ar, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+                $midpoint = max(1, (int) ceil(count($words) / 2));
+                $line1Ar = implode(' ', array_slice($words, 0, $midpoint));
+                $line2Ar = implode(' ', array_slice($words, $midpoint));
+            }
+
+            $imagePath = (string) ($banner->image ?? '');
+            $backgroundImage = $fallbackSlide['backgroundImage'];
+            if ($imagePath !== '') {
+                $backgroundImage = preg_match('/^https?:\/\//i', $imagePath)
+                    ? $imagePath
+                    : (media_url($imagePath) ?? $fallbackSlide['backgroundImage']);
+            }
+
+            $buttonsEn = (array) data_get($banner->translations, 'en.buttons', []);
+            $buttonEn = $buttonsEn[0] ?? null;
+            $buttonsAr = (array) data_get($banner->translations, 'ar.buttons', []);
+            $buttonAr = $buttonsAr[0] ?? null;
+
+            return [
+                'id' => $banner->id,
+                'line1' => [
+                    'en' => $line1En,
+                    'ar' => $line1Ar,
+                ],
+                'line2' => [
+                    'en' => $line2En !== '' ? $line2En : $fallbackSlide['line2'],
+                    'ar' => $line2Ar !== '' ? $line2Ar : $fallbackSlide['line2'],
+                ],
+                'backgroundImage' => $backgroundImage,
+                'primaryActionLabel' => [
+                    'en' => trim((string) data_get($buttonEn, 'label', $fallbackSlide['primaryActionLabel'])),
+                    'ar' => trim((string) data_get($buttonAr, 'label', $fallbackSlide['primaryActionLabel'])),
+                ],
+                'primaryActionUrl' => trim((string) data_get($buttonEn, 'url', $fallbackSlide['primaryActionUrl'])) ?: '#rentals',
+            ];
+        })->values()->all();
+
+        return ['slides' => $slides];
+    }
+
+    public static function homeSearchFiltersForSpa(): array
+    {
+        if (! Schema::hasTable('home_banner_filter_definitions') || ! Schema::hasTable('home_banner_filter_values')) {
+            return self::fallbackSearchFilters();
+        }
+
+        $definitions = HomeBannerFilterDefinition::query()
+            ->where('status', true)
+            ->orderBy('sort_order')
+            ->get();
+
+        if ($definitions->isEmpty()) {
+            return self::fallbackSearchFilters();
+        }
+
+        $currentLocale = app()->getLocale();
+        $filters = [];
+
+        foreach ($definitions as $definition) {
+            $queryParam = self::queryParamForFilter((string) $definition->key);
+            if (! $queryParam) {
+                continue;
+            }
+
+            $values = $definition->values()
+                ->where('status', true)
+                ->orderBy('sort_order')
+                ->get(['value', 'label', 'translations']);
+
+            $options = $values->map(function ($v) use ($currentLocale, $definition) {
+                $translated = data_get($v->translations, $currentLocale, []);
+                $label = data_get($translated, 'label') !== null
+                    ? (string) data_get($translated, 'label')
+                    : ($v->label ? (string) $v->label : (string) $v->value);
+
+                $option = [
+                    'value' => (string) $v->value,
+                    'label' => $label,
+                ];
+
+                if ((string) $definition->key === 'location') {
+                    $option['subtitle'] = (string) data_get($translated, 'subtitle', '');
+                    $option['type'] = (string) data_get($translated, 'type', '');
+                }
+
+                return $option;
+            })->values()->all();
+
+            $label = data_get($definition->translations, $currentLocale.'.label')
+                ?: (string) $definition->label;
+
+            if (! collect($options)->contains(fn ($opt) => (string) $opt['value'] === '')) {
+                array_unshift($options, [
+                    'value' => '',
+                    'label' => $label,
+                ]);
+            }
+
+            $filters[] = [
+                'key' => (string) $definition->key,
+                'label' => $label,
+                'uiType' => (string) (
+                    (string) $definition->key === 'location'
+                        ? 'text'
+                        : ($definition->ui_type ?: self::fallbackUiTypeForFilter((string) $definition->key))
+                ),
+                'queryParam' => $queryParam,
+                'options' => $options,
+            ];
+        }
+
+        if (empty($filters)) {
+            return self::fallbackSearchFilters();
+        }
+
+        return ['filters' => $filters];
+    }
+
+    private static function queryParamForFilter(string $key): ?string
+    {
+        return [
+            'location' => 'location',
+            'property_type' => 'type',
+            'bedrooms' => 'beds',
+            'bathrooms' => 'baths',
+            'bed_and_baths' => 'beds_baths',
+            'price' => 'price',
+        ][$key] ?? null;
+    }
+
+    private static function fallbackUiTypeForFilter(string $key): string
+    {
+        return [
+            'location' => 'dropdown',
+            'property_type' => 'dropdown',
+            'bedrooms' => 'dropdown',
+            'bathrooms' => 'dropdown',
+            'bed_and_baths' => 'dropdown',
+            'price' => 'dropdown',
+        ][$key] ?? 'dropdown';
+    }
+
+    private static function fallbackSearchFilters(): array
+    {
+        return [
+            'filters' => [
+                [
+                    'key' => 'location',
+                    'label' => 'Location',
+                    'uiType' => 'text',
+                    'queryParam' => 'location',
+                    'options' => [],
+                ],
+                [
+                    'key' => 'property_type',
+                    'label' => 'Property Type',
+                    'uiType' => 'dropdown',
+                    'queryParam' => 'type',
+                    'options' => [
+                        ['value' => '', 'label' => 'Property Type'],
+                        ['value' => 'apartment', 'label' => 'Apartment'],
+                        ['value' => 'villa', 'label' => 'Villa'],
+                        ['value' => 'townhouse', 'label' => 'Townhouse'],
+                    ],
+                ],
+                [
+                    'key' => 'bedrooms',
+                    'label' => 'Bedrooms',
+                    'uiType' => 'dropdown',
+                    'queryParam' => 'beds',
+                    'options' => [
+                        ['value' => '', 'label' => 'Bedrooms'],
+                        ['value' => '1', 'label' => '1 Bedroom'],
+                        ['value' => '2', 'label' => '2 Bedrooms'],
+                        ['value' => '3', 'label' => '3 Bedrooms'],
+                    ],
+                ],
+                [
+                    'key' => 'price',
+                    'label' => 'Price Range',
+                    'uiType' => 'dropdown',
+                    'queryParam' => 'price',
+                    'options' => [
+                        ['value' => '', 'label' => 'Price Range'],
+                        ['value' => '0-50000', 'label' => 'Up to 50,000'],
+                        ['value' => '50000-100000', 'label' => '50,000 - 100,000'],
+                        ['value' => '100000-250000', 'label' => '100,000 - 250,000'],
+                    ],
+                ],
+            ],
+        ];
     }
 }

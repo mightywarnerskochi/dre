@@ -84,7 +84,8 @@ class PropertyPageController extends Controller
             $query->where(function ($q) use ($location) {
                 $q->where('city', 'like', "%{$location}%")
                     ->orWhere('community', 'like', "%{$location}%")
-                    ->orWhere('address', 'like', "%{$location}%");
+                    ->orWhere('address', 'like', "%{$location}%")
+                    ->orWhere('title', 'like', "%{$location}%");
             });
         }
 
@@ -128,10 +129,10 @@ class PropertyPageController extends Controller
 
         $query = Property::query()
             ->with(['agent', 'translations', 'details'])
-            ->where('status', true)
-            ->ordered();
+            ->where('status', true);
 
         $this->applyPublishedPropertyFilters($request, $query);
+        $this->applyPublishedPropertySort($request, $query);
 
         $perPage = (int) $request->query('per_page', 6);
         $perPage = max(1, min(48, $perPage));
@@ -145,6 +146,19 @@ class PropertyPageController extends Controller
         });
 
         return response()->json($properties);
+    }
+
+    /**
+     * @param  Builder<Property>  $query
+     */
+    protected function applyPublishedPropertySort(Request $request, $query): void
+    {
+        match ((string) $request->query('sort', 'newest')) {
+            'price_asc' => $query->orderBy('price')->orderByDesc('published_at')->orderByDesc('id'),
+            'price_desc' => $query->orderByDesc('price')->orderByDesc('published_at')->orderByDesc('id'),
+            'area_desc' => $query->orderByDesc('sqft')->orderByDesc('published_at')->orderByDesc('id'),
+            default => $query->ordered(),
+        };
     }
 
     /**
@@ -223,60 +237,147 @@ class PropertyPageController extends Controller
     public function apiFilterOptions(Request $request): JsonResponse
     {
         $this->setRequestLocale($request);
+        $locale = app()->getLocale();
 
-        $typeConfig = config('cms-kit.database.properties.property_types', []);
-        $catConfig = config('cms-kit.database.properties.categories', []);
-
-        $typesUsed = Property::query()
+        $filters = [];
+        $definitions = \App\Models\CmsKit\HomeBannerFilterDefinition::query()
+            ->with(['values' => fn ($q) => $q->where('status', true)->orderBy('sort_order')])
             ->where('status', true)
-            ->whereNotNull('property_type')
-            ->where('property_type', '!=', '')
-            ->distinct()
-            ->orderBy('property_type')
-            ->pluck('property_type');
+            ->orderBy('sort_order')
+            ->get();
 
-        if ($typesUsed->isEmpty()) {
-            $typesUsed = collect(array_keys($typeConfig));
-        }
-
-        $propertyTypes = $typesUsed
-            ->map(function (string $key) use ($typeConfig) {
-                $key = trim($key);
+        foreach ($definitions as $definition) {
+            $options = $definition->values->map(function ($val) use ($locale) {
+                $translated = $val->translations[$locale] ?? [];
+                $label = data_get($translated, 'label') ?? $val->label;
 
                 return [
-                    'value' => $key,
-                    'label' => $this->optionLabel($typeConfig, $key) ?: $key,
+                    'value' => $val->value,
+                    'label' => $label,
+                    'subtitle' => data_get($translated, 'subtitle', ''),
+                    'type' => data_get($translated, 'type', ''),
                 ];
-            })
-            ->values();
+            })->values()->all();
 
-        $categoriesUsed = Property::query()
-            ->where('status', true)
-            ->whereNotNull('category')
-            ->where('category', '!=', '')
-            ->distinct()
-            ->orderBy('category')
-            ->pluck('category');
-
-        if ($categoriesUsed->isEmpty()) {
-            $categoriesUsed = collect(array_keys($catConfig));
+            if ($definition->key === 'property_type') {
+                $filters['property_types'] = $options;
+            } elseif ($definition->key === 'category') {
+                $filters['categories'] = $options;
+            } elseif ($definition->key === 'location') {
+                $filters['locations'] = $options;
+            }
         }
 
-        $categories = $categoriesUsed
-            ->map(function (string $key) use ($catConfig) {
-                $key = trim($key);
+        // Fallback for property_types if not configured
+        if (! isset($filters['property_types'])) {
+            $typeConfig = config('cms-kit.database.properties.property_types', []);
+            $typesUsed = Property::query()
+                ->where('status', true)
+                ->whereNotNull('property_type')
+                ->where('property_type', '!=', '')
+                ->distinct()
+                ->orderBy('property_type')
+                ->pluck('property_type');
 
-                return [
-                    'value' => $key,
-                    'label' => $this->optionLabel($catConfig, $key) ?: $key,
-                ];
-            })
-            ->values();
+            if ($typesUsed->isEmpty()) {
+                $typesUsed = collect(array_keys($typeConfig));
+            }
 
-        return response()->json([
-            'property_types' => $propertyTypes,
-            'categories' => $categories,
-        ]);
+            $filters['property_types'] = $typesUsed
+                ->map(function (string $key) use ($typeConfig) {
+                    $key = trim($key);
+                    return [
+                        'value' => $key,
+                        'label' => $this->optionLabel($typeConfig, $key) ?: $key,
+                    ];
+                })
+                ->values();
+        }
+
+        // Fallback for categories if not configured
+        if (! isset($filters['categories'])) {
+            $catConfig = config('cms-kit.database.properties.categories', []);
+            $categoriesUsed = Property::query()
+                ->where('status', true)
+                ->whereNotNull('category')
+                ->where('category', '!=', '')
+                ->distinct()
+                ->orderBy('category')
+                ->pluck('category');
+
+            if ($categoriesUsed->isEmpty()) {
+                $categoriesUsed = collect(array_keys($catConfig));
+            }
+
+            $filters['categories'] = $categoriesUsed
+                ->map(function (string $key) use ($catConfig) {
+                    $key = trim($key);
+                    return [
+                        'value' => $key,
+                        'label' => $this->optionLabel($catConfig, $key) ?: $key,
+                    ];
+                })
+                ->values();
+        }
+
+        {
+            $locations = collect($filters['locations'] ?? []);
+            $seen = $locations
+                ->mapWithKeys(fn ($location) => [Str::lower((string) ($location['value'] ?? '')) => true])
+                ->all();
+            $fallbackCountry = 'United Arab Emirates';
+
+            $addLocation = function (?string $value, ?string $label, string $type, ?string $subtitle = '') use (&$seen, $locations) {
+                $value = trim((string) $value);
+                $label = trim((string) ($label ?: $value));
+                if ($value === '' || $label === '') {
+                    return;
+                }
+
+                $key = Str::lower($value);
+                if (isset($seen[$key])) {
+                    return;
+                }
+
+                $seen[$key] = true;
+                $locations->push([
+                    'value' => $value,
+                    'label' => $label,
+                    'subtitle' => trim((string) $subtitle),
+                    'type' => $type,
+                ]);
+            };
+
+            Property::query()
+                ->where('status', true)
+                ->with('translations')
+                ->orderByDesc('is_featured')
+                ->ordered()
+                ->take(200)
+                ->get()
+                ->each(function (Property $property) use ($locale, $fallbackCountry, $addLocation) {
+                    $title = $property->getTranslation('title', $locale) ?: $property->title;
+                    $address = $property->getTranslation('address', $locale) ?: $property->address;
+                    $community = $property->getTranslation('community', $locale) ?: $property->community;
+                    $city = $property->getTranslation('city', $locale) ?: $property->city;
+                    $country = $property->getTranslation('country', $locale) ?: $property->country ?: $fallbackCountry;
+
+                    $locationLine = collect([$community, $city, $country])
+                        ->map(fn ($part) => trim((string) $part))
+                        ->filter()
+                        ->unique()
+                        ->implode(', ');
+
+                    $addLocation($property->title, $title, 'Building', $locationLine);
+                    $addLocation($property->community, $community, 'Community', collect([$city, $country])->filter()->implode(', '));
+                    $addLocation($property->city, $city, 'City', $country);
+                    $addLocation($property->address, $address, 'Address', $locationLine);
+                });
+
+            $filters['locations'] = $locations->values()->all();
+        }
+
+        return response()->json($filters);
     }
 
     /**
@@ -324,6 +425,7 @@ class PropertyPageController extends Controller
 
         $title = $property->getTranslation('title') ?: $property->title ?: 'Property';
         $location = $this->propertyLocationForLocale($property, app()->getLocale());
+        $fullAddress = $this->propertyFullAddressForLocale($property, app()->getLocale());
 
         $agentPhone = trim((string) ($property->agent?->phone ?? $siteInfo?->phone_1 ?? ''));
         $whatsApp = trim((string) ($property->agent?->whatsapp_number ?? $siteInfo?->whatsapp_number ?? ''));
@@ -341,6 +443,8 @@ class PropertyPageController extends Controller
             'price' => (float) $property->price,
             'currency' => $property->currency ?: 'AED',
             'location' => $location,
+            'address' => trim((string) ($property->getTranslation('address', app()->getLocale()) ?: $property->address)),
+            'full_address' => $fullAddress,
             'latitude' => (float) $property->latitude,
             'longitude' => (float) $property->longitude,
             'bedrooms' => (int) $property->bedrooms,
@@ -540,6 +644,7 @@ class PropertyPageController extends Controller
     protected function propertyLocationForLocale(Property $property, string $locale): string
     {
         $location = collect([
+            // $property->getTranslation('address', $locale) ?: $property->address,
             $property->getTranslation('community', $locale) ?: $property->community,
             $property->getTranslation('city', $locale) ?: $property->city,
             $property->getTranslation('country', $locale) ?: $property->country,
@@ -552,6 +657,25 @@ class PropertyPageController extends Controller
         }
 
         return trim((string) ($property->getTranslation('address', $locale) ?: $property->address ?: 'United Arab Emirates'));
+    }
+
+    protected function propertyFullAddressForLocale(Property $property, string $locale): string
+    {
+        $address = trim((string) ($property->getTranslation('address', $locale) ?: $property->address));
+        $parts = collect([
+            $property->getTranslation('community', $locale) ?: $property->community,
+            $property->getTranslation('city', $locale) ?: $property->city,
+            $property->getTranslation('postal_code', $locale) ?: $property->postal_code,
+            $property->getTranslation('country', $locale) ?: $property->country,
+        ])
+            ->map(fn ($value) => trim((string) $value))
+            ->filter(fn ($value) => $value !== '')
+            ->reject(fn ($value) => $address !== '' && Str::contains(Str::lower($address), Str::lower($value)))
+            ->prepend($address)
+            ->filter(fn ($value) => $value !== '')
+            ->implode(', ');
+
+        return $parts !== '' ? $parts : $this->propertyLocationForLocale($property, $locale);
     }
 
     protected function optionLabel(array $options, string $key): string
