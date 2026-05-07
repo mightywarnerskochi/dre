@@ -6,6 +6,8 @@ use App\Http\Controllers\CmsKit\ContactSectionController;
 use App\Http\Controllers\CmsKit\CareerCandidateController;
 use App\Http\Controllers\CmsKit\HomeBannerFiltersController;
 use App\Http\Controllers\CmsKit\MissionVisionController;
+use App\Http\Controllers\CmsKit\EnquiryController as CmsEnquiryController;
+use App\Http\Controllers\CmsKit\LanguageController as CmsLanguageController;
 use App\Http\Controllers\CareerApplicationController;
 use App\Http\Controllers\CmsKit\NearbyPlaceController;
 use App\Http\Controllers\CmsKit\NeighborhoodController;
@@ -15,7 +17,8 @@ use App\Http\Controllers\CmsKit\WhyChooseUsController;
 use App\Http\Controllers\ContactEnquiryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PropertyPageController;
-use App\Support\PublicContentViewData;
+use App\Http\Controllers\PropertyEnquiryController;
+use App\Support\PublicSpaBootData;
 use App\Support\PublicSiteViewData;
 use Illuminate\Support\Facades\Route;
 
@@ -144,6 +147,29 @@ Route::middleware(['web'])->group(function () {
                 ->middleware('cms.permission:site-information.edit');
         });
 
+        Route::middleware(['cms.permission:languages.view'])->group(function () {
+            if (config('cms-kit.common.modules.languages', true)) {
+                Route::get('/languages/{id}/translations', [CmsLanguageController::class, 'translationsEdit'])
+                    ->name('cms.languages.translations.edit');
+                Route::put('/languages/{id}/translations', [CmsLanguageController::class, 'translationsUpdate'])
+                    ->name('cms.languages.translations.update');
+            }
+        });
+
+        Route::middleware(['cms.permission:enquiries.view'])->group(function () {
+            Route::get('/form-enquiries', [CmsEnquiryController::class, 'formIndex'])->name('cms.form-enquiries.index');
+            Route::get('/form-enquiries/export', [CmsEnquiryController::class, 'formExport'])->name('cms.form-enquiries.export');
+            Route::get('/form-enquiries/{id}', [CmsEnquiryController::class, 'formShow'])->name('cms.form-enquiries.show');
+            Route::delete('/form-enquiries/{id}', [CmsEnquiryController::class, 'formDestroy'])->name('cms.form-enquiries.destroy');
+            Route::post('/form-enquiries/bulk-action', [CmsEnquiryController::class, 'formBulkAction'])->name('cms.form-enquiries.bulk-action');
+
+            Route::get('/property-enquiries', [CmsEnquiryController::class, 'propertyIndex'])->name('cms.property-enquiries.index');
+            Route::get('/property-enquiries/export', [CmsEnquiryController::class, 'propertyExport'])->name('cms.property-enquiries.export');
+            Route::get('/property-enquiries/{id}', [CmsEnquiryController::class, 'propertyShow'])->name('cms.property-enquiries.show');
+            Route::delete('/property-enquiries/{id}', [CmsEnquiryController::class, 'propertyDestroy'])->name('cms.property-enquiries.destroy');
+            Route::post('/property-enquiries/bulk-action', [CmsEnquiryController::class, 'propertyBulkAction'])->name('cms.property-enquiries.bulk-action');
+        });
+
         Route::middleware(['cms.permission:careers.show'])->group(function () {
             Route::get('/careers/candidates/{id}/attachment', [CareerCandidateController::class, 'attachment'])
                 ->whereNumber('id')
@@ -192,24 +218,16 @@ Route::post('/contact-enquiry', [ContactEnquiryController::class, 'store'])
     ->middleware('throttle:20,1')
     ->name('contact.enquiry.store');
 
+Route::post('/property-enquiry', [PropertyEnquiryController::class, 'store'])
+    ->middleware('throttle:20,1')
+    ->name('property.enquiry.store');
+
 Route::get('/{any?}', function () {
     return response()
         ->view('app', [
             'styleVersion' => '15',
             'sitePublic' => PublicSiteViewData::forSpa(),
-            'contentPublic' => [
-                'hero' => PublicContentViewData::heroDataForSpa(),
-                'search' => PublicContentViewData::homeSearchFiltersForSpa(),
-                'rentalSection' => PublicContentViewData::rentalSectionForSpa(),
-                'neighborhoods' => PublicContentViewData::neighborhoodsForSpa(),
-                'newsInsights' => PublicContentViewData::newsAndInsightsForSpa(),
-                'insights' => PublicContentViewData::insightsForSpa(),
-                'homeAbout' => PublicContentViewData::homeAboutForSpa(),
-                'aboutPage' => PublicContentViewData::aboutPageForSpa(),
-                'contactSection' => PublicContentViewData::contactSectionForSpa(),
-                'locationsSection' => PublicContentViewData::locationsSectionForSpa(),
-                'careers' => PublicContentViewData::careersPublicForSpa(),
-            ],
+            'contentPublic' => PublicSpaBootData::initialViewContent(),
         ])
         ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         ->header('Pragma', 'no-cache')

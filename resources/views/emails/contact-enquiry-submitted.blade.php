@@ -2,14 +2,30 @@
     $logoSrc = filled($logoPath ?? null) && is_file($logoPath)
         ? $message->embed($logoPath)
         : ($logoUrl ?? asset('images/logo.png'));
+    $extraFields = is_array($enquiry->extra_fields ?? null) ? $enquiry->extra_fields : [];
+    $isProperty = data_get($extraFields, 'enquiry_type') === 'property';
+    $categoryLabel = $isProperty ? 'Property Enquiry' : 'Contact Enquiry';
+    $introText = $isProperty
+        ? 'A visitor submitted the property enquiry popup on the website.'
+        : 'A visitor submitted the contact form on the website.';
     $rows = [
         'Name' => $enquiry->name,
         'Email' => $enquiry->email,
         'Phone' => $enquiry->phone,
         'Country' => $enquiry->country,
         'Subject' => $enquiry->subject,
+        'Page Source' => $enquiry->page_source,
+        'Page URL' => $enquiry->page_url,
         'Submitted at' => optional($enquiry->created_at)->timezone(config('app.timezone'))->format('d M Y, h:i A'),
     ];
+    $extraRows = [];
+    foreach ($extraFields as $key => $value) {
+        if (!filled($value) || in_array($key, ['subject', 'enquiry_type'], true)) {
+            continue;
+        }
+        $label = str($key)->replace('_', ' ')->title()->toString();
+        $extraRows[$label] = is_scalar($value) ? (string) $value : json_encode($value);
+    }
 @endphp
 <!doctype html>
 <html lang="en">
@@ -30,9 +46,9 @@
                     </tr>
                     <tr>
                         <td style="padding:32px;">
-                            <p style="margin:0 0 8px; color:#2f5aa4; font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;">Contact Enquiry</p>
+                            <p style="margin:0 0 8px; color:#2f5aa4; font-size:13px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;">{{ $categoryLabel }}</p>
                             <h1 style="margin:0 0 12px; font-size:28px; line-height:1.25; font-weight:500; color:#0a1119;">New enquiry received</h1>
-                            <p style="margin:0 0 28px; font-size:15px; line-height:1.7; color:#3c4a5f;">A visitor submitted the contact form on the website.</p>
+                            <p style="margin:0 0 28px; font-size:15px; line-height:1.7; color:#3c4a5f;">{{ $introText }}</p>
 
                             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse; border:1px solid #e6ebf2; border-radius:8px; overflow:hidden;">
                                 @foreach($rows as $label => $value)
@@ -43,14 +59,22 @@
                                         </tr>
                                     @endif
                                 @endforeach
+                                @foreach($extraRows as $label => $value)
+                                    <tr>
+                                        <td style="width:34%; padding:13px 16px; border-bottom:1px solid #e6ebf2; background:#f8fafc; color:#5e6b80; font-size:14px; font-weight:700;">{{ $label }}</td>
+                                        <td style="padding:13px 16px; border-bottom:1px solid #e6ebf2; color:#0a1119; font-size:14px; line-height:1.5;">{{ $value }}</td>
+                                    </tr>
+                                @endforeach
                             </table>
 
-                            <div style="margin-top:24px;">
-                                <h2 style="margin:0 0 10px; font-size:16px; color:#0a1119;">Message</h2>
-                                <div style="padding:16px; background:#f8fafc; border:1px solid #e6ebf2; border-radius:8px; color:#233044; font-size:14px; line-height:1.7;">
-                                    {!! nl2br(e($enquiry->message)) !!}
+                            @if(filled($enquiry->message))
+                                <div style="margin-top:24px;">
+                                    <h2 style="margin:0 0 10px; font-size:16px; color:#0a1119;">Message</h2>
+                                    <div style="padding:16px; background:#f8fafc; border:1px solid #e6ebf2; border-radius:8px; color:#233044; font-size:14px; line-height:1.7;">
+                                        {!! nl2br(e($enquiry->message)) !!}
+                                    </div>
                                 </div>
-                            </div>
+                            @endif
 
                             <p style="margin:28px 0 0; font-size:14px; line-height:1.7; color:#3c4a5f;">
                                 Thanks &amp; Regards,<br>

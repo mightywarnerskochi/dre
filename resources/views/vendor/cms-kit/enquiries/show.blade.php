@@ -1,15 +1,15 @@
 @extends('cms-kit::layouts.cms')
 
 @section('breadcrumbs')
-    <li class="breadcrumb-item"><a href="{{ route('cms.enquiries.index') }}">Enquiries</a></li>
+    <li class="breadcrumb-item"><a href="{{ route(($routePrefix ?? 'cms.enquiries') . '.index') }}">{{ $pageHeading ?? 'Enquiries' }}</a></li>
     <li class="breadcrumb-item active" aria-current="page">Enquiry #{{ $enquiry->id }}</li>
 @endsection
 
 @section('content')
 <div class="card">
     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-        <h5 class="mb-0">Enquiry Details</h5>
-        <a href="{{ route('cms.enquiries.index') }}" class="btn btn-sm btn-outline-secondary">
+        <h5 class="mb-0">{{ $pageHeading ?? 'Enquiry' }} Details</h5>
+        <a href="{{ route(($routePrefix ?? 'cms.enquiries') . '.index') }}" class="btn btn-sm btn-outline-secondary">
             <i class="fas fa-arrow-left"></i> Back
         </a>
     </div>

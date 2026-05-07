@@ -263,7 +263,7 @@ class PublicContentViewData
                             'ar' => self::joinLocationAddressLine($addrAr, $countryAr),
                         ],
                         'image' => $imageUrl,
-                        'imageAlt' => trim((string) ($loc->image_alt ?? '')),
+                        'imageAlt' => self::fallbackAltText($loc->image_alt ?? null, $titleEn !== '' ? $titleEn : 'Office location'),
                         'phones' => $phones,
                         'emails' => $emails,
                         'whatsapp' => $whatsappRaw !== '' ? $whatsappRaw : null,
@@ -605,6 +605,50 @@ class PublicContentViewData
         return $plain !== '' ? Str::limit($plain, $max) : '';
     }
 
+    private static function fallbackAltText(?string $value, string $fallback): string
+    {
+        $value = trim((string) $value);
+        if ($value !== '') {
+            return $value;
+        }
+
+        $fallback = trim($fallback);
+
+        return $fallback !== '' ? $fallback : 'DRE image';
+    }
+
+    /**
+     * @param  array<string, mixed>  $metadata
+     * @param  array{title?: string, description?: string, canonical_url?: string, og_image?: ?string}  $fallback
+     * @return array<string, string|null>
+     */
+    private static function resolveEntitySeoPayload(array $metadata, array $fallback = []): array
+    {
+        $metaTitle = trim((string) ($metadata['meta_title'] ?? ''));
+        $metaDescription = trim((string) ($metadata['meta_description'] ?? ''));
+        $canonicalUrl = trim((string) ($metadata['canonical_url'] ?? ''));
+        $ogTitle = trim((string) ($metadata['og_title'] ?? ''));
+        $ogDescription = trim((string) ($metadata['og_description'] ?? ''));
+        $ogImage = trim((string) ($metadata['og_image'] ?? ''));
+
+        $fallbackTitle = trim((string) ($fallback['title'] ?? ''));
+        $fallbackDescription = trim((string) ($fallback['description'] ?? ''));
+        $fallbackCanonical = trim((string) ($fallback['canonical_url'] ?? ''));
+        $fallbackOgImage = trim((string) ($fallback['og_image'] ?? ''));
+        $ogImageUrl = $ogImage !== '' ? media_url($ogImage) : ($fallbackOgImage !== '' ? $fallbackOgImage : null);
+
+        return [
+            'metaTitle' => $metaTitle !== '' ? $metaTitle : $fallbackTitle,
+            'metaDescription' => $metaDescription !== '' ? $metaDescription : $fallbackDescription,
+            'metaKeywords' => trim((string) ($metadata['meta_keywords'] ?? '')) ?: null,
+            'canonicalUrl' => $canonicalUrl !== '' ? $canonicalUrl : $fallbackCanonical,
+            'ogTitle' => $ogTitle !== '' ? $ogTitle : ($metaTitle !== '' ? $metaTitle : $fallbackTitle),
+            'ogDescription' => $ogDescription !== '' ? $ogDescription : ($metaDescription !== '' ? $metaDescription : $fallbackDescription),
+            'ogImage' => $ogImageUrl,
+            'otherMetaTags' => trim((string) ($metadata['other_meta_tags'] ?? '')) ?: null,
+        ];
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -628,11 +672,23 @@ class PublicContentViewData
 
         $locEn = trim((string) data_get($tr, 'en.location')) ?: trim((string) ($c->location ?? ''));
         $locAr = trim((string) data_get($tr, 'ar.location')) ?: $locEn;
+        $summaryEn = self::careerPlainSummary(data_get($tr, 'en.short_description'));
+        $summaryAr = self::careerPlainSummary(data_get($tr, 'ar.short_description'));
 
         $deptStored = trim((string) ($c->department ?? ''));
         $flagUrl = filled($c->flag_image)
             ? media_url((string) $c->flag_image)
             : '/images/career-location-placeholder.svg';
+        $primaryTitle = $titleEn !== '' ? $titleEn : ($titleAr !== '' ? $titleAr : 'Career');
+        $careerSeo = self::resolveEntitySeoPayload(
+            is_array($c->metadata) ? $c->metadata : [],
+            [
+                'title' => $primaryTitle,
+                'description' => $summaryEn !== '' ? $summaryEn : ($summaryAr !== '' ? $summaryAr : $primaryTitle),
+                'canonical_url' => filled($c->slug) ? url('/career-details/'.$c->slug) : url('/career'),
+                'og_image' => null,
+            ]
+        );
 
         return [
             'id' => (int) $c->id,
@@ -640,8 +696,8 @@ class PublicContentViewData
             'title' => ['en' => $titleEn, 'ar' => $titleAr],
             'titleFilterKey' => $titleFilterKey,
             'shortDescription' => [
-                'en' => self::careerPlainSummary(data_get($tr, 'en.short_description')),
-                'ar' => self::careerPlainSummary(data_get($tr, 'ar.short_description')),
+                'en' => $summaryEn,
+                'ar' => $summaryAr,
             ],
             'aboutHtml' => [
                 'en' => (string) data_get($tr, 'en.about'),
@@ -680,8 +736,9 @@ class PublicContentViewData
                 'ar' => $locAr,
             ],
             'flagImage' => $flagUrl,
-            'flagAlt' => (string) ($c->flag_alt ?? ''),
+            'flagAlt' => self::fallbackAltText($c->flag_alt ?? null, $locEn !== '' ? $locEn : 'Career location'),
             'publishedDate' => optional($c->published_date)->toDateString(),
+            'seo' => $careerSeo,
         ];
     }
 
@@ -814,7 +871,7 @@ class PublicContentViewData
             ],
             'readMoreUrl' => '/about',
             'image' => $homeImage ?: '',
-            'imageAlt' => trim((string) ($about->home_image_alt ?? '')),
+            'imageAlt' => self::fallbackAltText($about->home_image_alt ?? null, $titleEn !== '' ? $titleEn : 'About image'),
         ];
     }
 
@@ -883,10 +940,10 @@ class PublicContentViewData
     public static function aboutPageForSpa(): array
     {
         $fallbackGallery = [
-            ['src' => asset('images/dre/about-building.jpg'), 'alt' => ''],
-            ['src' => dre_property_placeholder_image(), 'alt' => ''],
-            ['src' => dre_property_placeholder_image(), 'alt' => ''],
-            ['src' => dre_property_placeholder_image(), 'alt' => ''],
+            ['src' => asset('images/dre/about-building.jpg'), 'alt' => 'About image 1'],
+            ['src' => dre_property_placeholder_image(), 'alt' => 'About image 2'],
+            ['src' => dre_property_placeholder_image(), 'alt' => 'About image 3'],
+            ['src' => dre_property_placeholder_image(), 'alt' => 'About image 4'],
         ];
         $data = [
             'hero' => [
@@ -937,7 +994,7 @@ class PublicContentViewData
                     }
                     $gallery[] = [
                         'src' => $url,
-                        'alt' => trim((string) ($about->{"image_{$i}_alt"} ?? '')),
+                        'alt' => self::fallbackAltText($about->{"image_{$i}_alt"} ?? null, 'About image '.$i),
                     ];
                 }
 
@@ -1013,7 +1070,7 @@ class PublicContentViewData
                         'ar' => (string) data_get($section->translations, 'ar.description'),
                     ],
                     'sectionImage' => $sectionImage,
-                    'sectionImageAlt' => trim((string) ($section->section_image_alt ?? '')),
+                    'sectionImageAlt' => self::fallbackAltText($section->section_image_alt ?? null, 'Why choose us image'),
                     'collage' => $collage,
                 ];
                 $data['whyChooseUs']['active'] = (bool) $section->status;
@@ -1176,6 +1233,20 @@ class PublicContentViewData
                 $detailImage = filled($detailImage) ? $detailImage : $placeholder;
                 $image3 = $blog->image_3 ? media_url((string) $blog->image_3) : null;
                 $image4 = $blog->image_4 ? media_url((string) $blog->image_4) : null;
+                $primaryTitle = $titleEn !== '' ? $titleEn : ($titleAr !== '' ? $titleAr : 'Insight');
+                $featureImageAlt = self::fallbackAltText($blog->feature_image_alt ?? null, $primaryTitle.' image');
+                $detailImageAlt = self::fallbackAltText($blog->detail_image_alt ?? null, $primaryTitle.' image');
+                $image3Alt = self::fallbackAltText($blog->image_3_alt ?? null, $primaryTitle.' image');
+                $image4Alt = self::fallbackAltText($blog->image_4_alt ?? null, $primaryTitle.' image');
+                $blogSeo = self::resolveEntitySeoPayload(
+                    is_array($blog->metadata) ? $blog->metadata : [],
+                    [
+                        'title' => $primaryTitle,
+                        'description' => $contentEn !== '' ? $contentEn : $primaryTitle,
+                        'canonical_url' => filled($blog->slug) ? url('/insights-details/'.$blog->slug) : url('/insights'),
+                        'og_image' => $detailImage,
+                    ]
+                );
 
                 $authorEn = trim((string) (data_get($extraFieldsEn, 'published_by')
                     ?? data_get($blog->metadata, 'author_en')
@@ -1222,9 +1293,13 @@ class PublicContentViewData
                     ],
                     'publishedAt' => optional($blog->published_at)->toDateString(),
                     'image' => $image,
+                    'imageAlt' => $featureImageAlt,
                     'detailImage' => $detailImage,
+                    'detailImageAlt' => $detailImageAlt,
                     'image3' => filled($image3) ? $image3 : null,
+                    'image3Alt' => $image3Alt,
                     'image4' => filled($image4) ? $image4 : null,
+                    'image4Alt' => $image4Alt,
                     'title' => [
                         'en' => $titleEn,
                         'ar' => $titleAr,
@@ -1241,6 +1316,7 @@ class PublicContentViewData
                         'en' => $typeEn,
                         'ar' => $typeAr,
                     ],
+                    'seo' => $blogSeo,
                 ];
 
                 if ($includeContent) {

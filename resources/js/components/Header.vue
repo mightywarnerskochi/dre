@@ -27,7 +27,7 @@
                         >
                             <img
                                 :src="flagSrc"
-                                :alt="currentLang?.flagAlt || currentLang?.name"
+                                :alt="currentLang?.flagAlt || 'Language flag'"
                                 class="lang-switcher__flag"
                                 width="22"
                                 height="16"
@@ -46,7 +46,7 @@
                                     :aria-pressed="locale === lang.code ? 'true' : 'false'"
                                     @click="setLang(lang.code)"
                                 >
-                                    <img :src="lang.flagImage || asset('public/images/' + (lang.code === 'ar' ? 'arabic.jpg' : 'english.jpg'))" alt="" width="22" height="16" />
+                                    <img :src="lang.flagImage || asset('public/images/' + (lang.code === 'ar' ? 'arabic.jpg' : 'english.jpg'))" :alt="lang.flagAlt || 'Language flag'" width="22" height="16" />
                                     <span>{{ lang.name }}</span>
                                 </button>
                             </li>
@@ -91,7 +91,7 @@ const activeLanguages = computed(() => {
 });
 
 const currentLang = computed(() => activeLanguages.value.find(l => l.code === locale.value) || activeLanguages.value[0]);
-const displayCode = computed(() => currentLang.value?.code.toUpperCase() === 'AR' ? 'AR' : 'ENG');
+const displayCode = computed(() => t('lang.code'));
 const flagSrc = computed(() => currentLang.value?.flagImage || asset(locale.value === 'ar' ? 'public/images/arabic.jpg' : 'public/images/english.jpg'));
 
 const logoAltText = computed(() => dreSite.value?.logoAlt || t('brand.logoAlt'));

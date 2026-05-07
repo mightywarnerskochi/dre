@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
-class ContactEnquiryController extends Controller
+class PropertyEnquiryController extends Controller
 {
     public function store(Request $request): JsonResponse
     {
@@ -22,8 +22,12 @@ class ContactEnquiryController extends Controller
             'phone_country_iso2' => ['nullable', 'string', 'size:2'],
             'phone_country_name' => ['nullable', 'string', 'max:120'],
             'phone' => ['required', 'string', 'max:40'],
-            'subject' => ['required', 'string', 'max:255'],
-            'message' => ['required', 'string', 'max:5000'],
+            'location' => ['required', 'string', 'max:255'],
+            'property_type' => ['required', 'string', 'max:120'],
+            'property_size' => ['required', 'string', 'max:120'],
+            'property_title' => ['nullable', 'string', 'max:255'],
+            'page_source' => ['required', 'string', 'max:120'],
+            'page_url' => ['required', 'string', 'max:2048'],
             'recaptcha_token' => ['nullable', 'string'],
         ], [
             'phone_national.regex' => 'Enter a phone number of 6 to 13 digits.',
@@ -55,12 +59,16 @@ class ContactEnquiryController extends Controller
             'phone' => $phone,
             'company' => null,
             'country' => $countryLabel,
-            'page_source' => 'Contact',
-            'page_url' => $request->headers->get('referer') ?: url('/contact'),
-            'message' => $validated['message'],
+            'page_source' => $validated['page_source'],
+            'page_url' => $validated['page_url'],
+            'message' => $this->buildMessage($validated),
             'extra_fields' => array_filter([
-                'enquiry_type' => 'form',
-                'subject' => $validated['subject'] ?? null,
+                'enquiry_type' => 'property',
+                'subject' => 'Property Enquiry',
+                'location' => $validated['location'],
+                'property_type' => $validated['property_type'],
+                'property_size' => $validated['property_size'],
+                'property_title' => $validated['property_title'] ?? null,
                 'phone_dial_code' => $validated['phone_dial_code'] ?? null,
                 'phone_national' => $validated['phone_national'] ?? null,
                 'phone_country_iso2' => strtoupper(trim((string) ($validated['phone_country_iso2'] ?? ''))) ?: null,
@@ -81,6 +89,22 @@ class ContactEnquiryController extends Controller
             'ok' => true,
             'message' => __('Your enquiry has been submitted successfully.'),
         ]);
+    }
+
+    private function buildMessage(array $validated): string
+    {
+        $lines = [
+            'Property enquiry submitted.',
+            'Location: '.trim((string) $validated['location']),
+            'Property type: '.trim((string) $validated['property_type']),
+            'Property size: '.trim((string) $validated['property_size']),
+        ];
+
+        if (filled($validated['property_title'] ?? null)) {
+            array_splice($lines, 1, 0, ['Property: '.trim((string) $validated['property_title'])]);
+        }
+
+        return implode(PHP_EOL, $lines);
     }
 
     private function formatPhone(array $validated): ?string
@@ -147,6 +171,7 @@ class ContactEnquiryController extends Controller
             return true;
         } catch (\Throwable $e) {
             report($e);
+
             return false;
         }
     }

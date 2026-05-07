@@ -208,6 +208,7 @@ class PropertyPageController extends Controller
             ->ordered();
 
         $this->applyPublishedPropertyFilters($request, $query);
+        $this->applyMapBoundsFilter($request, $query);
 
         $markers = $query
             ->get()
@@ -227,6 +228,31 @@ class PropertyPageController extends Controller
             ->values();
 
         return response()->json(['markers' => $markers]);
+    }
+
+    /**
+     * Restrict map markers to current map viewport when bounds are provided.
+     *
+     * @param  Builder<Property>  $query
+     */
+    protected function applyMapBoundsFilter(Request $request, $query): void
+    {
+        $latMin = $request->query('lat_min');
+        $latMax = $request->query('lat_max');
+        $lngMin = $request->query('lng_min');
+        $lngMax = $request->query('lng_max');
+
+        if (! is_numeric($latMin) || ! is_numeric($latMax) || ! is_numeric($lngMin) || ! is_numeric($lngMax)) {
+            return;
+        }
+
+        $south = min((float) $latMin, (float) $latMax);
+        $north = max((float) $latMin, (float) $latMax);
+        $west = min((float) $lngMin, (float) $lngMax);
+        $east = max((float) $lngMin, (float) $lngMax);
+
+        $query->whereBetween('latitude', [$south, $north]);
+        $query->whereBetween('longitude', [$west, $east]);
     }
 
     /**
@@ -434,6 +460,14 @@ class PropertyPageController extends Controller
 
         $slug = trim((string) ($property->slug ?? ''));
         $detailPath = $slug !== '' ? '/property-details/'.$slug : '/our-property';
+        $descriptionText = $property->getTranslation('description') ?: ($property->details?->description ?? '');
+        $seoPayload = $this->propertySeoPayload(
+            $property,
+            $title,
+            $detailPath,
+            (string) ($images->first() ?? ''),
+            $descriptionText
+        );
 
         $data = [
             'id' => $property->id,
@@ -454,7 +488,9 @@ class PropertyPageController extends Controller
             'sqft' => (int) $property->sqft,
             'period' => $property->listing_type === 'rent' ? ' / yr' : '',
             'property_type' => $property->property_type,
+            'propertyTypeLabel' => $this->optionLabel(config('cms-kit.database.properties.property_types', []), (string) $property->property_type),
             'listing_type' => $property->listing_type,
+            'listingTypeLabel' => $this->optionLabel(config('cms-kit.database.properties.listing_types', []), (string) $property->listing_type),
             'category' => $property->category,
             'categoryLabel' => $this->optionLabel(config('cms-kit.database.properties.categories', []), (string) $property->category),
             'images' => $images->all(),
@@ -467,14 +503,16 @@ class PropertyPageController extends Controller
             'whatsapp' => $whatsAppHref,
             'inquireUrl' => 'mailto:'.rawurlencode($email).'?subject='.rawurlencode('Inquiry - '.$title),
             'agent' => $property->agent ? [
-                'name' => $property->agent->name,
-                'designation' => $property->agent->designation,
-                'experience' => $property->agent->experience,
-                'languages' => $property->agent->languages,
+                'name' => $property->agent->getTranslation('name'),
+                'designation' => $property->agent->getTranslation('designation'),
+                'experience' => $property->agent->getTranslation('experience'),
+                'languages' => $property->agent->getTranslation('languages'),
                 'image' => $property->agent->image ? media_url((string) $property->agent->image) : asset('images/dre/agent-placeholder.svg'),
+                'imageAlt' => trim((string) ($property->agent->name ?? '')) ?: 'Property agent',
                 'phone' => $property->agent->phone ? 'tel:'.preg_replace('/\s+/', '', (string) $property->agent->phone) : '#',
                 'whatsapp' => $whatsAppHref,
             ] : null,
+            'seo' => $seoPayload,
         ];
 
         if ($full) {
@@ -631,6 +669,45 @@ class PropertyPageController extends Controller
             ->filter()
             ->values()
             ->all();
+    }
+
+    /**
+     * @return array<string, string|null>
+     */
+    protected function propertySeoPayload(
+        Property $property,
+        string $fallbackTitle,
+        string $detailPath,
+        string $fallbackImage,
+        ?string $fallbackDescription = null
+    ): array {
+        $metadata = is_array($property->metadata) ? $property->metadata : [];
+        $metaTitle = $this->trimSeoText(data_get($metadata, 'meta_title')) ?: $fallbackTitle;
+        $metaDescription = $this->trimSeoText(data_get($metadata, 'meta_description'));
+        if (! $metaDescription) {
+            $metaDescription = $this->trimSeoText(strip_tags((string) $fallbackDescription)) ?: $fallbackTitle;
+        }
+        $canonicalUrl = $this->trimSeoText(data_get($metadata, 'canonical_url')) ?: url($detailPath);
+        $ogImage = $this->trimSeoText(data_get($metadata, 'og_image'));
+        $ogImageUrl = $ogImage ? media_url($ogImage) : $fallbackImage;
+
+        return [
+            'metaTitle' => $metaTitle,
+            'metaDescription' => $metaDescription,
+            'metaKeywords' => $this->trimSeoText(data_get($metadata, 'meta_keywords')),
+            'canonicalUrl' => $canonicalUrl,
+            'ogTitle' => $this->trimSeoText(data_get($metadata, 'og_title')) ?: $metaTitle,
+            'ogDescription' => $this->trimSeoText(data_get($metadata, 'og_description')) ?: $metaDescription,
+            'ogImage' => $ogImageUrl,
+            'otherMetaTags' => $this->trimSeoText(data_get($metadata, 'other_meta_tags')),
+        ];
+    }
+
+    protected function trimSeoText(mixed $value): ?string
+    {
+        $text = trim((string) $value);
+
+        return $text !== '' ? $text : null;
     }
 
     protected function setRequestLocale(Request $request): void
@@ -792,6 +869,21 @@ class PropertyPageController extends Controller
                         ['value' => '1', 'label' => '1 Bedroom'],
                         ['value' => '2', 'label' => '2 Bedrooms'],
                         ['value' => '3', 'label' => '3 Bedrooms'],
+                        ['value' => '4', 'label' => '4 Bedrooms'],
+                        ['value' => '5', 'label' => '5+ Bedrooms'],
+                    ],
+                ],
+                [
+                    'key' => 'bathrooms',
+                    'label' => 'Bathrooms',
+                    'uiType' => 'dropdown',
+                    'queryParam' => 'baths',
+                    'options' => [
+                        ['value' => '', 'label' => 'Bathrooms'],
+                        ['value' => '1', 'label' => '1 Bathroom'],
+                        ['value' => '2', 'label' => '2 Bathrooms'],
+                        ['value' => '3', 'label' => '3 Bathrooms'],
+                        ['value' => '4', 'label' => '4+ Bathrooms'],
                     ],
                 ],
                 [

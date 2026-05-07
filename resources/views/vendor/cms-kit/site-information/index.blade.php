@@ -13,6 +13,8 @@
         $siteInfoExtraFields = config('cms-kit.database.site-information.extra_fields', []);
         $colourLogoConfig = $siteInfoExtraFields['colour_logo'] ?? null;
         $colourLogoPath = data_get($siteInfo->extra_fields, 'colour_logo');
+        $qrCodeConfig = $siteInfoExtraFields['qr_code'] ?? null;
+        $qrCodePath = data_get($siteInfo->extra_fields, 'qr_code');
         $hasTranslatableExtraFields = collect($siteInfoExtraFields)->contains(fn($field) => $field['translatable'] ?? false);
         $translations = $siteInfo->translations ?? [];
         $socialFields = [
@@ -312,6 +314,26 @@
                             <input type="file" name="favicon" class="form-control @error('favicon') is-invalid @enderror" {{ in_array('favicon', $siteInfoRequired) && !$siteInfo->favicon ? 'required' : '' }}>
                             @error('favicon')
                                 <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        @endif
+
+                        @if($qrCodeConfig)
+                        <div class="mb-0">
+                            <label class="form-label fw-bold">{{ $qrCodeConfig['label'] ?? 'App QR Code' }}</label>
+                            <small class="text-muted d-block mb-1">{{ $qrCodeConfig['helpText'] ?? 'Recommended size: 200x200px (PNG/SVG).' }}</small>
+                            @if($qrCodePath)
+                            <div class="mb-2">
+                                <img src="{{ media_url($qrCodePath) }}" class="img-thumbnail rounded" style="max-height: 100px;">
+                            </div>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="checkbox" name="remove_qr_code" id="removeSiteQrCode" value="1" {{ old('remove_qr_code') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="removeSiteQrCode">Remove current QR code</label>
+                            </div>
+                            @endif
+                            <input type="file" name="extra_fields[qr_code]" class="form-control @error('extra_fields.qr_code') is-invalid @enderror" accept="image/*,.svg">
+                            @error('extra_fields.qr_code')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
                             @enderror
                         </div>
                         @endif

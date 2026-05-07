@@ -2,10 +2,11 @@
     <!-- Floating Widgets -->
 
     <!-- Share Button -->
-    <div class="sticky-share" id="stickyShare" role="complementary" :aria-label="t('floating.sharePanelAria')">
+    <div v-if="hasShareIcons" class="sticky-share" id="stickyShare" role="complementary" :aria-label="t('floating.sharePanelAria')">
         <div class="sticky-share__panel" id="stickySharePanel" role="list" :aria-label="t('floating.shareListAria')">
             <a
-                href="https://www.facebook.com/sharer/sharer.php?u="
+                v-if="socialHref('facebook')"
+                :href="socialHref('facebook')"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="sticky-share__icon"
@@ -22,7 +23,8 @@
                 </svg>
             </a>
             <a
-                href="https://twitter.com/intent/tweet?url="
+                v-if="socialHref('twitter')"
+                :href="socialHref('twitter')"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="sticky-share__icon"
@@ -39,7 +41,8 @@
                 </svg>
             </a>
             <a
-                href="https://www.linkedin.com/sharing/share-offsite/?url="
+                v-if="socialHref('linkedin')"
+                :href="socialHref('linkedin')"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="sticky-share__icon"
@@ -56,7 +59,8 @@
                 </svg>
             </a>
             <a
-                href="https://www.instagram.com/"
+                v-if="socialHref('instagram')"
+                :href="socialHref('instagram')"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="sticky-share__icon"
@@ -71,7 +75,8 @@
                 </svg>
             </a>
             <a
-                href="https://www.youtube.com/@dreuae"
+                v-if="socialHref('youtube')"
+                :href="socialHref('youtube')"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="sticky-share__icon"
@@ -95,7 +100,8 @@
                 </svg>
             </a>
             <a
-                href="https://wa.me/97143438302"
+                v-if="whatsAppSocialHref"
+                :href="whatsAppSocialHref"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="sticky-share__icon"
@@ -154,9 +160,9 @@
     </div>
 
     <!-- Chat With Us (WhatsApp) -->
-    <div class="sticky-chat" :aria-label="t('floating.chatSectionAria')">
+    <div v-if="whatsAppChatHref" class="sticky-chat" :aria-label="t('floating.chatSectionAria')">
         <a
-            href="https://wa.me/97143438302"
+            :href="whatsAppChatHref"
             target="_blank"
             rel="noopener noreferrer"
             class="sticky-chat__btn"
@@ -173,8 +179,49 @@
 </template>
 
 <script setup>
+import { computed, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
+import { getPublicSiteBoot } from '@/utils/publicSite';
 
 const { t } = useI18n();
+
+const injected = inject('dreSite', null);
+const dreSite = injected ?? computed(() => getPublicSiteBoot());
+
+const socialMap = computed(() => {
+    const rows = Array.isArray(dreSite.value?.social) ? dreSite.value.social : [];
+
+    return rows.reduce((acc, row) => {
+        const network = typeof row?.network === 'string' ? row.network.trim().toLowerCase() : '';
+        const href = typeof row?.href === 'string' ? row.href.trim() : '';
+        if (network && href) {
+            acc[network] = href;
+        }
+
+        return acc;
+    }, {});
+});
+
+const socialHref = (network) => socialMap.value[network] ?? null;
+
+function whatsappHref(raw) {
+    const value = String(raw ?? '').trim();
+    if (value === '' || value === '#') {
+        return null;
+    }
+    const digits = value.replace(/\D+/g, '');
+    if (digits !== '') {
+        return `https://wa.me/${digits}`;
+    }
+    if (/^https?:\/\//i.test(value)) {
+        return value;
+    }
+
+    return `https://${value}`;
+}
+
+const whatsAppSocialHref = computed(() => whatsappHref(socialHref('whatsapp')) ?? whatsappHref(dreSite.value?.whatsappNumber));
+const whatsAppChatHref = computed(() => whatsappHref(dreSite.value?.whatsappNumber) ?? whatsAppSocialHref.value);
+const hasShareIcons = computed(() => ['facebook', 'twitter', 'linkedin', 'instagram', 'youtube'].some((network) => !!socialHref(network)) || !!whatsAppSocialHref.value);
 </script>

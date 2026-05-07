@@ -104,6 +104,8 @@
 
 <script>
     $(function() {
+        const translationUrlTemplate = "{{ route('cms.languages.translations.edit', ':id') }}";
+
         $('.premium-table').DataTable({
             processing: true,
             serverSide: true,
@@ -117,7 +119,11 @@
                 }, width: '14%'},
                 {data: 'default_badge', name: 'is_default', className: 'text-center', width: '18%'},
                 {data: 'status_badge', name: 'status', className: 'text-center', width: '18%'},
-                {data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-end pe-4', width: '16%'}
+                {data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-end pe-4', width: '16%', render: function(data, type, row) {
+                    const translationUrl = translationUrlTemplate.replace(':id', row.id);
+                    const translationBtn = '<a href="' + translationUrl + '" class="btn btn-sm btn-light border me-1" title="Manage static text"><i class="fas fa-language text-info"></i></a>';
+                    return '<div class="d-inline-flex align-items-center justify-content-end flex-nowrap gap-1 language-action-group">' + translationBtn + (data || '') + '</div>';
+                }}
             ],
             order: [[0, 'asc']],
             language: {
@@ -154,6 +160,18 @@
         });
     });
 </script>
+
+<style>
+    table.dataTable td:last-child,
+    table.dataTable th:last-child {
+        white-space: nowrap;
+    }
+
+    .language-action-group .btn,
+    .language-action-group form {
+        margin: 0 !important;
+    }
+</style>
 
 <div class="modal fade" id="dynamicEditModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">

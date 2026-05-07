@@ -1,6 +1,7 @@
 @php
     $item = $property ?? null;
     $details = $item?->details;
+    $itemMetadata = is_array($item?->metadata) ? $item->metadata : [];
     $showLanguageUi = config('cms-kit.common.modules.languages', true);
     $fallbackLocale = config('app.fallback_locale', 'en');
     $translationCollection = $item?->translations ? $item->translations->keyBy('language_code') : collect();
@@ -580,6 +581,60 @@
                                             <div class="col-md-6">
                                                 <label class="form-label fw-bold">Display Order</label>
                                                 <input type="number" min="1" name="order" class="form-control" value="{{ old('order', $item->order ?? $nextOrder ?? 1) }}">
+                                            </div>
+                                            <div class="col-12">
+                                                <hr class="my-2">
+                                                <h6 class="fw-bold mb-1">SEO Metadata</h6>
+                                                <small class="text-muted">Used on property detail page. If empty, the page falls back to property title and current URL.</small>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold">Meta Title</label>
+                                                <input type="text" name="metadata[meta_title]" class="form-control @error('metadata.meta_title') is-invalid @enderror" value="{{ old('metadata.meta_title', $itemMetadata['meta_title'] ?? '') }}" placeholder="Page title for search engines">
+                                                @error('metadata.meta_title')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold">Canonical URL</label>
+                                                <input type="url" name="metadata[canonical_url]" class="form-control @error('metadata.canonical_url') is-invalid @enderror" value="{{ old('metadata.canonical_url', $itemMetadata['canonical_url'] ?? '') }}" placeholder="https://example.com/property-details/slug">
+                                                @error('metadata.canonical_url')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold">Meta Description</label>
+                                                <textarea name="metadata[meta_description]" rows="3" class="form-control @error('metadata.meta_description') is-invalid @enderror" placeholder="Page description">{{ old('metadata.meta_description', $itemMetadata['meta_description'] ?? '') }}</textarea>
+                                                @error('metadata.meta_description')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold">Meta Keywords</label>
+                                                <input type="text" name="metadata[meta_keywords]" class="form-control @error('metadata.meta_keywords') is-invalid @enderror" value="{{ old('metadata.meta_keywords', $itemMetadata['meta_keywords'] ?? '') }}" placeholder="keyword1, keyword2">
+                                                @error('metadata.meta_keywords')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold">OG Title</label>
+                                                <input type="text" name="metadata[og_title]" class="form-control @error('metadata.og_title') is-invalid @enderror" value="{{ old('metadata.og_title', $itemMetadata['og_title'] ?? '') }}">
+                                                @error('metadata.og_title')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold">OG Description</label>
+                                                <textarea name="metadata[og_description]" rows="3" class="form-control @error('metadata.og_description') is-invalid @enderror">{{ old('metadata.og_description', $itemMetadata['og_description'] ?? '') }}</textarea>
+                                                @error('metadata.og_description')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold">OG Image</label>
+                                                @if(!empty($itemMetadata['og_image']))
+                                                    <div class="mb-2">
+                                                        <img src="{{ media_url($itemMetadata['og_image']) }}" class="rounded border" style="height: 100px;" alt="Property OG image preview">
+                                                    </div>
+                                                    <div class="form-check mb-2">
+                                                        <input class="form-check-input" type="checkbox" name="remove_metadata_og_image" id="removePropertyOgImage" value="1" {{ old('remove_metadata_og_image') ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="removePropertyOgImage">Remove current OG image</label>
+                                                    </div>
+                                                @endif
+                                                <input type="file" name="metadata[og_image]" class="form-control @error('metadata.og_image') is-invalid @enderror" accept="image/*">
+                                                @error('metadata.og_image')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-bold">Other Meta Tags</label>
+                                                <textarea name="metadata[other_meta_tags]" rows="3" class="form-control @error('metadata.other_meta_tags') is-invalid @enderror" placeholder='<meta name="robots" content="index,follow">'>{{ old('metadata.other_meta_tags', $itemMetadata['other_meta_tags'] ?? '') }}</textarea>
+                                                @error('metadata.other_meta_tags')<div class="invalid-feedback">{{ $message }}</div>@enderror
                                             </div>
                                         </div>
                                     </div>

@@ -27,10 +27,14 @@
     "viewLess": "View less",
     "selectBedsBaths": "Select Beds & Baths",
     "bedrooms": "Bedrooms",
+    "bedroomsHeading": "Bedrooms",
     "bathrooms": "Bathrooms",
+    "bathroomsHeading": "Bathrooms",
     "studio": "Studio",
+    "popularLocations": "Popular locations",
     "clearFilters": "Clear Filter",
     "categoriesPlaceholder": "Categories",
+    "categoriesHeading": "Categories",
     "categoryHeading": "Category",
     "pricePlaceholder": "Price",
     "minPrice": "Min Price",
@@ -43,6 +47,7 @@
     "map": "Map",
     "mobileToolsAria": "Property listing tools",
     "layoutAria": "Listing layout",
+    "listView": "List View",
     "listViewAria": "List view",
     "gridViewAria": "Grid view",
     "featured": "Featured",
@@ -52,13 +57,53 @@
     "noResultsText": "Try changing your location, property type, beds, baths, or price filters.",
     "forSale": "For Sale",
     "listingType": "Listing",
-    "photosCount": "{n} Photos",
-    "bedroomsUnit": "{count} Bedroom | {count} Bedrooms",
-    "bathroomsUnit": "{count} Bathroom | {count} Bathrooms",
+    "bathroomsUnit": "1 Bathroom | {count} Bathrooms",
+    "bedroomsUnit": "Studio | 1 Bedroom | {count} Bedrooms",
     "virtualTourTitle": "360 virtual tour",
     "photoGalleryAria": "Photo gallery",
     "photoNumberAria": "Photo {n}",
-    "sqftSuffix": "ft²"
+    "sqftSuffix": "ft²",
+    "rentals": "Rentals"
+  },
+  "propertyDetail": {
+    "loading": "Loading property…",
+    "notFound": "This property could not be found.",
+    "allPhotos": "All Photos",
+    "experience": "Experience",
+    "languages": "Languages",
+    "enquiry": "Enquiry",
+    "callNow": "Call Now",
+    "whatsapp": "Whatsapp",
+    "description": "Description",
+    "easyAccess": "Easy Access To",
+    "detailsTitle": "Property Details",
+    "keyFeatures": "Key Features",
+    "amenities": "Amenities",
+    "attributes": "Property Attributes",
+    "location": "Location",
+    "similarListing": "Similar Listing",
+    "specId": "Property ID",
+    "specPrice": "Price",
+    "specSize": "Property Size",
+    "specBath": "Bathroom",
+    "specYear": "Year Built",
+    "specOwner": "Direct from Owner",
+    "specDeposit": "Security Deposit",
+    "minDeposit": "Minimum {amount}",
+    "calcTitle": "Payment Calculator",
+    "paymentChartAria": "Payment breakdown chart",
+    "perMonth": "Per Month",
+    "pi": "Principal and Interest",
+    "tax": "Property Tax",
+    "hoa": "HOA Fees",
+    "priceLabel": "Home Price",
+    "downPaymentLabel": "Down Payment",
+    "downPaymentHint": "Amount and percentage stay in sync with home price.",
+    "taxLabel": "Property Tax",
+    "hoaLabel": "HOA Fees",
+    "termLabel": "Term",
+    "termHint": "(*in years)",
+    "interestLabel": "Interest"
   },
   "map": {
     "heroTitle": "Map View",
@@ -77,9 +122,14 @@
     "bedShort": "Bed",
     "bedsShort": "Beds",
     "bathShort": "Bath",
-    "bathsShort": "Baths"
+    "bathsShort": "Baths",
+    "school": "Schools",
+    "hospital": "Hospitals",
+    "restaurant": "Restaurants",
+    "attraction": "Attractions"
   },
   "lang": {
+    "code": "ENG",
     "english": "English",
     "arabic": "Arabic",
     "switcherAria": "Language switcher",
@@ -116,7 +166,8 @@
     "twitter": "X (Twitter)",
     "linkedin": "LinkedIn",
     "instagram": "Instagram",
-    "youtube": "YouTube"
+    "youtube": "YouTube",
+    "whatsapp": "WhatsApp"
   },
   "floating": {
     "sharePanelAria": "Share this page",
@@ -295,5 +346,8 @@
         "whatsapp": "Whatsapp"
       }
     }
+  },
+  "lang": {
+    "code": "ENG"
   }
 }

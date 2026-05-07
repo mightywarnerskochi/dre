@@ -1,6 +1,6 @@
 import './bootstrap';
 import { createApp } from 'vue';
-import PropertyDetailPage from './pages/PropertyDetailPage.vue';
+import PropertyDetailPage from './components/PropertyDetailsContent.vue';
 import i18n from './i18n';
 
 const mountEl = document.getElementById('dre-properties-detail-app');

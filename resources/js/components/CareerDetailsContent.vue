@@ -2,7 +2,7 @@
 <section class="banner banner--page banner--page--listing position-relative" :aria-label="t('careers.pageHeaderAria')">
         <div class="banner--page__bg">
             <picture>
-                <img :src="heroImageSrc" alt="" width="1920" height="403" loading="eager">
+                <img :src="heroImageSrc" alt="Careers banner" width="1920" height="403" loading="eager">
             </picture>
         </div>
         <div class="banner--page__content">
@@ -64,7 +64,7 @@
                         </li>
                         <li v-if="detail.vacancy.locationLine">
                             <span class="visually-hidden">{{ t('careers.detailLocation') }}: </span>
-                            <img :src="detail.vacancy.flagImage || fallbackFlagIcon" :alt="detail.vacancy.flagAlt || ''" width="16" height="16" loading="lazy" @error="onLocationIconError">
+                            <img :src="detail.vacancy.flagImage || fallbackFlagIcon" :alt="detail.vacancy.flagAlt || 'Career location'" width="16" height="16" loading="lazy" @error="onLocationIconError">
                             {{ detail.vacancy.locationLine }}
                         </li>
                     </ul>
@@ -331,6 +331,7 @@ import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 import { asset } from '@/utils/asset';
 import { getCareerDetailBySlug, getCareersPublicData } from '@/utils/publicContent';
+import { applyGlobalImageAltFallback, applySeoPayload } from '@/utils/seo';
 
 const route = useRoute();
 const router = useRouter();
@@ -680,7 +681,7 @@ function formatDate(iso) {
 
 watch(
     [slug, detail, locale],
-    ([s, d]) => {
+    ([s, d, activeLocale]) => {
         if (!s) {
             router.replace({ name: 'career' });
             return;
@@ -689,7 +690,14 @@ watch(
             router.replace({ name: 'career' });
             return;
         }
-        document.title = `${d.pageTitle} | ${t('footer.navCareers')} | DRE`;
+
+        applySeoPayload(d.seo || d.vacancy?.seo || {}, activeLocale, {
+            title: d.pageTitle || d.vacancy?.title || 'Career',
+            description: d.vacancy?.shortDescription || d.vacancy?.title || 'Career',
+            canonicalUrl: window.location.href,
+            ogImage: heroImageSrc.value || fallbackFlagIcon,
+        });
+        applyGlobalImageAltFallback('DRE image');
     },
     { immediate: true },
 );

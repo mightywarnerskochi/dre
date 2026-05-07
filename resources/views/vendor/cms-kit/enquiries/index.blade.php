@@ -1,10 +1,13 @@
 @extends('cms-kit::layouts.cms')
 
 @section('breadcrumbs')
-    <li class="breadcrumb-item active" aria-current="page">Enquiries</li>
+    <li class="breadcrumb-item active" aria-current="page">{{ $pageHeading ?? 'Enquiries' }}</li>
 @endsection
 
 @section('content')
+@php
+    $isPropertyList = ($enquiryType ?? '') === 'property';
+@endphp
 <div class="card mb-4">
     <div class="card-body">
         <form id="filterForm" class="row g-3 align-items-end">
@@ -17,6 +20,17 @@
                     @endforeach
                 </select>
             </div>
+            @if($isPropertyList)
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold">Property type</label>
+                    <select name="property_type" id="filterPropertyType" class="form-select form-select-sm">
+                        <option value="All">All</option>
+                        @foreach(($propertyTypes ?? []) as $propertyType)
+                            <option value="{{ $propertyType }}">{{ $propertyType }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
             <div class="col-md-2">
                 <label class="form-label small fw-bold">From date</label>
                 <input type="date" name="from_date" id="filterFromDate" class="form-control form-control-sm">
@@ -36,7 +50,7 @@
 
 <div class="card">
     <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
-        <h5 class="mb-0">Enquiries List</h5>
+        <h5 class="mb-0">{{ $listHeading ?? 'Enquiries List' }}</h5>
     </div>
     <div class="card-body p-4">
         <div class="table-responsive">
@@ -47,8 +61,13 @@
                         <th>Name</th>
                         <th>Email</th>
                         <th>Phone</th>
-                        <th>Country</th>
-                        <th>Subject</th>
+                        @if($isPropertyList)
+                            <th>Property Name</th>
+                            <th>Location</th>
+                        @else
+                            <th>Country</th>
+                            <th>Subject</th>
+                        @endif
                         <th>Date</th>
                         <th class="text-end pe-4">Actions</th>
                     </tr>
@@ -69,19 +88,24 @@
 
 <script>
     $(function() {
+        const destroyUrlTemplate = @json(route(($routePrefix ?? 'cms.enquiries') . '.destroy', ['id' => '__ID__']));
+
         const table = $('.premium-table').DataTable({
             processing: true,
             serverSide: true,
             ajax: {
-                url: "{{ route('cms.enquiries.index') }}",
+                url: "{{ route(($routePrefix ?? 'cms.enquiries') . '.index') }}",
                 data: function(d) {
                     d.page_source = $('#filterSource').val();
+                    @if($isPropertyList)
+                        d.property_type = $('#filterPropertyType').val();
+                    @endif
                     d.from_date = $('#filterFromDate').val();
                     d.to_date = $('#filterToDate').val();
                 }
             },
             columns: [
-                {data: 'id', name: 'id'},
+                {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
                 {data: 'name', name: 'name', render: function(data) {
                     return data ? `<span class="text-truncate d-inline-block" style="max-width: 150px;">${data}</span>` : '-';
                 }},
@@ -91,12 +115,21 @@
                 {data: 'phone', name: 'phone', render: function(data) {
                     return data ? `<span class="text-truncate d-inline-block" style="max-width: 140px;">${data}</span>` : '-';
                 }},
-                {data: 'country', name: 'country', render: function(data) {
-                    return data ? `<span class="text-truncate d-inline-block" style="max-width: 120px;">${data}</span>` : '-';
-                }},
-                {data: 'subject', name: 'subject', orderable: false, searchable: false, render: function(data) {
-                    return data ? `<span class="text-truncate d-inline-block" style="max-width: 150px;">${data}</span>` : '-';
-                }},
+                @if($isPropertyList)
+                    {data: 'property_title', name: 'property_title', orderable: false, searchable: false, render: function(data) {
+                        return data ? `<span class="text-truncate d-inline-block" style="max-width: 200px;">${data}</span>` : '-';
+                    }},
+                    {data: 'location', name: 'location', orderable: false, searchable: false, render: function(data) {
+                        return data ? `<span class="text-truncate d-inline-block" style="max-width: 220px;">${data}</span>` : '-';
+                    }},
+                @else
+                    {data: 'country', name: 'country', render: function(data) {
+                        return data ? `<span class="text-truncate d-inline-block" style="max-width: 120px;">${data}</span>` : '-';
+                    }},
+                    {data: 'subject', name: 'subject', orderable: false, searchable: false, render: function(data) {
+                        return data ? `<span class="text-truncate d-inline-block" style="max-width: 150px;">${data}</span>` : '-';
+                    }},
+                @endif
                 {data: 'date', name: 'created_at'},
                 {data: 'action', name: 'action', orderable: false, searchable: false}
             ],
@@ -110,10 +143,13 @@
         $('#exportCsv').on('click', function() {
             const params = $.param({
                 page_source: $('#filterSource').val(),
+                @if($isPropertyList)
+                    property_type: $('#filterPropertyType').val(),
+                @endif
                 from_date: $('#filterFromDate').val(),
                 to_date: $('#filterToDate').val()
             });
-            window.location.href = "{{ route('cms.enquiries.export') }}?" + params;
+            window.location.href = "{{ route(($routePrefix ?? 'cms.enquiries') . '.export') }}?" + params;
         });
 
         // Delete
@@ -121,7 +157,7 @@
             if (confirm('Are you sure you want to delete this enquiry?')) {
                 const id = $(this).data('id');
                 $.ajax({
-                    url: `{{ url(config('cms-kit.common.auth.prefix', 'admin')) }}/enquiries/${id}`,
+                    url: destroyUrlTemplate.replace('__ID__', id),
                     type: 'DELETE',
                     data: { _token: '{{ csrf_token() }}' },
                     success: function() {

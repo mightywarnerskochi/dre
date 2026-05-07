@@ -953,73 +953,146 @@ jQuery(function () {
   }
 
   // --- Enquiry Modal logic ---
-  const enquiryButtons = document.querySelectorAll('.property-card__actions .property-btn--primary[data-bs-target="#siteEnquiryForm"]');
   const modalEl = document.getElementById('siteEnquiryForm');
   
   if (modalEl) {
+    const propertyTitleInput = modalEl.querySelector('input[name="property_title"]');
     const locInput = modalEl.querySelector('input[name="location"]');
     const typeSelect = modalEl.querySelector('select[name="property_type"]');
     const sizeInput = modalEl.querySelector('input[name="property_size"]');
-    
-    enquiryButtons.forEach(btn => {
-      btn.addEventListener('click', function() {
-        const card = this.closest('.property-card__inner');
-        if (!card) return;
-        
-        const titleEl = card.querySelector('.property-card__title');
-        const locEl = card.querySelector('.property-card__location span');
-        const typeEl = card.querySelector('.property-tag--fill');
-        
-        let sizeStr = '';
-        const detailItems = card.querySelectorAll('.property-details__item span');
-        detailItems.forEach(span => {
-          if (span.textContent.includes('ft²')) {
-            sizeStr = span.textContent.trim();
-          }
-        });
 
-        if (locInput) {
-          const title = titleEl ? titleEl.textContent.trim() : '';
-          const loc = locEl ? locEl.textContent.trim() : '';
-          locInput.value = title ? `${title}, ${loc}` : loc;
-          locInput.disabled = true;
-        }
+    function setInputValue(input, value) {
+      if (!input) return;
+      input.value = value || '';
+      try {
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      } catch (e) {}
+    }
 
-        if (sizeInput) {
-          sizeInput.value = sizeStr;
-          sizeInput.disabled = true;
-        }
+    function extractFromCard(buttonEl) {
+      if (!buttonEl || typeof buttonEl.closest !== 'function') return null;
+      const card = buttonEl.closest('.property-card__inner');
+      if (!card) return null;
 
-        if (typeSelect) {
-          const typeStr = typeEl ? typeEl.textContent.trim() : '';
-          let matched = false;
-          Array.from(typeSelect.options).forEach(opt => {
-            if (opt.text.toLowerCase() === typeStr.toLowerCase()) {
-              typeSelect.value = opt.value;
-              matched = true;
-            }
-          });
-          if (!matched && typeStr) {
-            const newOpt = new Option(typeStr, typeStr.toLowerCase());
-            typeSelect.add(newOpt);
-            typeSelect.value = typeStr.toLowerCase();
-          }
-          typeSelect.disabled = true;
+      const titleEl = card.querySelector('.property-card__title');
+      const locEl = card.querySelector('.property-card__location span');
+      const typeEl = card.querySelector('.property-tag--fill');
+
+      let sizeStr = '';
+      const detailItems = card.querySelectorAll('.property-details__item span');
+      detailItems.forEach(span => {
+        const txt = String(span.textContent || '').trim();
+        if (/ft|sq\s*ft/i.test(txt)) {
+          sizeStr = txt;
         }
       });
+
+      return {
+        title: titleEl ? titleEl.textContent.trim() : '',
+        location: locEl ? locEl.textContent.trim() : '',
+        type: typeEl ? typeEl.textContent.trim() : '',
+        size: sizeStr,
+      };
+    }
+
+    function extractFromDetailPage() {
+      const detailRoot = document.querySelector('.property-detail-main');
+      if (!detailRoot) return null;
+
+      const titleEl = detailRoot.querySelector('.property-detail-title') || document.querySelector('.banner--page__title');
+      const locEl = detailRoot.querySelector('.property-detail-location span');
+      const typeEl = detailRoot.querySelector('.property-detail-badge');
+      const statSpans = detailRoot.querySelectorAll('.property-detail-stat span');
+      let sizeStr = '';
+      statSpans.forEach(span => {
+        const txt = String(span.textContent || '').trim();
+        if (/ft|sq\s*ft/i.test(txt)) {
+          sizeStr = txt;
+        }
+      });
+
+      const title = titleEl ? titleEl.textContent.trim() : '';
+      const location = locEl ? locEl.textContent.trim() : '';
+      const type = typeEl ? typeEl.textContent.trim() : '';
+
+      if (!title && !location && !type && !sizeStr) {
+        return null;
+      }
+
+      return {
+        title,
+        location,
+        type,
+        size: sizeStr,
+      };
+    }
+    
+    function applyContextToModal(triggerEl) {
+      const context = extractFromCard(triggerEl) || extractFromDetailPage() || {
+        title: '',
+        location: '',
+        type: '',
+        size: '',
+      };
+
+      if (propertyTitleInput) {
+        setInputValue(propertyTitleInput, context.title);
+      }
+
+      if (locInput) {
+        setInputValue(locInput, context.location);
+        locInput.disabled = context.location !== '';
+      }
+
+      if (sizeInput) {
+        setInputValue(sizeInput, context.size);
+        sizeInput.disabled = context.size !== '';
+      }
+
+      if (typeSelect) {
+        const typeStr = context.type;
+        let matched = false;
+        Array.from(typeSelect.options).forEach(opt => {
+          if (opt.text.toLowerCase() === typeStr.toLowerCase()) {
+            typeSelect.value = opt.value;
+            matched = true;
+          }
+        });
+        if (!matched && typeStr) {
+          const newOpt = new Option(typeStr, typeStr.toLowerCase());
+          typeSelect.add(newOpt);
+          typeSelect.value = typeStr.toLowerCase();
+        }
+        try {
+          typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        } catch (e) {}
+        typeSelect.disabled = typeStr !== '';
+      }
+    }
+
+    modalEl.addEventListener('show.bs.modal', function (e) {
+      const trigger = e && e.relatedTarget ? e.relatedTarget : null;
+      applyContextToModal(trigger);
     });
 
     modalEl.addEventListener('hidden.bs.modal', () => {
+      if (propertyTitleInput) {
+        setInputValue(propertyTitleInput, '');
+      }
       if (locInput) {
-        locInput.value = '';
+        setInputValue(locInput, '');
         locInput.disabled = false;
       }
       if (sizeInput) {
-        sizeInput.value = '';
+        setInputValue(sizeInput, '');
         sizeInput.disabled = false;
       }
       if (typeSelect) {
         typeSelect.value = '';
+        try {
+          typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+        } catch (e) {}
         typeSelect.disabled = false;
       }
     });
@@ -1131,7 +1204,12 @@ jQuery(function () {
     const pageUrl = encodeURIComponent(window.location.href);
     stickySharePanel.querySelectorAll('.sticky-share__icon[href]').forEach(function(a) {
       const href = a.getAttribute('href');
-      if (href && (href.includes('facebook.com') || href.includes('twitter.com') || href.includes('linkedin.com'))) {
+      const isShareUrl = href && (
+        href.includes('facebook.com/sharer/sharer.php?u=') ||
+        href.includes('twitter.com/intent/tweet?url=') ||
+        href.includes('linkedin.com/sharing/share-offsite/?url=')
+      );
+      if (isShareUrl) {
         a.setAttribute('href', href + pageUrl);
       }
     });

@@ -1,5 +1,5 @@
 <template>
-    <div class="properties-grid d-flex flex-wrap">
+    <div class="properties-grid d-flex flex-wrap" :class="{ 'properties-grid--list': currentView === 'list' }">
         <p v-if="listError" class="w-100 text-danger py-4">{{ t(listError) }}</p>
         <template v-for="prop in properties" :key="prop.id">
             <div class="properties-col">
@@ -150,6 +150,7 @@ const router = useRouter();
 
 /** Vue-managed type/category (parent); FormData alone can miss :value hiddens or wrong .search-form--listing. */
 const dreVueListingFilters = inject('dreVueListingFilters', null);
+const currentView = inject('currentView', ref('grid'));
 
 const properties = ref([]);
 const listLoading = ref(false);
@@ -257,54 +258,34 @@ function listingLabel(raw) {
     return t('listing.listingType');
 }
 
-function collectFilterParamsFromDom() {
-    const form =
-        document.getElementById('dre-our-property-listing-form') ||
-        document.querySelector('.search-form--listing');
-    if (!form) return {};
-    const fd = new FormData(form);
-    const location = String(fd.get('location') || '').trim();
-    const provided = dreVueListingFilters?.value;
-    const typeFromVue = typeof provided?.property_type === 'string' ? provided.property_type.trim() : '';
-    const typeFromDom = String(fd.get('property_type') || '').trim();
-    const type = typeFromVue || typeFromDom;
-    const categoryFromVue = typeof provided?.categories === 'string' ? provided.categories.trim() : '';
-    const categoryFromDom = String(fd.get('categories') || '').trim();
-    const categoryRaw = categoryFromVue || categoryFromDom;
-    const sort = typeof provided?.sort === 'string' ? provided.sort.trim() : '';
-    const beds = String(fd.get('bedrooms') || '').trim();
-    const baths = String(fd.get('bathrooms') || '').trim();
-    const hasVueMinPrice = provided && Object.prototype.hasOwnProperty.call(provided, 'min_price');
-    const hasVueMaxPrice = provided && Object.prototype.hasOwnProperty.call(provided, 'max_price');
-    const minPrice = hasVueMinPrice
-        ? String(provided.min_price || '').trim()
-        : String(fd.get('min_price') || fd.get('price_min') || '').trim();
-    const maxPrice = hasVueMaxPrice
-        ? String(provided.max_price || '').trim()
-        : String(fd.get('max_price') || fd.get('price_max') || '').trim();
+function collectFilterParams() {
+    const provided = dreVueListingFilters?.value || {};
     const out = { ...route.query };
-    if (location) out.location = location;
-    if (type) out.type = type;
-    if (categoryRaw) out.category = categoryRaw;
-    if (sort) out.sort = sort;
-    if (beds) {
-        // Map UI values to numeric for API if needed
-        const bedArr = beds.split(',').map(b => {
-            if (b === 'Studio') return 0;
-            if (b === '7+') return 7;
-            return b;
-        });
-        out.beds = bedArr.join(',');
+
+    if (provided.location) out.location = provided.location;
+    if (provided.property_type) out.type = provided.property_type;
+    if (provided.categories) out.category = provided.categories;
+    if (provided.sort) out.sort = provided.sort;
+    if (provided.min_price) out.min_price = provided.min_price;
+    if (provided.max_price) out.max_price = provided.max_price;
+
+    if (provided.bedrooms) {
+        const beds = provided.bedrooms;
+        if (beds === 'Studio') out.beds = '0';
+        else if (beds === '7+') out.beds = '7';
+        else out.beds = beds;
+    } else {
+        delete out.beds;
     }
-    if (baths) {
-        const bathArr = baths.split(',').map(b => {
-            if (b === '7+') return 7;
-            return b;
-        });
-        out.baths = bathArr.join(',');
+
+    if (provided.bathrooms) {
+        const baths = provided.bathrooms;
+        if (baths === '7+') out.baths = '7';
+        else out.baths = baths;
+    } else {
+        delete out.baths;
     }
-    if (minPrice) out.min_price = minPrice;
-    if (maxPrice) out.max_price = maxPrice;
+
     return out;
 }
 
@@ -330,7 +311,7 @@ async function fetchPage(url, append) {
 }
 
 async function loadFirstPage() {
-    filterParams.value = collectFilterParamsFromDom();
+    filterParams.value = collectFilterParams();
     const params = new URLSearchParams({
         per_page: '6',
         page: '1',

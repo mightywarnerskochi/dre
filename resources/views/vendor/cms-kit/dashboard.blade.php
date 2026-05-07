@@ -137,7 +137,7 @@
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white border-bottom">
                     <h6 class="m-0 font-weight-bold text-gray-800">Recent Enquiries</h6>
-                    <a href="{{ route('cms.enquiries.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                    <a href="{{ route('cms.form-enquiries.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">

@@ -25,6 +25,8 @@ class AgentController extends Controller
             return [$code => [
                 'name' => trim((string) ($translation['name'] ?? '')),
                 'designation' => trim((string) ($translation['designation'] ?? '')),
+                'experience' => trim((string) ($translation['experience'] ?? '')),
+                'languages' => trim((string) ($translation['languages'] ?? '')),
                 'description' => trim((string) ($translation['description'] ?? '')),
             ]];
         })->all();
@@ -48,6 +50,8 @@ class AgentController extends Controller
         foreach ($this->activeLanguages() as $language) {
             $rules["translations.{$language->code}.name"] = ['required', 'string', 'max:255'];
             $rules["translations.{$language->code}.designation"] = ['nullable', 'string', 'max:255'];
+            $rules["translations.{$language->code}.experience"] = ['nullable', 'string', 'max:255'];
+            $rules["translations.{$language->code}.languages"] = ['nullable', 'string', 'max:255'];
             $rules["translations.{$language->code}.description"] = ['nullable', 'string'];
         }
 
@@ -119,6 +123,8 @@ class AgentController extends Controller
         $validated['status'] = $request->boolean('status', true);
         $validated['name'] = $fallbackTranslation['name'] ?? '';
         $validated['designation'] = $fallbackTranslation['designation'] ?? null;
+        $validated['experience'] = $fallbackTranslation['experience'] ?? null;
+        $validated['languages'] = $fallbackTranslation['languages'] ?? null;
         $validated['description'] = $fallbackTranslation['description'] ?? null;
         $validated['translations'] = $translations;
 
@@ -151,6 +157,8 @@ class AgentController extends Controller
         $validated['status'] = $request->boolean('status', false);
         $validated['name'] = $fallbackTranslation['name'] ?? $agent->name;
         $validated['designation'] = $fallbackTranslation['designation'] ?? null;
+        $validated['experience'] = $fallbackTranslation['experience'] ?? null;
+        $validated['languages'] = $fallbackTranslation['languages'] ?? null;
         $validated['description'] = $fallbackTranslation['description'] ?? null;
         $validated['translations'] = $translations;
 

@@ -129,7 +129,7 @@
                                         <div class="dropdown-section-title">{{ locale === 'ar' ? 'غرف النوم' : 'Bedrooms' }}</div>
                                         <div class="option-buttons" data-type="bedrooms">
                                             <label v-for="bed in bedOptions" :key="'bed-'+bed" class="custom-check-btn">
-                                                <input type="checkbox" class="btn-check bed-check" :value="bed" v-model="formState.bedrooms">
+                                                <input type="radio" name="bedrooms" class="btn-check bed-check" :value="bed" v-model="formState.bedrooms">
                                                 {{ bed }}
                                             </label>
                                         </div>
@@ -138,7 +138,7 @@
                                         <div class="dropdown-section-title">{{ locale === 'ar' ? 'الحمامات' : 'Bathrooms' }}</div>
                                         <div class="option-buttons" data-type="bathrooms">
                                             <label v-for="bath in bathOptions" :key="'bath-'+bath" class="custom-check-btn">
-                                                <input type="checkbox" class="btn-check bath-check" :value="bath" v-model="formState.bathrooms">
+                                                <input type="radio" name="bathrooms" class="btn-check bath-check" :value="bath" v-model="formState.bathrooms">
                                                 {{ bath }}
                                             </label>
                                         </div>
@@ -378,8 +378,8 @@ const bathOptions = ['1', '2', '3', '4', '5', '6', '7', '7+'];
 const formState = ref({
     location: '',
     property_type: '',
-    bedrooms: [],
-    bathrooms: []
+    bedrooms: '',
+    bathrooms: ''
 });
 
 const selectedPropertyTypeLabel = computed(() => {
@@ -391,23 +391,23 @@ const selectedPropertyTypeLabel = computed(() => {
 });
 
 const selectedBedsBathsLabel = computed(() => {
-    const beds = formState.value.bedrooms.length;
-    const baths = formState.value.bathrooms.length;
+    const beds = formState.value.bedrooms;
+    const baths = formState.value.bathrooms;
     
-    if (beds === 0 && baths === 0) {
+    if (!beds && !baths) {
         return locale.value === 'ar' ? 'حدد الغرف والحمامات' : 'Select Beds & Baths';
     }
     
     let label = [];
-    if (beds > 0) label.push(`${beds} ${locale.value === 'ar' ? 'غرف نوم' : (beds === 1 ? 'Bed' : 'Beds')}`);
-    if (baths > 0) label.push(`${baths} ${locale.value === 'ar' ? 'حمامات' : (baths === 1 ? 'Bath' : 'Baths')}`);
+    if (beds) label.push(`${beds} ${locale.value === 'ar' ? 'غرف نوم' : 'Bed'}`);
+    if (baths) label.push(`${baths} ${locale.value === 'ar' ? 'حمامات' : 'Bath'}`);
     
     return label.join(', ');
 });
 
 function clearBedsBaths() {
-    formState.value.bedrooms = [];
-    formState.value.bathrooms = [];
+    formState.value.bedrooms = '';
+    formState.value.bathrooms = '';
 }
 
 function onSubmit() {
@@ -418,11 +418,11 @@ function onSubmit() {
     if (formState.value.property_type) {
         query.type = formState.value.property_type;
     }
-    if (formState.value.bedrooms.length > 0) {
-        query.beds = formState.value.bedrooms.join(',');
+    if (formState.value.bedrooms) {
+        query.beds = formState.value.bedrooms;
     }
-    if (formState.value.bathrooms.length > 0) {
-        query.baths = formState.value.bathrooms.join(',');
+    if (formState.value.bathrooms) {
+        query.baths = formState.value.bathrooms;
     }
     router.push({ name: 'our-property', query });
 }

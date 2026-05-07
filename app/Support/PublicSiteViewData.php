@@ -16,6 +16,7 @@ class PublicSiteViewData
      *   logoUrl: ?string,
      *   colourLogoUrl: ?string,
      *   logoAlt: ?string,
+     *   whatsappNumber: ?string,
      *   social: list<array{network: string, href: string}>,
      *   legalPages: array<string, mixed>,
      *   tracking: array{
@@ -44,6 +45,7 @@ class PublicSiteViewData
      *   logoUrl: ?string,
      *   colourLogoUrl: ?string,
      *   logoAlt: ?string,
+     *   whatsappNumber: ?string,
      *   social: list<array{network: string, href: string}>,
      *   legalPages: array<string, mixed>,
      *   tracking: array{
@@ -67,6 +69,7 @@ class PublicSiteViewData
             ['network' => 'linkedin', 'url' => $info->linkedin],
             ['network' => 'instagram', 'url' => $info->instagram],
             ['network' => 'youtube', 'url' => $info->youtube],
+            ['network' => 'whatsapp', 'url' => $info->whatsapp_social],
         ];
 
         $social = collect($socialRows)
@@ -97,6 +100,7 @@ class PublicSiteViewData
         return [
             'phone1' => self::nonEmptyString($info->phone_1 ?? null),
             'phone2' => self::nonEmptyString($info->phone_2 ?? null),
+            'whatsappNumber' => self::nonEmptyString($info->whatsapp_number ?? null),
             'email' => self::nonEmptyString($info->email_1 ?? null),
             'logoUrl' => self::mediaPathUrl($info->logo ?? null),
             'colourLogoUrl' => self::mediaPathUrl(data_get($extraFields, 'colour_logo')),
@@ -105,6 +109,11 @@ class PublicSiteViewData
             'legalPages' => self::legalPages($info),
             'tracking' => self::tracking($info),
             'languages' => $languages,
+            'appLinks' => [
+                'qrCodeUrl' => self::mediaPathUrl(data_get($extraFields, 'qr_code')),
+                'googlePlayUrl' => self::normalizeUrl(data_get($extraFields, 'google_play_link')),
+                'appStoreUrl' => self::normalizeUrl(data_get($extraFields, 'app_store_link')),
+            ],
         ];
     }
 
@@ -116,6 +125,7 @@ class PublicSiteViewData
      *   logoUrl: null,
      *   colourLogoUrl: null,
      *   logoAlt: null,
+     *   whatsappNumber: null,
      *   social: array{},
      *   legalPages: array{},
      *   tracking: array{
@@ -131,6 +141,7 @@ class PublicSiteViewData
         return [
             'phone1' => null,
             'phone2' => null,
+            'whatsappNumber' => null,
             'email' => null,
             'logoUrl' => null,
             'colourLogoUrl' => null,
@@ -143,6 +154,11 @@ class PublicSiteViewData
                 'customBodyScript' => null,
             ],
             'languages' => [],
+            'appLinks' => [
+                'qrCodeUrl' => null,
+                'googlePlayUrl' => null,
+                'appStoreUrl' => null,
+            ],
         ];
     }
 
@@ -254,6 +270,7 @@ class PublicSiteViewData
             'linkedin' => 'LinkedIn',
             'instagram' => 'Instagram',
             'youtube' => 'YouTube',
+            'whatsapp' => 'WhatsApp',
         ];
 
         $links = collect(self::fromModel($info)['social'])

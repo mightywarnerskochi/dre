@@ -225,11 +225,13 @@ export function getInsightsListingData(locale) {
             slug: item.slug || '',
             url: item.url || '#',
             image: item.image || '',
+            imageAlt: item.imageAlt || pickLocalized(item.title, locale) || 'DRE image',
             author: pickLocalized(item.author, locale) || 'DRE Admin',
             publishedAt: item.publishedAt || null,
             title: pickLocalized(item.title, locale),
             excerpt: pickLocalized(item.excerpt, locale),
             category: pickLocalized(item.category, locale),
+            seo: item.seo && typeof item.seo === 'object' ? item.seo : {},
         })),
     };
 }
@@ -250,10 +252,14 @@ export function getInsightDetailData(slug, locale) {
     const current = {
         ...items[index],
         detailImage: rawCurrent.detailImage || items[index].image || '',
+        detailImageAlt: rawCurrent.detailImageAlt || items[index].imageAlt || items[index].title || 'DRE image',
         image3: rawCurrent.image3 || '',
+        image3Alt: rawCurrent.image3Alt || items[index].title || 'DRE image',
         image4: rawCurrent.image4 || '',
+        image4Alt: rawCurrent.image4Alt || items[index].title || 'DRE image',
         content: pickLocalized(rawCurrent.content, locale),
         secondDescription: pickLocalized(rawCurrent.secondDescription, locale),
+        seo: rawCurrent.seo && typeof rawCurrent.seo === 'object' ? rawCurrent.seo : (items[index].seo || {}),
     };
 
     const prev = index > 0 ? items[index - 1] : null;
@@ -393,6 +399,7 @@ export function getCareersPublicData(locale) {
         flagImage: typeof v.flagImage === 'string' ? v.flagImage : '',
         flagAlt: typeof v.flagAlt === 'string' ? v.flagAlt : '',
         publishedDate: v.publishedDate || null,
+        seo: v.seo && typeof v.seo === 'object' ? v.seo : {},
     });
 
     return {
@@ -458,5 +465,6 @@ export function getCareerDetailBySlug(slug, locale) {
     return {
         vacancy,
         pageTitle,
+        seo: raw?.seo && typeof raw.seo === 'object' ? raw.seo : (vacancy.seo || {}),
     };
 }

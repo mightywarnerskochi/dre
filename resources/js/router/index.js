@@ -14,6 +14,25 @@ import BookAViewing from '@/pages/BookAViewing.vue';
 import TermsConditions from '@/pages/TermsConditions.vue';
 import ThankYou from '@/pages/ThankYou.vue';
 import NotFound from '@/pages/NotFound.vue';
+import i18n from '@/i18n';
+import { applyGlobalImageAltFallback, applyPageSeoByKey } from '@/utils/seo';
+
+const PAGE_KEY_BY_ROUTE_NAME = {
+    home: 'home',
+    about: 'about',
+    'our-property': 'properties',
+    'property-details': 'properties',
+    insights: 'blogs',
+    'insights-details': 'blogs',
+    career: 'careers',
+    'career-details': 'careers',
+    contact: 'contact',
+    map: 'map',
+    terms: 'terms',
+    'privacy-policy': 'privacy',
+    disclaimer: 'disclaimer',
+    'cookie-policy': 'cookie',
+};
 
 const router = createRouter({
     history: createWebHistory(),
@@ -218,7 +237,17 @@ const router = createRouter({
 });
 
 router.beforeEach((to) => {
-    document.title = to.meta.title ?? 'Distinguished Real Estate';
+    const locale = typeof i18n.global.locale === 'object'
+        ? (i18n.global.locale.value || 'en')
+        : (i18n.global.locale || 'en');
+    const routeName = typeof to.name === 'string' ? to.name : '';
+    const pageKey = PAGE_KEY_BY_ROUTE_NAME[routeName] || '';
+
+    applyPageSeoByKey(pageKey, locale, {
+        title: 'Distinguished Real Estate',
+        description: 'Distinguished Real Estate',
+        canonicalUrl: new URL(to.fullPath || '/', window.location.origin).toString(),
+    });
 });
 
 router.afterEach((to) => {
@@ -228,6 +257,7 @@ router.afterEach((to) => {
     requestAnimationFrame(() => {
         requestAnimationFrame(() => {
             window.dispatchEvent(new CustomEvent('dre:page-mounted', { detail: { path: to.fullPath } }));
+            applyGlobalImageAltFallback(document.title || 'DRE image');
         });
     });
 });

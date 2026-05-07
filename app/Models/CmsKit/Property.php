@@ -49,6 +49,7 @@ class Property extends Model
         'published_at',
         'images_directory',
         'images',
+        'metadata',
     ];
 
     protected $casts = [
@@ -58,6 +59,7 @@ class Property extends Model
         'status' => 'boolean',
         'is_featured' => 'boolean',
         'published_at' => 'datetime',
+        'metadata' => 'array',
     ];
 
     public function agent(): BelongsTo

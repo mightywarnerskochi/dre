@@ -2,7 +2,7 @@
     <section v-if="detail" class="banner banner--page banner--page--listing position-relative" aria-label="Page header">
         <div class="banner--page__bg">
             <picture>
-                <img :src="asset('public/images/inner-banner.jpg')" alt="" width="1920" height="403" loading="eager">
+                <img :src="asset('public/images/inner-banner.jpg')" alt="Insights banner" width="1920" height="403" loading="eager">
             </picture>
         </div>
         <div class="banner--page__content">
@@ -49,13 +49,13 @@
 
             <div class="insight-detail__layout d-flex flex-wrap justify-content-between">
                 <figure class="insight-detail__hero">
-                    <img :src="detail.current.detailImage || dummyImage" :alt="detail.current.title" width="1547" height="1032" loading="lazy" @error="onImgError">
+                    <img :src="detail.current.detailImage || dummyImage" :alt="detail.current.detailImageAlt || 'Insight image'" width="1547" height="1032" loading="lazy" @error="onImgError">
                 </figure>
                 <article class="insight-detail__content list">
                     <div id="insight-detail-title" v-html="detail.current.content"></div>
                     <div class="insight-detail__gallery" v-if="detail.current.image3 || detail.current.image4">
-                            <img :src="detail.current.image3" :alt="detail.current.title"  v-if="detail.current.image3" width="469" height="313" loading="lazy" @error="onImgError">
-                            <img :src="detail.current.image4" :alt="detail.current.title" v-if="detail.current.image4" width="469" height="313" loading="lazy" @error="onImgError">
+                            <img :src="detail.current.image3" :alt="detail.current.image3Alt || 'Insight image'"  v-if="detail.current.image3" width="469" height="313" loading="lazy" @error="onImgError">
+                            <img :src="detail.current.image4" :alt="detail.current.image4Alt || 'Insight image'" v-if="detail.current.image4" width="469" height="313" loading="lazy" @error="onImgError">
                     </div>
                     
                     <div v-if="detail.current.secondDescription" v-html="detail.current.secondDescription" class="mt-4"></div>
@@ -109,7 +109,7 @@
                         <ul>
                             <li v-for="post in detail.related" :key="post.id">
                                 <RouterLink :to="{ name: 'insights-details', params: { slug: post.slug } }">
-                                    <img :src="post.image || dummyImage" alt="" width="90" height="64" loading="lazy" @error="onImgError">
+                                    <img :src="post.image || dummyImage" :alt="post.imageAlt || 'Insight image'" width="90" height="64" loading="lazy" @error="onImgError">
                                     <span>{{ post.title }}</span>
                                 </RouterLink>
                             </li>
@@ -123,17 +123,26 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
 import { getInsightDetailData } from '@/utils/publicContent';
+import { applyGlobalImageAltFallback, applySeoPayload } from '@/utils/seo';
 
 const route = useRoute();
 const { locale, t } = useI18n({ useScope: 'global' });
 const dummyImage = asset('public/images/news/blog-placeholder-new.png');
 
 const detail = computed(() => getInsightDetailData(route.params.slug, locale.value));
+
+function plainText(input, maxLength = 180) {
+    const text = String(input || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (text.length <= maxLength) {
+        return text;
+    }
+    return `${text.slice(0, maxLength).trimEnd()}...`;
+}
 
 function asLocalizedText(value, fallback = '') {
     if (typeof value === 'string') {
@@ -195,6 +204,24 @@ function onImgError(event) {
         event.target.src = dummyImage;
     }
 }
+
+watch(
+    [detail, locale],
+    ([value, activeLocale]) => {
+        if (!value?.current) {
+            return;
+        }
+
+        applySeoPayload(value.current.seo || {}, activeLocale, {
+            title: value.current.title || 'Insight',
+            description: plainText(value.current.excerpt || value.current.content || value.current.secondDescription || value.current.title || 'Insight'),
+            canonicalUrl: window.location.href,
+            ogImage: value.current.detailImage || value.current.image || dummyImage,
+        });
+        applyGlobalImageAltFallback('DRE image');
+    },
+    { immediate: true }
+);
 </script>
 
 <style scoped>

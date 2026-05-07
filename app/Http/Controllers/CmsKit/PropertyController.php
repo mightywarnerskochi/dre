@@ -218,6 +218,15 @@ class PropertyController extends Controller
             'new_images' => ['nullable', 'array'],
             'new_images.*.file' => ['nullable', 'image', 'max:'.($imageConfig['max_size'] ?? 4096)],
             'new_images.*.order' => ['nullable', 'integer', 'min:1'],
+            'metadata.meta_title' => ['nullable', 'string', 'max:255'],
+            'metadata.meta_description' => ['nullable', 'string', 'max:500'],
+            'metadata.meta_keywords' => ['nullable', 'string', 'max:500'],
+            'metadata.canonical_url' => ['nullable', 'url', 'max:2048'],
+            'metadata.og_title' => ['nullable', 'string', 'max:255'],
+            'metadata.og_description' => ['nullable', 'string', 'max:500'],
+            'metadata.og_image' => ['nullable', 'image', 'max:512'],
+            'metadata.other_meta_tags' => ['nullable', 'string'],
+            'remove_metadata_og_image' => ['nullable', 'boolean'],
         ];
 
         foreach ($languages as $language) {
@@ -785,6 +794,57 @@ class PropertyController extends Controller
         return $jpgData !== '' ? $jpgData : $raw;
     }
 
+    /**
+     * @param  array<string, mixed>  $existingMetadata
+     * @return array<string, mixed>
+     */
+    protected function extractPropertyMetadata(Request $request, array $existingMetadata = []): array
+    {
+        $metadata = $request->input('metadata', []);
+        $metadata = is_array($metadata) ? $metadata : [];
+
+        $out = [
+            'meta_title' => $this->trimNullableString($metadata['meta_title'] ?? null),
+            'meta_description' => $this->trimNullableString($metadata['meta_description'] ?? null),
+            'meta_keywords' => $this->trimNullableString($metadata['meta_keywords'] ?? null),
+            'canonical_url' => $this->trimNullableString($metadata['canonical_url'] ?? null),
+            'og_title' => $this->trimNullableString($metadata['og_title'] ?? null),
+            'og_description' => $this->trimNullableString($metadata['og_description'] ?? null),
+            'other_meta_tags' => $this->trimNullableString($metadata['other_meta_tags'] ?? null),
+            'og_image' => null,
+        ];
+
+        $existingOgImage = trim((string) ($existingMetadata['og_image'] ?? ''));
+        if ($request->hasFile('metadata.og_image')) {
+            if ($existingOgImage !== '') {
+                MediaStorage::delete($existingOgImage);
+            }
+            $out['og_image'] = MediaStorage::store($request->file('metadata.og_image'), 'properties/metadata');
+        } elseif ($request->boolean('remove_metadata_og_image')) {
+            if ($existingOgImage !== '') {
+                MediaStorage::delete($existingOgImage);
+            }
+            $out['og_image'] = null;
+        } else {
+            $out['og_image'] = $existingOgImage !== '' ? $existingOgImage : null;
+        }
+
+        return array_filter($out, static function ($value, $key) {
+            if ($key === 'og_image') {
+                return $value !== null && trim((string) $value) !== '';
+            }
+
+            return $value !== null && trim((string) $value) !== '';
+        }, ARRAY_FILTER_USE_BOTH);
+    }
+
+    protected function trimNullableString(mixed $value): ?string
+    {
+        $stringValue = trim((string) $value);
+
+        return $stringValue !== '' ? $stringValue : null;
+    }
+
     public function index(Request $request)
     {
         if ($request->ajax()) {
@@ -910,11 +970,12 @@ class PropertyController extends Controller
             $this->validateImageWithinLimits($request, "new_images.{$index}.file", config('cms-kit.images.properties.image', []), 'Property image');
         }
         $translations = $this->normalizedTranslations($request);
+        $metadata = $this->extractPropertyMetadata($request);
         $order = $this->resolveOrderForCreate($request->filled('order') ? (int) $request->order : null);
         $fallbackLocale = config('app.fallback_locale', 'en');
         $fallbackTranslation = collect($translations)->firstWhere('language_code', $fallbackLocale) ?? ($translations[0] ?? []);
 
-        DB::transaction(function () use ($request, $translations, $order, $fallbackTranslation) {
+        DB::transaction(function () use ($request, $translations, $metadata, $order, $fallbackTranslation) {
             Property::where('order', '>=', $order)->increment('order');
 
             $property = Property::create([
@@ -943,6 +1004,7 @@ class PropertyController extends Controller
                 'is_featured' => $request->boolean('is_featured', false),
                 'order' => $order,
                 'published_at' => $request->input('published_at') ?: now(),
+                'metadata' => $metadata,
             ]);
 
             $property->details()->create([
@@ -1005,13 +1067,14 @@ class PropertyController extends Controller
             $this->validateImageWithinLimits($request, "new_images.{$index}.file", config('cms-kit.images.properties.image', []), 'Property image');
         }
         $translations = $this->normalizedTranslations($request);
+        $metadata = $this->extractPropertyMetadata($request, is_array($property->metadata) ? $property->metadata : []);
         $fallbackLocale = config('app.fallback_locale', 'en');
         $fallbackTranslation = collect($translations)->firstWhere('language_code', $fallbackLocale) ?? ($translations[0] ?? []);
         $existingIconPaths = $this->managedIconPathsForProperty($property);
 
         $galleryRequiresSync = $this->propertyImageGalleryRequiresSync($request, $property);
 
-        DB::transaction(function () use ($request, $property, $translations, $fallbackTranslation, $existingIconPaths, $galleryRequiresSync) {
+        DB::transaction(function () use ($request, $property, $translations, $metadata, $fallbackTranslation, $existingIconPaths, $galleryRequiresSync) {
             $newOrder = $this->resolveOrderForReorder((int) $request->input('order', $property->order));
             $oldOrder = $property->order;
 
@@ -1049,6 +1112,7 @@ class PropertyController extends Controller
                 'is_featured' => $request->boolean('is_featured', false),
                 'order' => $newOrder,
                 'published_at' => $request->input('published_at') ?: $property->published_at,
+                'metadata' => $metadata,
             ]);
 
             $property->details()->updateOrCreate(
@@ -1085,6 +1149,8 @@ class PropertyController extends Controller
     {
         $property = Property::findOrFail($id);
         $order = $property->order;
+
+        MediaStorage::delete(data_get($property->metadata, 'og_image'));
 
         if ($property->images_directory) {
             MediaStorage::deleteDirectory($property->images_directory);
@@ -1155,6 +1221,8 @@ class PropertyController extends Controller
         if ($action === 'delete') {
             $properties = Property::query()->whereIn('id', $ids)->get();
             foreach ($properties as $property) {
+                MediaStorage::delete(data_get($property->metadata, 'og_image'));
+
                 if ($property->images_directory) {
                     MediaStorage::deleteDirectory($property->images_directory);
                 }

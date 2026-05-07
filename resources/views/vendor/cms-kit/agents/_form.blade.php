@@ -50,6 +50,16 @@
                                     <input type="text" name="translations[{{ $lang->code }}][designation]" class="form-control @error("translations.{$lang->code}.designation") is-invalid @enderror" value="{{ old("translations.{$lang->code}.designation", $translation['designation'] ?? ($lang->code === $fallbackLocale ? $item->designation ?? '' : '')) }}">
                                     @error("translations.{$lang->code}.designation")<div class="invalid-feedback">{{ $message }}</div>@enderror
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Experience</label>
+                                    <input type="text" name="translations[{{ $lang->code }}][experience]" class="form-control @error("translations.{$lang->code}.experience") is-invalid @enderror" value="{{ old("translations.{$lang->code}.experience", $translation['experience'] ?? ($lang->code === $fallbackLocale ? $item->experience ?? '' : '')) }}" placeholder="e.g. 8 Years">
+                                    @error("translations.{$lang->code}.experience")<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Languages Spoken</label>
+                                    <input type="text" name="translations[{{ $lang->code }}][languages]" class="form-control @error("translations.{$lang->code}.languages") is-invalid @enderror" value="{{ old("translations.{$lang->code}.languages", $translation['languages'] ?? ($lang->code === $fallbackLocale ? $item->languages ?? '' : '')) }}" placeholder="e.g. English, Arabic">
+                                    @error("translations.{$lang->code}.languages")<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
                                 <div class="col-12">
                                     <label class="form-label fw-bold">Description</label>
                                     <textarea name="translations[{{ $lang->code }}][description]" rows="5" class="form-control @error("translations.{$lang->code}.description") is-invalid @enderror">{{ old("translations.{$lang->code}.description", $translation['description'] ?? ($lang->code === $fallbackLocale ? $item->description ?? '' : '')) }}</textarea>
@@ -78,16 +88,7 @@
         <input type="text" name="whatsapp_number" class="form-control @error('whatsapp_number') is-invalid @enderror" value="{{ old('whatsapp_number', $agent->whatsapp_number ?? '') }}" placeholder="e.g. +971501234567">
         @error('whatsapp_number')<div class="invalid-feedback">{{ $message }}</div>@enderror
     </div>
-    <div class="col-md-6">
-        <label class="form-label fw-bold">Experience</label>
-        <input type="text" name="experience" class="form-control @error('experience') is-invalid @enderror" value="{{ old('experience', $agent->experience ?? '') }}" placeholder="e.g. 8 Years">
-        @error('experience')<div class="invalid-feedback">{{ $message }}</div>@enderror
-    </div>
-    <div class="col-md-6">
-        <label class="form-label fw-bold">Languages</label>
-        <input type="text" name="languages" class="form-control @error('languages') is-invalid @enderror" value="{{ old('languages', $agent->languages ?? '') }}" placeholder="e.g. English, Arabic">
-        @error('languages')<div class="invalid-feedback">{{ $message }}</div>@enderror
-    </div>
+
     <div class="col-md-6">
         <label class="form-label fw-bold">Image</label>
         <input type="file" name="image" class="form-control @error('image') is-invalid @enderror" accept="image/*">

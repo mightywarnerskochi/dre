@@ -1,6 +1,7 @@
 import './bootstrap';
 import { createApp } from 'vue';
-import MapSearchPage from './pages/MapSearchPage.vue';
+import MapSearchPage from './components/MapContent.vue';
+import i18n from './i18n';
 
 const mountEl = document.getElementById('dre-map-search-app');
 const dataEl = document.getElementById('dre-map-page-data');
@@ -12,5 +13,5 @@ if (mountEl && dataEl) {
     } catch {
         pageData = {};
     }
-    createApp(MapSearchPage, { pageData }).mount(mountEl);
+    createApp(MapSearchPage, { pageData }).use(i18n).mount(mountEl);
 }
