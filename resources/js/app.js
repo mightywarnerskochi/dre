@@ -2,7 +2,7 @@ import './bootstrap';
 import { createApp } from 'vue';
 import { startGlobalAltObserver } from '@/utils/seo';
 
-const BOOT_CACHE_KEY = 'dre_spa_boot_v1';
+const BOOT_CACHE_KEY = 'dre_spa_boot_v3';
 const BOOT_CACHE_TTL_MS = 5 * 60 * 1000;
 
 function assignBootObject(key, value) {
@@ -11,6 +11,12 @@ function assignBootObject(key, value) {
     }
 
     window[key] = value;
+}
+
+/** Site contact data is loaded only from the bootstrap API (not inlined in HTML or cached). */
+function assignSitePublic(data) {
+    window.__DRE_SITE__ =
+        data && typeof data === 'object' && !Array.isArray(data) ? data : {};
 }
 
 function readBootCache() {
@@ -37,14 +43,18 @@ function readBootCache() {
     }
 }
 
-function writeBootCache(payload) {
+/** Persist only heavy, non-sensitive slices. `sitePublic` is always refetched so contact details stay current. */
+function writeBootCache(contentPublic, i18nMessages) {
     try {
         sessionStorage.setItem(
             BOOT_CACHE_KEY,
             JSON.stringify({
                 ts: Date.now(),
-                payload,
-            })
+                payload: {
+                    contentPublic: contentPublic || {},
+                    i18nMessages: i18nMessages || {},
+                },
+            }),
         );
     } catch (_error) {
         // Ignore storage errors (private mode / quota)
@@ -53,15 +63,14 @@ function writeBootCache(payload) {
 
 async function hydrateBootPayload() {
     const cached = readBootCache();
-    if (cached) {
-        assignBootObject('__DRE_SITE__', cached.sitePublic);
-        assignBootObject('__DRE_CONTENT__', cached.contentPublic);
-        assignBootObject('__DRE_I18N__', cached.i18nMessages);
-        return;
-    }
-
     const endpoint = String(window.__DRE_BOOT_ENDPOINT__ || '/api/public/bootstrap').trim();
+
     if (endpoint === '') {
+        assignSitePublic(null);
+        if (cached) {
+            assignBootObject('__DRE_CONTENT__', cached.contentPublic);
+            assignBootObject('__DRE_I18N__', cached.i18nMessages);
+        }
         return;
     }
 
@@ -73,15 +82,39 @@ async function hydrateBootPayload() {
         });
         const payload = data && typeof data === 'object' ? data : {};
 
-        assignBootObject('__DRE_SITE__', payload.sitePublic);
-        assignBootObject('__DRE_CONTENT__', payload.contentPublic);
-        assignBootObject('__DRE_I18N__', payload.i18nMessages);
-        writeBootCache(payload);
+        assignSitePublic(payload.sitePublic);
+
+        if (
+            cached &&
+            cached.contentPublic &&
+            typeof cached.contentPublic === 'object' &&
+            cached.i18nMessages &&
+            typeof cached.i18nMessages === 'object'
+        ) {
+            assignBootObject('__DRE_CONTENT__', cached.contentPublic);
+            assignBootObject('__DRE_I18N__', cached.i18nMessages);
+        } else {
+            assignBootObject('__DRE_CONTENT__', payload.contentPublic || {});
+            assignBootObject('__DRE_I18N__', payload.i18nMessages || {});
+            writeBootCache(payload.contentPublic || {}, payload.i18nMessages || {});
+        }
     } catch (_error) {
-        // Keep graceful fallback defaults when boot API is unavailable.
-        window.__DRE_SITE__ = window.__DRE_SITE__ && typeof window.__DRE_SITE__ === 'object' ? window.__DRE_SITE__ : {};
-        window.__DRE_CONTENT__ = window.__DRE_CONTENT__ && typeof window.__DRE_CONTENT__ === 'object' ? window.__DRE_CONTENT__ : {};
-        window.__DRE_I18N__ = window.__DRE_I18N__ && typeof window.__DRE_I18N__ === 'object' ? window.__DRE_I18N__ : {};
+        assignSitePublic(null);
+        if (
+            cached &&
+            cached.contentPublic &&
+            typeof cached.contentPublic === 'object' &&
+            cached.i18nMessages &&
+            typeof cached.i18nMessages === 'object'
+        ) {
+            assignBootObject('__DRE_CONTENT__', cached.contentPublic);
+            assignBootObject('__DRE_I18N__', cached.i18nMessages);
+        } else {
+            window.__DRE_CONTENT__ =
+                window.__DRE_CONTENT__ && typeof window.__DRE_CONTENT__ === 'object' ? window.__DRE_CONTENT__ : {};
+            window.__DRE_I18N__ =
+                window.__DRE_I18N__ && typeof window.__DRE_I18N__ === 'object' ? window.__DRE_I18N__ : {};
+        }
     }
 }
 

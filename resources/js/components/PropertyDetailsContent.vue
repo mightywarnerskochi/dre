@@ -90,34 +90,34 @@
                             <span class="property-detail-badge property-detail-badge--outline">{{ listingOutlineLabel }}</span>
                         </div>
                         <h2 class="property-detail-title">{{ property.title }}</h2>
-                        <p class="property-detail-location">
+                        <p v-if="detailAddressText" class="property-detail-location">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                             <path d="M12 2.00012C7.6 2.00012 4 5.60012 4 10.0001C4 15.4001 11 21.5001 11.3 21.8001C11.5 21.9001 11.8 22.0001 12 22.0001C12.2 22.0001 12.5 21.9001 12.7 21.8001C13 21.5001 20 15.4001 20 10.0001C20 5.60012 16.4 2.00012 12 2.00012ZM12 19.7001C9.9 17.7001 6 13.4001 6 10.0001C6 6.70012 8.7 4.00012 12 4.00012C15.3 4.00012 18 6.70012 18 10.0001C18 13.3001 14.1 17.7001 12 19.7001ZM12 6.00012C9.8 6.00012 8 7.80012 8 10.0001C8 12.2001 9.8 14.0001 12 14.0001C14.2 14.0001 16 12.2001 16 10.0001C16 7.80012 14.2 6.00012 12 6.00012ZM12 12.0001C10.9 12.0001 10 11.1001 10 10.0001C10 8.90012 10.9 8.00012 12 8.00012C13.1 8.00012 14 8.90012 14 10.0001C14 11.1001 13.1 12.0001 12 12.0001Z" fill="#2F3F58"/>
                         </svg>
                             <span>{{ detailAddressText }}</span>
                         </p>
-                        <div class="property-detail-stats property-detail-stats--divided property-detail-stats--stacked">
-                            <div class="property-detail-stat property-detail-stat--stacked">
+                        <div v-if="summaryStats.length" class="property-detail-stats property-detail-stats--divided property-detail-stats--stacked">
+                            <div v-for="stat in summaryStats" :key="stat.id" class="property-detail-stat property-detail-stat--stacked">
+                            <template v-if="stat.id === 'beds'">
                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
                             <path d="M3 26V19C3.00313 17.9401 3.42557 16.9245 4.17503 16.175C4.9245 15.4256 5.9401 15.0031 7 15H25C26.0599 15.0031 27.0755 15.4256 27.825 16.175C28.5744 16.9245 28.9969 17.9401 29 19V26M24 15H6V8.5C6.00198 7.83757 6.26601 7.20283 6.73442 6.73442C7.20283 6.26601 7.83757 6.00198 8.5 6H23.5C24.1624 6.00198 24.7972 6.26601 25.2656 6.73442C25.734 7.20283 25.998 7.83757 26 8.5V15H24Z" stroke="#2F3F58" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             <path d="M3 26V25.5C3.00115 25.1025 3.15956 24.7217 3.44061 24.4406C3.72167 24.1596 4.10253 24.0012 4.5 24H27.5C27.8975 24.0012 28.2783 24.1596 28.5594 24.4406C28.8404 24.7217 28.9988 25.1025 29 25.5V26M7 15V14C7.00148 13.47 7.21267 12.9622 7.58743 12.5874C7.96218 12.2127 8.47002 12.0015 9 12H14C14.53 12.0015 15.0378 12.2127 15.4126 12.5874C15.7873 12.9622 15.9985 13.47 16 14M16 14V15M16 14C16.0015 13.47 16.2127 12.9622 16.5874 12.5874C16.9622 12.2127 17.47 12.0015 18 12H23C23.53 12.0015 24.0378 12.2127 24.4126 12.5874C24.7873 12.9622 24.9985 13.47 25 14V15" stroke="#2F3F58" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                             </svg>
-                                <span>{{ property.bedrooms }} {{ property.bedrooms == 1 ? t('map.bedShort') : t('map.bedsShort') }}</span>
-                            </div>
-                            <div class="property-detail-stat property-detail-stat--stacked">
+                            </template>
+                            <template v-else-if="stat.id === 'baths'">
                             <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none">
                             <path d="M29 17.5H5V6.24996C4.99885 5.82629 5.08174 5.40661 5.24387 5.01519C5.40601 4.62377 5.64416 4.2684 5.94456 3.96965L5.96956 3.94465C6.44035 3.47454 7.04479 3.16125 7.70032 3.04757C8.35584 2.93389 9.03048 3.02538 9.63206 3.30952C9.06392 4.25414 8.82777 5.36154 8.96115 6.45576C9.09452 7.54997 9.58977 8.56822 10.3682 9.34871L11.0526 10.0331L9.79281 11.293L11.2069 12.7071L12.4668 11.4473L19.4473 4.4669L20.7071 3.20708L19.2929 1.7929L18.0331 3.05271L17.3486 2.36827C16.5292 1.5511 15.449 1.04737 14.2962 0.944854C13.1435 0.842339 11.9914 1.14754 11.0406 1.80727C10.0379 1.17409 8.84979 0.900744 7.67128 1.03213C6.49277 1.16352 5.39399 1.69183 4.55544 2.53027L4.53044 2.55527C4.0437 3.03932 3.65782 3.61511 3.39512 4.24931C3.13241 4.8835 2.99812 5.56351 3 6.24996V17.5H1V19.5H3V21.4187C3.00001 21.5799 3.02601 21.7401 3.077 21.893L4.9375 27.4743C5.0368 27.7731 5.22771 28.033 5.48314 28.2171C5.73856 28.4012 6.04551 28.5002 6.36037 28.5H7.16663L6.4375 31H8.52081L9.25 28.5H22.2563L23.0063 31H25.0938L24.3438 28.5H25.6394C25.9543 28.5003 26.2613 28.4013 26.5168 28.2172C26.7722 28.0331 26.9632 27.7731 27.0625 27.4743L28.9229 21.893C28.9739 21.7401 28.9999 21.5799 29 21.4187V19.5H31V17.5H29ZM11.7825 3.78246C12.3335 3.23266 13.0801 2.92389 13.8585 2.92389C14.6368 2.92389 15.3834 3.23266 15.9344 3.78246L16.6187 4.4669L12.4669 8.61871L11.7825 7.9344C11.2327 7.38338 10.924 6.6368 10.924 5.85843C10.924 5.08006 11.2327 4.33347 11.7825 3.78246ZM27 21.3375L25.2792 26.5H6.72075L5 21.3375V19.5H27V21.3375Z" fill="#2F3F58"/>
                             </svg>
-                                <span>{{ property.bathrooms }} {{ property.bathrooms == 1 ? t('map.bathShort') : t('map.bathsShort') }}</span>
-                            </div>
-                            <div class="property-detail-stat property-detail-stat--stacked">
+                            </template>
+                            <template v-else-if="stat.id === 'sqft'">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="33" height="33" viewBox="0 0 33 33" fill="none">
                                 <path d="M4.016 0C1.81184 0 0 1.81152 0 4.016C0 5.94144 1.38144 7.56672 3.2 7.94752V24.0845C1.38144 24.4653 0 26.0909 0 28.0163C0 30.2208 1.81152 32.032 4.016 32.032C5.95104 32.032 7.5648 30.6323 7.93312 28.8H24.0787C24.4474 30.6342 26.0797 32.032 28.0163 32.032C30.1443 32.032 31.8899 30.3398 32.0093 28.2394C32.0242 28.166 32.0317 28.0912 32.0317 28.0163C32.0317 27.9414 32.0242 27.8667 32.0093 27.7933C31.905 25.9574 30.5584 24.4339 28.8 24.0787V7.95328C30.5584 7.59808 31.905 6.07488 32.0096 4.23936C32.0245 4.16595 32.032 4.09123 32.032 4.01632C32.032 3.94141 32.0245 3.86669 32.0096 3.79328C31.8896 1.6928 30.1443 0 28.016 0C26.0909 0 24.4653 1.38144 24.0845 3.2H7.9264C7.5456 1.38368 5.9392 0 4.016 0ZM4.016 2.24C5.01024 2.24 5.792 3.02208 5.792 4.016C5.792 5.01024 5.01024 5.792 4.016 5.792C3.02176 5.792 2.24 5.01024 2.24 4.016C2.24 3.02176 3.02208 2.24 4.016 2.24ZM28.016 2.24C29.0102 2.24 29.792 3.02208 29.792 4.016C29.792 5.01024 29.0102 5.792 28.016 5.792C27.0218 5.792 26.24 5.01024 26.24 4.016C26.24 3.02176 27.0221 2.24 28.016 2.24ZM7.74976 5.44H24.2682C24.4699 5.96272 24.7776 6.43801 25.1721 6.83592C25.5665 7.23383 26.0391 7.54574 26.56 7.752V24.28C26.0443 24.4841 25.5759 24.7917 25.1838 25.1838C24.7917 25.5759 24.4841 26.0443 24.28 26.56H7.736C7.53219 26.0402 7.22298 25.5682 6.82783 25.1738C6.43269 24.7794 5.96016 24.471 5.44 24.2682V7.76384C5.96574 7.559 6.4428 7.24643 6.84054 6.84621C7.23827 6.446 7.54787 5.967 7.74944 5.44M4.016 26.24C5.00992 26.24 5.79168 27.0221 5.79168 28.016C5.79168 29.0102 5.00992 29.792 4.01568 29.792C3.02144 29.792 2.24 29.0102 2.24 28.016C2.24 27.0218 3.02208 26.24 4.016 26.24ZM28.016 26.24C29.0099 26.24 29.7917 27.0221 29.7917 28.016C29.7917 29.0102 29.0099 29.792 28.0157 29.792C27.0214 29.792 26.24 29.0102 26.24 28.016C26.24 27.0218 27.0221 26.24 28.016 26.24Z" fill="#2F3F58"/>
                                 </svg>
-                                <span>{{ formatSqft(property.sqft) }}{{ t('listing.sqftSuffix') }}</span>
+                            </template>
+                                <span>{{ stat.label }}</span>
                             </div>
                         </div>
-                        <div class="property-detail-price-wrap">
+                        <div v-if="hasPrice" class="property-detail-price-wrap">
                             <p class="property-detail-price">{{ formatPrice(property.price) }} {{ priceCurrencySuffix }}</p>
                         </div>
                     </div>
@@ -147,9 +147,28 @@
                                     </div>
                                     <div class="property-detail-agent__actions">
                                         <div class="property-detail-agent__actions-row">
-                                            <button type="button" class="property-detail-btn property-detail-btn--primary property-detail-btn--row" data-bs-toggle="modal" data-bs-target="#siteEnquiryForm">{{ t('propertyDetail.enquiry') }}</button>
-                                            <a class="property-detail-btn property-detail-btn--soft property-detail-btn--row" :href="callHref">{{ t('propertyDetail.callNow') }}</a>
-                                            <a class="property-detail-btn property-detail-btn--outline property-detail-btn--row" :href="whatsappHref" target="_blank" rel="noopener noreferrer">{{ t('propertyDetail.whatsapp') }}</a>
+                                            <a
+                                                class="property-detail-btn property-detail-btn--primary property-detail-btn--row"
+                                                href="#"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#siteEnquiryForm"
+                                                :data-property-title="property.title || ''"
+                                                :data-property-location="detailAddressText || ''"
+                                                :data-property-type="propertyTypeLabel"
+                                                :data-property-size="detailEnquiryPrefillSize"
+                                            >{{ t('propertyDetail.enquiry') }}</a>
+                                            <a
+                                                v-if="siteCallHref"
+                                                class="property-detail-btn property-detail-btn--soft property-detail-btn--row"
+                                                :href="siteCallHref"
+                                            >{{ t('propertyDetail.callNow') }}</a>
+                                            <a
+                                                v-if="siteWhatsappLink"
+                                                class="property-detail-btn property-detail-btn--outline property-detail-btn--row"
+                                                :href="siteWhatsappLink"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >{{ t('propertyDetail.whatsapp') }}</a>
                                         </div>
                                     </div>
                                 </div>
@@ -261,7 +280,7 @@
                     </template>
                 </section>
                 
-                <MortgageCalculator :property-price="Number(property.price)" />
+                <MortgageCalculator v-if="showMortgageCalculator" :property-price="Number(property.price)" />
 
                 <div v-if="false && showMortgageCalculator" class="property-detail-calc-outer">
                     <section class="property-detail-section property-detail-section--flush" aria-labelledby="pd-calc-heading">
@@ -334,9 +353,45 @@
             </div>
 
             <aside v-if="showMapAside" class="property-detail-body__map" aria-label="Location map">
-                <div class="property-detail-map-fallback">
-                    <p class="property-detail-map-fallback__title">{{ t('propertyDetail.location') }}</p>
-                    <p v-if="property.location" class="property-detail-map-fallback__text">{{ property.location }}</p>
+                <div class="property-detail-map-card position-relative">
+                    <div class="property-detail-map-card__head">
+                        <p class="property-detail-map-card__title">{{ t('listing.map') }}</p>
+                    </div>
+                    <div class="property-detail-map-card__map-panels" aria-live="polite">
+                        <div
+                            id="property-detail-nearby-map-panel"
+                            class="property-detail-map-card__map-panel"
+                            role="tabpanel"
+                            :aria-labelledby="mapTabPanels.length ? activeMapTabMeta?.tabId : undefined"
+                        >
+                            <div class="property-detail-map-card__frame">
+                                <PropertyDetailNearbyMap
+                                    v-if="mapCenterLat != null && mapCenterLng != null"
+                                    :center-lat="mapCenterLat"
+                                    :center-lng="mapCenterLng"
+                                    :property-title="property.title || ''"
+                                    :places="activeMapPlaces"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                    <div v-if="mapTabPanels.length" class="property-detail-map-card__tabs-outer">
+                        <div class="property-detail-map-card__tabs" role="tablist" aria-label="Nearby places">
+                            <button
+                                v-for="panel in mapTabPanels"
+                                :id="panel.tabId"
+                                :key="`tab-${panel.key}`"
+                                type="button"
+                                class="property-detail-map-card__tab"
+                                :class="{ 'is-active': activeMapTab === panel.key }"
+                                role="tab"
+                                :aria-selected="activeMapTab === panel.key ? 'true' : 'false'"
+                                aria-controls="property-detail-nearby-map-panel"
+                                :tabindex="activeMapTab === panel.key ? 0 : -1"
+                                @click="setActiveMapTab(panel.key)"
+                            >{{ panel.label }}</button>
+                        </div>
+                    </div>
                 </div>
             </aside>
         </div>
@@ -395,7 +450,7 @@
                                                 <path d="M13.997 4C14.3578 3.99999 14.7119 4.09759 15.0217 4.28244C15.3316 4.46729 15.5856 4.73251 15.757 5.05L16.243 5.95C16.4144 6.26749 16.6684 6.53271 16.9783 6.71756C17.2881 6.90241 17.6422 7.00001 18.003 7H20C20.5304 7 21.0391 7.21071 21.4142 7.58579C21.7893 7.96086 22 8.46957 22 9V18C22 18.5304 21.7893 19.0391 21.4142 19.4142C21.0391 19.7893 20.5304 20 20 20H4C3.46957 20 2.96086 19.7893 2.58579 19.4142C2.21071 19.0391 2 18.5304 2 18V9C2 8.46957 2.21071 7.96086 2.58579 7.58579C2.96086 7.21071 3.46957 7 4 7H5.997C6.35742 7.00002 6.71115 6.90264 7.02078 6.71817C7.33041 6.53369 7.58444 6.26897 7.756 5.952L8.245 5.048C8.41656 4.73103 8.67059 4.46631 8.98022 4.28183C9.28985 4.09736 9.64358 3.99998 10.004 4H13.997Z" stroke="#A4B3C9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                                 <path d="M12 16C13.6569 16 15 14.6569 15 13C15 11.3431 13.6569 10 12 10C10.3431 10 9 11.3431 9 13C9 14.6569 10.3431 16 12 16Z" stroke="#A4B3C9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                             </svg>
-                                            {{ t('listing.photosCount', { n: similarPhotoCount(p) }) }}
+                                            {{ similarPhotosLabel(p) }}
                                         </div>
                                         <div class="property-details">
                                             <div class="property-details__item">
@@ -420,9 +475,24 @@
                                         </div>
                                         <div class="property-card__footer property-card__footer--actions-only">
                                             <div class="property-card__actions">
-                                                <a class="property-btn property-btn--primary" href="#" data-bs-toggle="modal" data-bs-target="#siteEnquiryForm">{{ t('propertyDetail.enquiry') }}</a>
-                                                <a class="property-btn property-btn--outline" :href="p.phone">{{ t('propertyDetail.callNow') }}</a>
-                                                <a class="property-btn property-btn--outline" :href="p.whatsapp" target="_blank" rel="noopener noreferrer">{{ t('propertyDetail.whatsapp') }}</a>
+                                                <a
+                                                    class="property-btn property-btn--primary"
+                                                    href="#"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#siteEnquiryForm"
+                                                    :data-property-title="p.title || ''"
+                                                    :data-property-location="p.location || ''"
+                                                    :data-property-type="typeLabel(p.property_type)"
+                                                    :data-property-size="similarSizeLabel(p)"
+                                                >{{ t('propertyDetail.enquiry') }}</a>
+                                                <a v-if="siteCallHref" class="property-btn property-btn--outline" :href="siteCallHref">{{ t('propertyDetail.callNow') }}</a>
+                                                <a
+                                                    v-if="siteWhatsappLink"
+                                                    class="property-btn property-btn--outline"
+                                                    :href="siteWhatsappLink"
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                >{{ t('propertyDetail.whatsapp') }}</a>
                                             </div>
                                         </div>
                                     </div>
@@ -440,7 +510,7 @@
 </template>
 
 <script setup>
-// import PropertyDetailMap from '@/components/properties/PropertyDetailMap.vue';
+import PropertyDetailNearbyMap from '@/components/properties/PropertyDetailNearbyMap.vue';
 import MortgageCalculator from '@/components/properties/MortgageCalculator.vue';
 import { asset } from '@/utils/asset';
 import {
@@ -452,23 +522,50 @@ import {
     DRE_PROPERTY_PLACEHOLDER_IMAGE,
 } from '@/utils/propertyImages';
 import { applyGlobalImageAltFallback, applySeoPayload } from '@/utils/seo';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { getPublicSiteBoot } from '@/utils/publicSite';
+import { siteTelHref, siteWhatsappHref } from '@/utils/siteContact';
+import { computed, inject, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 
 const route = useRoute();
 const { locale, t } = useI18n({ useScope: 'global' });
 
+const injectedSite = inject('dreSite', null);
+const dreSite = injectedSite ?? computed(() => getPublicSiteBoot());
+const siteCallHref = computed(() => siteTelHref(dreSite.value));
+const siteWhatsappLink = computed(() => siteWhatsappHref(dreSite.value));
+
 const loading = ref(true);
 const property = ref(null);
 const similar = ref([]);
+const activeMapTab = ref('schools');
+
+const MAP_PANEL_DEFS = [
+    { key: 'schools', type: 'school', tabId: 'map-tab-schools', labelKey: 'map.school' },
+    { key: 'hospitals', type: 'hospital', tabId: 'map-tab-hospitals', labelKey: 'map.hospital' },
+    { key: 'restaurants', type: 'restaurant', tabId: 'map-tab-restaurants', labelKey: 'map.restaurant' },
+    { key: 'attractions', type: 'attraction', tabId: 'map-tab-attractions', labelKey: 'map.attraction' },
+];
+
+function isPropertyPlaceholderUrl(url) {
+    const value = String(url || '').toLowerCase();
+    return value.includes('property-placeholder.');
+}
 
 const galleryImages = computed(() => {
     const list = dreNormalizePropertyImages(property.value?.images);
-    // Drop duplicate URLs (CMS sometimes repeats the same image) so the slider does not show clones.
-    return [...new Set(list)];
-});
+    const cleaned = list.filter(Boolean);
+    const deduped = [...new Set(cleaned)];
 
+    // Keep real photos unique, but for "no image" state repeat the same placeholder
+    // so the gallery still behaves as a slider block.
+    if (deduped.length === 1 && isPropertyPlaceholderUrl(deduped[0])) {
+        return [deduped[0], deduped[0], deduped[0]];
+    }
+
+    return deduped.length ? deduped : [DRE_PROPERTY_PLACEHOLDER_IMAGE, DRE_PROPERTY_PLACEHOLDER_IMAGE, DRE_PROPERTY_PLACEHOLDER_IMAGE];
+});
 const heroBannerSrc = computed(() => asset('public/images/inner-banner.jpg'));
 
 const priceCurrencySuffix = computed(() => {
@@ -510,6 +607,13 @@ const detailAddressText = computed(() => {
     return property.value?.full_address || property.value?.address || property.value?.location || '';
 });
 
+/** Matches listing / similar enquiry triggers — explicit prefill for #siteEnquiryForm */
+const detailEnquiryPrefillSize = computed(() => {
+    const sqft = positiveNumber(property.value?.sqft);
+    if (!sqft) return '';
+    return `${formatSqft(sqft)} ${t('listing.sqftSuffix')}`;
+});
+
 const agentName = computed(() => {
     return property.value?.agent?.name || (locale.value === 'ar' ? 'فريق DRE' : 'DRE Team');
 });
@@ -526,9 +630,6 @@ const agentAvatar = computed(
     () => property.value?.agent?.image || DRE_AGENT_PLACEHOLDER_IMAGE,
 );
 
-const callHref = computed(() => property.value?.agent?.phone || property.value?.phone || '#');
-const whatsappHref = computed(() => property.value?.whatsapp || '#');
-
 function formatNumber(num) {
     const value = Number(num || 0);
 
@@ -541,6 +642,11 @@ function formatPrice(num) {
 
 function formatSqft(sqft) {
     return formatNumber(sqft);
+}
+
+function positiveNumber(value) {
+    const num = Number(value);
+    return Number.isFinite(num) && num > 0 ? num : null;
 }
 
 const descriptionHtml = computed(() => {
@@ -569,14 +675,8 @@ function plainText(input, maxLength = 180) {
     return `${text.slice(0, maxLength).trimEnd()}...`;
 }
 
-function specCellDash(value) {
-    const s = value == null ? '' : String(value).trim();
-
-    return s !== '' ? s : '—';
-}
-
 function formatYearBuiltDisplay(y) {
-    if (y == null || y === '') return '—';
+    if (y == null || y === '') return null;
     const n = Number(y);
     if (Number.isFinite(n) && n > 0) {
         return String(Math.round(n));
@@ -584,14 +684,14 @@ function formatYearBuiltDisplay(y) {
     const str = String(y).trim();
     const m = str.match(/^(\d{4})/);
 
-    return m ? m[1] : specCellDash(str);
+    return m ? m[1] : null;
 }
 
 function formatSecurityDepositDisplay(p) {
     const raw = p?.security_deposit;
     const num = Number(raw);
     if (!Number.isFinite(num) || num <= 0) {
-        return '—';
+        return null;
     }
     const cur = String(p.currency || 'AED').toUpperCase();
     const curWord = cur === 'AED' ? 'AED' : cur;
@@ -618,39 +718,22 @@ const specCells = computed(() => {
 
     const cur = String(p.currency || 'AED').toUpperCase();
     const curSuff = cur === 'AED' ? 'د.إ' : cur;
-    const priceVal =
-        Number(p.price) > 0 ? `${formatPrice(p.price)} ${curSuff}` : '—';
-    const sizeVal = Number(p.sqft) > 0 ? `${formatSqft(p.sqft)} ft²` : '—';
+    const priceVal = positiveNumber(p.price) ? `${formatPrice(p.price)} ${curSuff}` : null;
+    const sizeVal = positiveNumber(p.sqft) ? `${formatSqft(p.sqft)} ${t('listing.sqftSuffix')}` : null;
+    const bathVal = positiveNumber(p.bathrooms) ? String(Math.round(Number(p.bathrooms))) : null;
+    const yearBuiltVal = formatYearBuiltDisplay(p.year_built);
+    const ownerVal = String(p.direct_from_owner ?? '').trim() || null;
+    const depositVal = formatSecurityDepositDisplay(p);
 
     return [
         { id: 'spec-id', label: t('propertyDetail.specId'), value: String(p.id), icon: icons.id },
         { id: 'spec-price', label: t('propertyDetail.specPrice'), value: priceVal, icon: icons.price },
         { id: 'spec-size', label: t('propertyDetail.specSize'), value: sizeVal, icon: icons.size },
-        {
-            id: 'spec-bath',
-            label: t('propertyDetail.specBath'),
-            value: specCellDash(Number.isFinite(Number(p.bathrooms)) ? String(p.bathrooms) : ''),
-            icon: icons.bath,
-        },
-        {
-            id: 'spec-year',
-            label: t('propertyDetail.specYear'),
-            value: formatYearBuiltDisplay(p.year_built),
-            icon: icons.year,
-        },
-        {
-            id: 'spec-owner',
-            label: t('propertyDetail.specOwner'),
-            value: specCellDash(p.direct_from_owner),
-            icon: icons.owner,
-        },
-        {
-            id: 'spec-deposit',
-            label: t('propertyDetail.specDeposit'),
-            value: formatSecurityDepositDisplay(p),
-            icon: icons.deposit,
-        },
-    ];
+        { id: 'spec-bath', label: t('propertyDetail.specBath'), value: bathVal, icon: icons.bath },
+        { id: 'spec-year', label: t('propertyDetail.specYear'), value: yearBuiltVal, icon: icons.year },
+        { id: 'spec-owner', label: t('propertyDetail.specOwner'), value: ownerVal, icon: icons.owner },
+        { id: 'spec-deposit', label: t('propertyDetail.specDeposit'), value: depositVal, icon: icons.deposit },
+    ].filter((cell) => String(cell.value ?? '').trim() !== '');
 });
 
 const amenityCards = computed(() => {
@@ -740,34 +823,91 @@ const accessPlaces = computed(() => {
         .filter((row) => row.name !== '' && row.name !== 'Nearby location' && row.name !== 'موقع قريب');
 });
 
+function normalizeNearbyType(type) {
+    const raw = String(type || '').trim().toLowerCase();
+    if (raw.startsWith('school')) return 'school';
+    if (raw.startsWith('hospital')) return 'hospital';
+    if (raw.startsWith('restaurant') || raw.startsWith('food')) return 'restaurant';
+    if (raw.startsWith('attraction')) return 'attraction';
+    return raw;
+}
+
+function toNumberOrNull(value) {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+}
+
+const mapCenterLat = computed(() => {
+    const lat = Number(property.value?.latitude);
+    if (!Number.isFinite(lat) || lat < -90 || lat > 90 || Math.abs(lat) <= 1e-6) return null;
+    return lat;
+});
+
+const mapCenterLng = computed(() => {
+    const lng = Number(property.value?.longitude);
+    if (!Number.isFinite(lng) || lng < -180 || lng > 180 || Math.abs(lng) <= 1e-6) return null;
+    return lng;
+});
+
+const mapNearbyPlaces = computed(() => {
+    const rows = Array.isArray(property.value?.nearby_places) ? property.value.nearby_places : [];
+
+    return rows
+        .map((row, index) => {
+            const name = String(row?.name || '').trim();
+            if (!name) return null;
+            const type = normalizeNearbyType(row?.type);
+            if (!['school', 'hospital', 'restaurant', 'attraction'].includes(type)) return null;
+            const distance = String(row?.distance ?? '').trim();
+
+            return {
+                id: `${type}-${row?.id ?? index}`,
+                name,
+                distance,
+                type,
+                latitude: toNumberOrNull(row?.latitude),
+                longitude: toNumberOrNull(row?.longitude),
+                icon: typeof row?.icon === 'string' && row.icon.trim() !== '' ? row.icon.trim() : null,
+            };
+        })
+        .filter(Boolean);
+});
+
+const mapTabPanels = computed(() => {
+    return MAP_PANEL_DEFS
+        .map((panel) => {
+            const places = mapNearbyPlaces.value.filter((place) => place.type === panel.type);
+
+            return {
+                ...panel,
+                label: t(panel.labelKey),
+                places,
+            };
+        })
+        .filter((panel) => panel.places.length > 0);
+});
+
+const activeMapTabMeta = computed(() => (
+    mapTabPanels.value.find((panel) => panel.key === activeMapTab.value) || null
+));
+
+const activeMapPlaces = computed(() => activeMapTabMeta.value?.places ?? []);
+
+function setActiveMapTab(key) {
+    activeMapTab.value = key;
+}
+
 const hasMapCenter = computed(() => {
     const lat = Number(property.value?.latitude);
     const lng = Number(property.value?.longitude);
 
-    return Number.isFinite(lat) && Number.isFinite(lng) && (Math.abs(lat) > 1e-6 || Math.abs(lng) > 1e-6);
-});
-
-const googleMapsUrl = computed(() => {
-    if (!property.value) return '#';
-
-    const lat = Number(property.value.latitude);
-    const lng = Number(property.value.longitude);
-
-    if (Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0 && lng !== 0) {
-        return `https://www.google.com/maps?q=${lat},${lng}`;
-    }
-
-    return property.value.location
-        ? `https://www.google.com/maps/search/${encodeURIComponent(property.value.location)}`
-        : '#';
-});
-
-const mapThumb = computed(() => galleryImages.value[0] || DRE_PROPERTY_PLACEHOLDER_IMAGE);
-
-const mapPriceDisplay = computed(() => {
-    if (!property.value) return '';
-
-    return `${formatPrice(property.value.price)} ${property.value.currency || 'AED'}`;
+    return Number.isFinite(lat)
+        && Number.isFinite(lng)
+        && lat >= -90
+        && lat <= 90
+        && lng >= -180
+        && lng <= 180
+        && (Math.abs(lat) > 1e-6 || Math.abs(lng) > 1e-6);
 });
 
 const calcHomePrice = computed(() => Math.max(0, Math.round(Number(property.value?.price) || 0)));
@@ -775,9 +915,33 @@ const calcHomePrice = computed(() => Math.max(0, Math.round(Number(property.valu
 const showMortgageCalculator = computed(() => calcHomePrice.value > 0);
 
 const showMapAside = computed(() => {
-    if (!property.value) return false;
-    if (hasMapCenter.value) return true;
-    return googleMapsUrl.value !== '#';
+    return Boolean(property.value) && hasMapCenter.value;
+});
+
+const hasPrice = computed(() => positiveNumber(property.value?.price) !== null);
+
+const summaryStats = computed(() => {
+    const p = property.value;
+    if (!p) return [];
+
+    const beds = positiveNumber(p.bedrooms);
+    const baths = positiveNumber(p.bathrooms);
+    const sqft = positiveNumber(p.sqft);
+
+    return [
+        beds ? {
+            id: 'beds',
+            label: `${Math.round(beds)} ${Math.round(beds) === 1 ? t('map.bedShort') : t('map.bedsShort')}`,
+        } : null,
+        baths ? {
+            id: 'baths',
+            label: `${Math.round(baths)} ${Math.round(baths) === 1 ? t('map.bathShort') : t('map.bathsShort')}`,
+        } : null,
+        sqft ? {
+            id: 'sqft',
+            label: `${formatSqft(sqft)} ${t('listing.sqftSuffix')}`,
+        } : null,
+    ].filter(Boolean);
 });
 
 function similarUrl(item) {
@@ -816,6 +980,21 @@ function similarPhotoCount(item) {
     return Number.isFinite(n) && n > 0 ? n : (Array.isArray(item?.images) ? item.images.length : 0);
 }
 
+function similarPhotosLabel(item) {
+    const count = similarPhotoCount(item);
+    const translated = t('listing.photosCount', { n: count });
+    if (translated === 'listing.photosCount') {
+        return `${count} Photos`;
+    }
+    return translated;
+}
+
+function similarSizeLabel(item) {
+    const sqft = positiveNumber(item?.sqft);
+    if (!sqft) return '';
+    return `${formatSqft(sqft)} ${t('listing.sqftSuffix')}`;
+}
+
 function typeLabel(type) {
     const raw = String(type || '').replace(/[_-]+/g, ' ').trim();
 
@@ -830,6 +1009,26 @@ function listingLabel(listingType) {
 
     return t('home.rentals.card.propertyType');
 }
+
+watch(
+    () => mapTabPanels.value.map((panel) => `${panel.key}:${panel.places.length}`).join('|'),
+    () => {
+        const panels = mapTabPanels.value;
+        if (!panels.length) {
+            return;
+        }
+
+        const current = panels.find((panel) => panel.key === activeMapTab.value);
+        if (current) {
+            return;
+        }
+
+        const preferred = panels.find((panel) => panel.key === 'schools') || panels[0];
+
+        activeMapTab.value = preferred.key;
+    },
+    { immediate: true }
+);
 
 async function fetchProperty() {
     window.dreDestroyPropertyDetailGallerySlider?.();

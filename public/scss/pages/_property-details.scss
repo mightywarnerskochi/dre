@@ -1301,6 +1301,11 @@ $calc-hoa: #FF513A;
         font-family: inherit;
     }
 
+    &__leaflet-divicon {
+        background: transparent !important;
+        border: none !important;
+    }
+
     &__img {
         display: block;
         width: 100%;
@@ -1392,6 +1397,21 @@ $calc-hoa: #FF513A;
             &:hover,
             &:focus-visible {
                 transform: scale(1.08);
+            }
+        }
+
+        &--icon-marker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            img {
+                display: block;
+                width: 18px;
+                height: 18px;
+                object-fit: contain;
+                filter: brightness(0) invert(1);
+                pointer-events: none;
             }
         }
 
@@ -1530,7 +1550,8 @@ $calc-hoa: #FF513A;
         bottom: 0px;
         left: 50%;
         transform: translate(-50%, -90%);
-        z-index: 2;
+        z-index: 1100;
+        pointer-events: auto;
     }
 
     &__tabs {
@@ -1584,6 +1605,36 @@ $calc-hoa: #FF513A;
             background: $primaryColor;
             color: #fff;
         }
+    }
+}
+
+// Leaflet tooltips mount on body (not inside .property-detail-map-card)
+.leaflet-tooltip.property-detail-map-tooltip {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #e4e9f0;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+    font-size: 12px;
+    font-weight: 600;
+    color: #0f172a;
+    max-width: min(240px, 70vw);
+    word-wrap: break-word;
+
+    .property-detail-map-tooltip__meta {
+        display: block;
+        margin-top: 2px;
+        font-size: 11px;
+        font-weight: 500;
+        color: #64748b;
+    }
+
+    .property-detail-map-tooltip__approx {
+        display: block;
+        margin-top: 4px;
+        font-size: 10px;
+        font-weight: 600;
+        font-style: italic;
+        color: #94a3b8;
     }
 }
 

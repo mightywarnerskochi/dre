@@ -62,6 +62,7 @@
         "virtualTourTitle": "جولة افتراضية 360",
         "photoGalleryAria": "معرض الصور",
         "photoNumberAria": "صورة {n}",
+        "photosCount": "{n} صور",
         "sqftSuffix": "قدم²",
         "rentals": "للإيجار"
     },

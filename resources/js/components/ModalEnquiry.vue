@@ -4,6 +4,7 @@
         ref="modalRoot"
         class="modal fade siteEnquiryForm"
         id="siteEnquiryForm"
+        data-enquiry-prefill="vue"
         aria-hidden="true"
         aria-labelledby="siteEnquiryFormLabel"
         tabindex="-1"
@@ -91,6 +92,7 @@
                                     type="text"
                                     name="location"
                                     placeholder="Property Location"
+                                    :disabled="prefillLocks.location"
                                     :class="{ 'is-invalid': fieldErrors.location }"
                                     required
                                 />
@@ -102,6 +104,7 @@
                                     ref="propertyTypeInputEl"
                                     v-model="form.property_type"
                                     name="property_type"
+                                    :disabled="prefillLocks.type"
                                     :class="{ 'is-invalid': fieldErrors.property_type }"
                                     required
                                 >
@@ -120,6 +123,7 @@
                                     type="text"
                                     name="property_size"
                                     placeholder="Property Size"
+                                    :disabled="prefillLocks.size"
                                     :class="{ 'is-invalid': fieldErrors.property_size }"
                                     required
                                 />
@@ -147,7 +151,7 @@
 </template>
 
 <script setup>
-import { onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 
@@ -175,6 +179,133 @@ const form = reactive({
     property_size: '',
     property_title: '',
 });
+
+const prefillLocks = reactive({
+    location: false,
+    size: false,
+    type: false,
+});
+
+function extractEnquiryFromTriggerDataset(triggerEl) {
+    if (!triggerEl?.dataset) return null;
+    const title = String(triggerEl.dataset.propertyTitle || '').trim();
+    const location = String(triggerEl.dataset.propertyLocation || '').trim();
+    const type = String(triggerEl.dataset.propertyType || '').trim();
+    const size = String(triggerEl.dataset.propertySize || '').trim();
+    if (!title && !location && !type && !size) return null;
+    return { title, location, type, size };
+}
+
+function extractEnquiryFromPropertyCard(triggerEl) {
+    if (!triggerEl?.closest) return null;
+    const card = triggerEl.closest('.property-card__inner');
+    if (!card) return null;
+
+    const titleEl = card.querySelector('.property-card__title');
+    const locEl = card.querySelector('.property-card__location span');
+    const typeEl = card.querySelector('.property-tag--fill');
+
+    let sizeStr = '';
+    card.querySelectorAll('.property-details__item span').forEach((span) => {
+        const txt = String(span.textContent || '').trim();
+        if (/ft|sq\s*ft|sqft|m²|sq\.?\s*m/i.test(txt)) {
+            sizeStr = txt;
+        }
+    });
+
+    const title = titleEl ? titleEl.textContent.trim() : '';
+    const location = locEl ? locEl.textContent.trim() : '';
+    const type = typeEl ? typeEl.textContent.trim() : '';
+
+    if (!title && !location && !type && !sizeStr) return null;
+
+    return { title, location, type, size: sizeStr };
+}
+
+/**
+ * Bootstrap sometimes omits `relatedTarget` on show.bs.modal (e.g. Slick clones / complex DOM).
+ * Capture the real opener on click so similar-listing cards still prefill like the listing grid.
+ */
+let lastEnquiryModalOpener = null;
+
+function captureEnquiryModalOpener(event) {
+    const el = event.target?.closest?.('[data-bs-toggle="modal"][data-bs-target="#siteEnquiryForm"]');
+    if (el) {
+        lastEnquiryModalOpener = el;
+    }
+}
+
+function extractEnquiryFromDetailMain() {
+    const detailRoot = document.querySelector('.property-detail-main');
+    if (!detailRoot) return null;
+
+    const titleEl = detailRoot.querySelector('.property-detail-title') || document.querySelector('.banner--page__title');
+    const locEl = detailRoot.querySelector('.property-detail-location span');
+    const typeEl = detailRoot.querySelector('.property-detail-badge');
+
+    let sizeStr = '';
+    detailRoot.querySelectorAll('.property-detail-stat span').forEach((span) => {
+        const txt = String(span.textContent || '').trim();
+        if (/ft|sq\s*ft|sqft|m²|sq\.?\s*m/i.test(txt)) {
+            sizeStr = txt;
+        }
+    });
+
+    const title = titleEl ? titleEl.textContent.trim() : '';
+    const location = locEl ? locEl.textContent.trim() : '';
+    const type = typeEl ? typeEl.textContent.trim() : '';
+
+    if (!title && !location && !type && !sizeStr) return null;
+
+    return { title, location, type, size: sizeStr };
+}
+
+function applyPropertyTypeFromLabel(typeLabelRaw) {
+    const typeStr = String(typeLabelRaw || '').trim();
+    const sel = propertyTypeInputEl.value;
+    if (!typeStr) {
+        form.property_type = '';
+        return;
+    }
+    if (!sel) {
+        form.property_type = typeStr.toLowerCase();
+        return;
+    }
+
+    let matched = false;
+    Array.from(sel.options).forEach((opt) => {
+        if (opt.text.toLowerCase() === typeStr.toLowerCase()) {
+            form.property_type = opt.value;
+            matched = true;
+        }
+    });
+    if (!matched) {
+        const value = typeStr.toLowerCase().replace(/\s+/g, '_');
+        const opt = new Option(typeStr, value);
+        sel.add(opt);
+        form.property_type = value;
+    }
+}
+
+function handleModalShow(e) {
+    clearFieldErrors();
+    const trigger = e?.relatedTarget ?? lastEnquiryModalOpener ?? null;
+    lastEnquiryModalOpener = null;
+
+    const ctx = extractEnquiryFromTriggerDataset(trigger)
+        || extractEnquiryFromPropertyCard(trigger)
+        || extractEnquiryFromDetailMain()
+        || { title: '', location: '', type: '', size: '' };
+
+    form.property_title = ctx.title;
+    form.location = ctx.location;
+    form.property_size = ctx.size;
+    applyPropertyTypeFromLabel(ctx.type);
+
+    prefillLocks.location = ctx.location !== '';
+    prefillLocks.size = ctx.size !== '';
+    prefillLocks.type = ctx.type !== '';
+}
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -444,25 +575,37 @@ async function submitPropertyEnquiry() {
     }
 }
 
-function handleModalShown() {
+async function handleModalShown() {
+    await nextTick();
+    if (typeof window.dreInitSiteEnquiryPhone === 'function') {
+        window.dreInitSiteEnquiryPhone();
+    }
+    await nextTick();
     syncFormFromDom();
 }
 
 function handleModalHidden() {
     clearFieldErrors();
     resetForm();
+    prefillLocks.location = false;
+    prefillLocks.size = false;
+    prefillLocks.type = false;
 }
 
 onMounted(() => {
+    document.addEventListener('click', captureEnquiryModalOpener, true);
     const element = modalRoot.value;
     if (!element) return;
+    element.addEventListener('show.bs.modal', handleModalShow);
     element.addEventListener('shown.bs.modal', handleModalShown);
     element.addEventListener('hidden.bs.modal', handleModalHidden);
 });
 
 onBeforeUnmount(() => {
+    document.removeEventListener('click', captureEnquiryModalOpener, true);
     const element = modalRoot.value;
     if (!element) return;
+    element.removeEventListener('show.bs.modal', handleModalShow);
     element.removeEventListener('shown.bs.modal', handleModalShown);
     element.removeEventListener('hidden.bs.modal', handleModalHidden);
 });

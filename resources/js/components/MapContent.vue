@@ -51,6 +51,8 @@ import 'leaflet/dist/leaflet.css';
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
+import { getPublicSiteBoot } from '@/utils/publicSite';
+import { siteTelHref, siteWhatsappHref } from '@/utils/siteContact';
 import PropertyFilters from '@/components/properties/PropertyFilters.vue';
 import ListingMobileExtras from '@/components/ListingMobileExtras.vue';
 
@@ -233,6 +235,20 @@ function renderMarkers({ fitResults = false } = {}) {
     }
 }
 
+function mapPopupSiteCtaHtml() {
+    const site = getPublicSiteBoot();
+    const tel = siteTelHref(site);
+    const wa = siteWhatsappHref(site);
+    if (!tel && !wa) return '';
+    const call = tel
+        ? `<a href="${tel}" class="map-popup-site-cta__btn map-popup-site-cta__btn--call">${t('home.rentals.card.callNow')}</a>`
+        : '';
+    const whatsapp = wa
+        ? `<a href="${wa}" class="map-popup-site-cta__btn map-popup-site-cta__btn--wa" target="_blank" rel="noopener noreferrer">${t('home.rentals.card.whatsapp')}</a>`
+        : '';
+    return `<div class="map-popup-site-cta" dir="${isArabicLocale() ? 'rtl' : 'ltr'}">${call}${whatsapp}</div>`;
+}
+
 function openClusterPopup(marker, items) {
     const isMultiItem = items.length > 1;
     const popupMaxWidth = Math.max(300, Math.min(isMultiItem ? 420 : 360, window.innerWidth - 32));
@@ -252,6 +268,7 @@ function openClusterPopup(marker, items) {
                     </a>
                 </div>
             `).join('')}
+            ${mapPopupSiteCtaHtml()}
         </div>
     `;
     marker.bindPopup(content, {
@@ -379,8 +396,30 @@ watch(locale, fetchMarkers);
     padding: 10px 0;
     border-bottom: 1px solid #eee;
 }
-.map-popup-item:last-child {
-    border-bottom: none;
+.map-popup-site-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+.map-popup-site-cta__btn {
+    flex: 1;
+    min-width: 7rem;
+    text-align: center;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    background: #fff;
+    color: #0d6efd;
+    text-decoration: none;
+}
+.map-popup-site-cta__btn:hover {
+    background: #f8f9fa;
+    color: #0a58ca;
 }
 .map-popup-item > a {
     display: flex;

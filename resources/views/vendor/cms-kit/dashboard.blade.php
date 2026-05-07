@@ -110,18 +110,18 @@
         @endif
 
        
-        @if(config('cms-kit.common.modules.why-choose-us', true) && $cmsUser->can('why-choose-us.view'))
+        @if(config('cms-kit.common.modules.blogs', true) && $cmsUser->can('blogs.view'))
         <div class="col-xl-3 col-md-6 mb-4">
             <div class="card border-0 shadow-sm h-100 py-2" style="border-left: 4px solid #6f42c1 !important;">
                 <div class="card-body">
                     <div class="row no-gutters align-items-center">
                         <div class="col mr-2">
                             <div class="text-xs font-weight-bold text-uppercase mb-1" style="color: #6f42c1;">
-                                Why Choose Us</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['why_choose_us'] }}</div>
+                                Blogs</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $stats['blogs'] }}</div>
                         </div>
                         <div class="col-auto">
-                            <i class="fas fa-star fa-2x text-gray-300"></i>
+                            <i class="fas fa-blog fa-2x text-gray-300"></i>
                         </div>
                     </div>
                 </div>
@@ -137,30 +137,68 @@
             <div class="card shadow-sm border-0 mb-4">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between bg-white border-bottom">
                     <h6 class="m-0 font-weight-bold text-gray-800">Recent Enquiries</h6>
-                    <a href="{{ route('cms.form-enquiries.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('cms.form-enquiries.index') }}" class="btn btn-sm btn-outline-primary">View Form</a>
+                        <a href="{{ route('cms.property-enquiries.index') }}" class="btn btn-sm btn-outline-dark">View Property</a>
+                    </div>
                 </div>
                 <div class="card-body">
+                    @php
+                        $formCount = $recentEnquiries->filter(function ($enquiry) {
+                            return data_get($enquiry->extra_fields, 'enquiry_type') !== 'property';
+                        })->count();
+                        $propertyCount = $recentEnquiries->filter(function ($enquiry) {
+                            return data_get($enquiry->extra_fields, 'enquiry_type') === 'property';
+                        })->count();
+                    @endphp
+                    <div class="recent-enquiries-summary mb-3">
+                        <span class="recent-enquiries-summary__item">
+                            <span class="badge bg-primary-subtle text-primary">Form</span>
+                            <strong>{{ $formCount }}</strong>
+                        </span>
+                        <span class="recent-enquiries-summary__item">
+                            <span class="badge bg-warning-subtle text-warning">Property</span>
+                            <strong>{{ $propertyCount }}</strong>
+                        </span>
+                    </div>
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0">
+                        <table class="table table-hover mb-0 recent-enquiries-table">
                             <thead class="bg-light">
                                 <tr>
+                                    <th>Type</th>
                                     <th>Name</th>
                                     <th>Email</th>
+                                    <th>Details</th>
                                     <th>Source</th>
                                     <th>Date</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($recentEnquiries as $enquiry)
+                                @php
+                                    $enquiryType = data_get($enquiry->extra_fields, 'enquiry_type') === 'property' ? 'property' : 'form';
+                                    $detailsValue = $enquiryType === 'property'
+                                        ? (data_get($enquiry->extra_fields, 'property_title') ?: data_get($enquiry->extra_fields, 'location') ?: '-')
+                                        : ($enquiry->subject ?: '-');
+                                    $sourceValue = $enquiry->page_source ?: '-';
+                                @endphp
                                 <tr>
+                                    <td>
+                                        @if($enquiryType === 'property')
+                                            <span class="badge rounded-pill bg-warning-subtle text-warning recent-enquiries-table__badge">Property</span>
+                                        @else
+                                            <span class="badge rounded-pill bg-primary-subtle text-primary recent-enquiries-table__badge">Form</span>
+                                        @endif
+                                    </td>
                                     <td>{{ $enquiry->name }}</td>
                                     <td>{{ $enquiry->email }}</td>
-                                    <td><span class="badge bg-secondary">{{ $enquiry->page_source ?? 'N/A' }}</span></td>
-                                    <td>{{ $enquiry->created_at->diffForHumans() }}</td>
+                                    <td class="text-truncate" style="max-width: 220px;" title="{{ $detailsValue }}">{{ $detailsValue }}</td>
+                                    <td><span class="badge bg-secondary">{{ $sourceValue }}</span></td>
+                                    <td>{{ optional($enquiry->created_at)->diffForHumans() }}</td>
                                 </tr>
                                 @empty
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">No recent enquiries found.</td>
+                                    <td colspan="6" class="text-center text-muted py-4">No recent enquiries found.</td>
                                 </tr>
                                 @endforelse
                             </tbody>
@@ -223,5 +261,20 @@
     .font-weight-bold { font-weight: 700 !important; }
     .card { transition: transform 0.2s ease-in-out; }
     .card:hover { transform: translateY(-5px); }
+    .recent-enquiries-summary {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .recent-enquiries-summary__item {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+    }
+    .recent-enquiries-table__badge {
+        min-width: 76px;
+        text-align: center;
+    }
 </style>
 @endsection

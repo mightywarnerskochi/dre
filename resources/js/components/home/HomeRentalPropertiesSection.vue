@@ -1,10 +1,17 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { computed, inject, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getHomeRentalSectionData } from '@/utils/publicContent';
+import { getPublicSiteBoot } from '@/utils/publicSite';
+import { siteTelHref, siteWhatsappHref } from '@/utils/siteContact';
 import { dreNormalizePropertyImages, dreOnPropertyImgError } from '@/utils/propertyImages';
 
 const { locale, t } = useI18n();
+
+const injectedSite = inject('dreSite', null);
+const dreSite = injectedSite ?? computed(() => getPublicSiteBoot());
+const siteCallHref = computed(() => siteTelHref(dreSite.value));
+const siteWhatsappLink = computed(() => siteWhatsappHref(dreSite.value));
 const rentalSectionData = computed(() => getHomeRentalSectionData(locale.value));
 const currentImageIndex = ref({});
 let autoSlideTimer = null;
@@ -187,12 +194,17 @@ onUnmounted(() => {
                                     >
                                         {{ t('home.rentals.card.enquiry') }}
                                     </a>
-                                    <a class="property-btn property-btn--light" :href="property.phone || '#'" target="_blank">
+                                    <a
+                                        v-if="siteCallHref"
+                                        class="property-btn property-btn--light"
+                                        :href="siteCallHref"
+                                    >
                                         {{ t('home.rentals.card.callNow') }}
                                     </a>
                                     <a
+                                        v-if="siteWhatsappLink"
                                         class="property-btn property-btn--outline"
-                                        :href="property.whatsapp || '#'"
+                                        :href="siteWhatsappLink"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >

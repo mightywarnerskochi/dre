@@ -1,5 +1,5 @@
-/** Public path — must match `public/images/dre/property-placeholder.svg` used in Laravel. */
-export const DRE_PROPERTY_PLACEHOLDER_IMAGE = '/images/dre/property-placeholder.svg';
+/** Public path — must match `public/images/dre/property-placeholder.png` used in Laravel. */
+export const DRE_PROPERTY_PLACEHOLDER_IMAGE = '/images/dre/property-placeholder.png';
 
 /** Public path — agent avatar when CMS has no photo or URL fails (not the property/house icon). */
 export const DRE_AGENT_PLACEHOLDER_IMAGE = '/images/dre/agent-placeholder.svg';

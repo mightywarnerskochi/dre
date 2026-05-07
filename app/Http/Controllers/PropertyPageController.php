@@ -438,11 +438,27 @@ class PropertyPageController extends Controller
 
         $images = collect($property->images ?? [])
             ->map(function ($img) {
-                $path = (string) ($img->image ?? '');
+                $path = '';
+                if (is_string($img)) {
+                    $path = trim($img);
+                } elseif (is_array($img)) {
+                    $path = trim((string) ($img['image'] ?? $img['url'] ?? $img['src'] ?? $img['path'] ?? ''));
+                } elseif (is_object($img)) {
+                    $path = trim((string) ($img->image ?? $img->url ?? $img->src ?? $img->path ?? ''));
+                }
 
-                return $path !== '' ? media_url($path) : null;
+                if ($path === '') {
+                    return null;
+                }
+
+                if (Str::startsWith($path, ['http://', 'https://'])) {
+                    return $path;
+                }
+
+                return media_url($path);
             })
             ->filter(fn ($url) => filled($url))
+            ->unique()
             ->values();
 
         if ($images->isEmpty()) {
@@ -570,8 +586,8 @@ class PropertyPageController extends Controller
                         'id' => (int) $np->id,
                         'name' => $np->getTranslation('name') ?: $np->name,
                         'type' => strtolower((string) ($np->type ?? '')),
-                        'latitude' => $np->latitude !== null ? (float) $np->latitude : null,
-                        'longitude' => $np->longitude !== null ? (float) $np->longitude : null,
+                        'latitude' => $np->latitude !== null && $np->latitude !== '' ? (float) $np->latitude : null,
+                        'longitude' => $np->longitude !== null && $np->longitude !== '' ? (float) $np->longitude : null,
                         'distance' => $np->pivot->distance,
                         'icon' => $np->icon ? media_url((string) $np->icon) : null,
                         'address' => trim((string) ($np->getTranslation('address') ?: ($np->address ?? ''))),

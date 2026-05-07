@@ -109,8 +109,14 @@
                                 </div>
                                 <div class="property-card__actions">
                                     <a class="property-btn property-btn--primary" href="#" data-bs-toggle="modal" data-bs-target="#siteEnquiryForm">{{ t('home.rentals.card.enquiry') }}</a>
-                                    <a class="property-btn property-btn--light" :href="prop.phone">{{ t('home.rentals.card.callNow') }}</a>
-                                    <a class="property-btn property-btn--outline" :href="prop.whatsapp" target="_blank" rel="noopener noreferrer">{{ t('home.rentals.card.whatsapp') }}</a>
+                                    <a v-if="siteCallHref" class="property-btn property-btn--light" :href="siteCallHref">{{ t('home.rentals.card.callNow') }}</a>
+                                    <a
+                                        v-if="siteWhatsappLink"
+                                        class="property-btn property-btn--outline"
+                                        :href="siteWhatsappLink"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                    >{{ t('home.rentals.card.whatsapp') }}</a>
                                 </div>
                             </div>
                         </div>
@@ -135,7 +141,7 @@
 </template>
 
 <script setup>
-import { inject, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import { computed, inject, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import {
@@ -143,8 +149,15 @@ import {
     dreOnAgentImgError,
     dreOnPropertyImgError,
 } from '@/utils/propertyImages';
+import { getPublicSiteBoot } from '@/utils/publicSite';
+import { siteTelHref, siteWhatsappHref } from '@/utils/siteContact';
 
 const { locale, t } = useI18n({ useScope: 'global' });
+
+const injectedSite = inject('dreSite', null);
+const dreSite = injectedSite ?? computed(() => getPublicSiteBoot());
+const siteCallHref = computed(() => siteTelHref(dreSite.value));
+const siteWhatsappLink = computed(() => siteWhatsappHref(dreSite.value));
 const route = useRoute();
 const router = useRouter();
 

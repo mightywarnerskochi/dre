@@ -863,7 +863,8 @@ jQuery(function () {
       const $slider = jQuery(".js-property-detail-slider");
       if (!$slider.length) return;
       const slideSel = ".property-detail-gallery__slide";
-      if (!$slider.children(slideSel).length) return;
+      const slideCount = $slider.children(slideSel).length;
+      if (!slideCount) return;
       const sliderEl = $slider[0];
       const galleryRoot = sliderEl.closest(".property-detail-gallery");
 
@@ -905,16 +906,21 @@ jQuery(function () {
       }
 
       const fancyBtn = galleryRoot && galleryRoot.querySelector(".js-property-gallery-fancybox");
-      if (fancyBtn && typeof Fancybox !== "undefined") {
+      if (fancyBtn) {
         const fancyHandler = function (e) {
           e.preventDefault();
           const slider = galleryRoot.querySelector(".js-property-detail-slider");
           if (!slider) return;
-          const imgs = slider.querySelectorAll(".slick-slide:not(.slick-cloned) img");
+          const imgs = slider.querySelectorAll(
+            ".slick-slide:not(.slick-cloned) img, .property-detail-gallery__slide img"
+          );
           const slides = [];
+          const seenSrc = new Set();
           imgs.forEach(function (img) {
             const src = img.currentSrc || img.getAttribute("src");
             if (!src) return;
+            if (seenSrc.has(src)) return;
+            seenSrc.add(src);
             const alt = (img.getAttribute("alt") || "").trim();
             const item = { src: src, type: "image" };
             if (alt) item.caption = alt;
@@ -929,10 +935,32 @@ jQuery(function () {
               startIndex = 0;
             }
           }
-          Fancybox.show(slides, {
-            startIndex: startIndex,
-            Carousel: { infinite: true },
-          });
+          const fancyboxV4 = window.Fancybox || (typeof Fancybox !== "undefined" ? Fancybox : null);
+          if (fancyboxV4 && typeof fancyboxV4.show === "function") {
+            fancyboxV4.show(slides, {
+              startIndex: startIndex,
+              Carousel: { infinite: true },
+            });
+            return;
+          }
+
+          if (
+            typeof jQuery !== "undefined" &&
+            jQuery.fancybox &&
+            typeof jQuery.fancybox.open === "function"
+          ) {
+            const jqSlides = slides.map(function (slide) {
+              return {
+                src: slide.src,
+                type: "image",
+                opts: slide.caption ? { caption: slide.caption } : {},
+              };
+            });
+            jQuery.fancybox.open(jqSlides, { loop: true }, startIndex);
+            return;
+          }
+
+          window.open(slides[startIndex]?.src || slides[0].src, "_blank");
         };
         fancyBtn.addEventListener("click", fancyHandler);
         sliderEl.__dreFancyboxHandler = fancyHandler;
@@ -952,10 +980,10 @@ jQuery(function () {
     window.dreInitPropertyDetailGallerySlider();
   }
 
-  // --- Enquiry Modal logic ---
+  // --- Enquiry Modal logic (legacy DOM pages only; SPA uses ModalEnquiry.vue) ---
   const modalEl = document.getElementById('siteEnquiryForm');
-  
-  if (modalEl) {
+
+  if (modalEl && modalEl.getAttribute('data-enquiry-prefill') !== 'vue') {
     const propertyTitleInput = modalEl.querySelector('input[name="property_title"]');
     const locInput = modalEl.querySelector('input[name="location"]');
     const typeSelect = modalEl.querySelector('select[name="property_type"]');
@@ -981,9 +1009,9 @@ jQuery(function () {
 
       let sizeStr = '';
       const detailItems = card.querySelectorAll('.property-details__item span');
-      detailItems.forEach(span => {
+      detailItems.forEach((span) => {
         const txt = String(span.textContent || '').trim();
-        if (/ft|sq\s*ft/i.test(txt)) {
+        if (/ft|sq\s*ft|sqft|m²|sq\.?\s*m/i.test(txt)) {
           sizeStr = txt;
         }
       });
@@ -994,6 +1022,19 @@ jQuery(function () {
         type: typeEl ? typeEl.textContent.trim() : '',
         size: sizeStr,
       };
+    }
+
+    function extractFromTriggerData(triggerEl) {
+      if (!triggerEl || !triggerEl.dataset) return null;
+
+      const title = String(triggerEl.dataset.propertyTitle || '').trim();
+      const location = String(triggerEl.dataset.propertyLocation || '').trim();
+      const type = String(triggerEl.dataset.propertyType || '').trim();
+      const size = String(triggerEl.dataset.propertySize || '').trim();
+
+      if (!title && !location && !type && !size) return null;
+
+      return { title, location, type, size };
     }
 
     function extractFromDetailPage() {
@@ -1007,7 +1048,7 @@ jQuery(function () {
       let sizeStr = '';
       statSpans.forEach(span => {
         const txt = String(span.textContent || '').trim();
-        if (/ft|sq\s*ft/i.test(txt)) {
+        if (/ft|sq\s*ft|sqft|m²|sq\.?\s*m/i.test(txt)) {
           sizeStr = txt;
         }
       });
@@ -1029,7 +1070,7 @@ jQuery(function () {
     }
     
     function applyContextToModal(triggerEl) {
-      const context = extractFromCard(triggerEl) || extractFromDetailPage() || {
+      const context = extractFromTriggerData(triggerEl) || extractFromCard(triggerEl) || extractFromDetailPage() || {
         title: '',
         location: '',
         type: '',
@@ -1520,6 +1561,11 @@ function initializePhoneInput(selector, options) {
     });
   }
 }
+
+/** Called when #siteEnquiryForm is visible (e.g. from Vue ModalEnquiry `shown.bs.modal`). */
+window.dreInitSiteEnquiryPhone = function () {
+  initializePhoneInput("#siteEnquiryForm");
+};
 
 function contactPhone(selector, phoneInput) {
   let phoneNumber = phoneInput.getNumber(); // Get full international number

@@ -62,6 +62,7 @@
     "virtualTourTitle": "360 virtual tour",
     "photoGalleryAria": "Photo gallery",
     "photoNumberAria": "Photo {n}",
+    "photosCount": "{n} Photos",
     "sqftSuffix": "ft²",
     "rentals": "Rentals"
   },
