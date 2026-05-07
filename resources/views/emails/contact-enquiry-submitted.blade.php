@@ -4,10 +4,17 @@
         : ($logoUrl ?? asset('images/logo.png'));
     $extraFields = is_array($enquiry->extra_fields ?? null) ? $enquiry->extra_fields : [];
     $isProperty = data_get($extraFields, 'enquiry_type') === 'property';
+    $isBookViewing = data_get($extraFields, 'enquiry_type') === 'book_viewing';
     $categoryLabel = $isProperty ? 'Property Enquiry' : 'Contact Enquiry';
+    if ($isBookViewing) {
+        $categoryLabel = 'Book a Viewing Enquiry';
+    }
     $introText = $isProperty
         ? 'A visitor submitted the property enquiry popup on the website.'
         : 'A visitor submitted the contact form on the website.';
+    if ($isBookViewing) {
+        $introText = 'A visitor submitted the book a viewing form on the website.';
+    }
     $rows = [
         'Name' => $enquiry->name,
         'Email' => $enquiry->email,
@@ -18,9 +25,15 @@
         'Page URL' => $enquiry->page_url,
         'Submitted at' => optional($enquiry->created_at)->timezone(config('app.timezone'))->format('d M Y, h:i A'),
     ];
+    if ($isProperty || $isBookViewing) {
+        unset($rows['Country'], $rows['Page Source'], $rows['Page URL']);
+    }
     $extraRows = [];
     foreach ($extraFields as $key => $value) {
         if (!filled($value) || in_array($key, ['subject', 'enquiry_type'], true)) {
+            continue;
+        }
+        if (($isProperty || $isBookViewing) && in_array($key, ['phone_dial_code', 'phone_national', 'phone_country_iso2', 'phone_country_name'], true)) {
             continue;
         }
         $label = str($key)->replace('_', ' ')->title()->toString();
@@ -67,7 +80,7 @@
                                 @endforeach
                             </table>
 
-                            @if(filled($enquiry->message))
+                            @if(!$isProperty && filled($enquiry->message))
                                 <div style="margin-top:24px;">
                                     <h2 style="margin:0 0 10px; font-size:16px; color:#0a1119;">Message</h2>
                                     <div style="padding:16px; background:#f8fafc; border:1px solid #e6ebf2; border-radius:8px; color:#233044; font-size:14px; line-height:1.7;">

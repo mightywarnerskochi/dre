@@ -63,7 +63,7 @@
 
             <div v-else class="career-openings__list" role="list">
                 <article
-                    v-for="job in filteredVacancies"
+                    v-for="job in displayedVacancies"
                     :key="job.id"
                     class="career-job-card"
                     role="listitem"
@@ -118,20 +118,30 @@
                     </RouterLink>
                 </article>
             </div>
+            <div
+                v-if="hasMoreVacancies"
+                ref="loadMoreSentinel"
+                class="career-load-sentinel"
+                aria-hidden="true"
+            />
         </div>
     </section>
 </template>
 
 <script setup>
-import { computed, reactive, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
 import { getCareersPublicData } from '@/utils/publicContent';
 
 const { locale, t } = useI18n({ useScope: 'global' });
+const PAGE_SIZE = 6;
 
 const careers = computed(() => getCareersPublicData(locale.value));
 const fallbackLocationIcon = asset('public/images/career-location-placeholder.svg');
+const visibleCount = ref(PAGE_SIZE);
+const loadMoreSentinel = ref(null);
+let loadMoreObserver = null;
 
 const heroImageSrc = computed(() => {
     const u = careers.value.heroBackgroundImage;
@@ -160,6 +170,7 @@ function applyFilters() {
     careers.value.filters.forEach((f) => {
         committed[f.key] = selections[f.key] ?? '';
     });
+    visibleCount.value = PAGE_SIZE;
 }
 
 function onLocationIconError(event) {
@@ -199,6 +210,70 @@ const filteredVacancies = computed(() => {
     }
     return list.filter((job) => vacancyMatches(job));
 });
+const displayedVacancies = computed(() => filteredVacancies.value.slice(0, visibleCount.value));
+const hasMoreVacancies = computed(() => visibleCount.value < filteredVacancies.value.length);
+
+function loadNextPage() {
+    if (!hasMoreVacancies.value) {
+        return;
+    }
+    visibleCount.value = Math.min(visibleCount.value + PAGE_SIZE, filteredVacancies.value.length);
+}
+
+function disconnectObserver() {
+    if (loadMoreObserver) {
+        loadMoreObserver.disconnect();
+        loadMoreObserver = null;
+    }
+}
+
+function initLoadMoreObserver() {
+    disconnectObserver();
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+        return;
+    }
+    const target = loadMoreSentinel.value;
+    if (!target || !hasMoreVacancies.value) {
+        return;
+    }
+    loadMoreObserver = new IntersectionObserver(
+        (entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+                loadNextPage();
+            }
+        },
+        { root: null, rootMargin: '240px 0px', threshold: 0 },
+    );
+    loadMoreObserver.observe(target);
+}
+
+watch(locale, async () => {
+    visibleCount.value = PAGE_SIZE;
+    await nextTick();
+    initLoadMoreObserver();
+});
+
+watch(filteredVacancies, async () => {
+    if (visibleCount.value > filteredVacancies.value.length) {
+        visibleCount.value = Math.min(PAGE_SIZE, filteredVacancies.value.length);
+    }
+    await nextTick();
+    initLoadMoreObserver();
+});
+
+watch(hasMoreVacancies, async () => {
+    await nextTick();
+    initLoadMoreObserver();
+});
+
+onMounted(async () => {
+    await nextTick();
+    initLoadMoreObserver();
+});
+
+onBeforeUnmount(() => {
+    disconnectObserver();
+});
 
 function formatDate(iso) {
     if (!iso) {
@@ -209,3 +284,10 @@ function formatDate(iso) {
     return new Intl.DateTimeFormat(loc, { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
 }
 </script>
+
+<style scoped>
+.career-load-sentinel {
+    width: 100%;
+    height: 1px;
+}
+</style>

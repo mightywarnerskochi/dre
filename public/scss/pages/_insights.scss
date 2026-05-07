@@ -251,8 +251,14 @@ display: flex;
 flex-wrap: wrap;
 gap: 10px;
       }
+      @include max(575){
+        display: block;
+      }
     }
     li{
+      @include max(575){
+        width: 100%;
+      }
       @include min-max(575,991){
         width: 48%;
       }
@@ -267,6 +273,9 @@ gap: 10px;
   
       }
       +li{
+          @include max(575){
+            margin-top: 10px;
+          }
           @include min(992){
             margin-top: clamp(10px, 1.88vw, 16px);
           }

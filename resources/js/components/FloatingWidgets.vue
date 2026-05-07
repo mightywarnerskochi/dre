@@ -2,8 +2,21 @@
     <!-- Floating Widgets -->
 
     <!-- Share Button -->
-    <div v-if="hasShareIcons" class="sticky-share" id="stickyShare" role="complementary" :aria-label="t('floating.sharePanelAria')">
-        <div class="sticky-share__panel" id="stickySharePanel" role="list" :aria-label="t('floating.shareListAria')">
+    <div
+        v-if="hasShareIcons"
+        ref="shareRootRef"
+        class="sticky-share"
+        id="stickyShare"
+        role="complementary"
+        :aria-label="t('floating.sharePanelAria')"
+    >
+        <div
+            class="sticky-share__panel"
+            :class="{ 'is-open': isShareOpen }"
+            id="stickySharePanel"
+            role="list"
+            :aria-label="t('floating.shareListAria')"
+        >
             <a
                 v-if="socialHref('facebook')"
                 :href="socialHref('facebook')"
@@ -119,7 +132,7 @@
                     />
                 </svg>
             </a>
-            <button class="sticky-share__close" id="stickyShareClose" :aria-label="t('floating.closeShare')" type="button">
+            <button class="sticky-share__close" id="stickyShareClose" :aria-label="t('floating.closeShare')" type="button" @click="closeSharePanel">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                     <path
                         d="M18 6L6 18M6 6L18 18"
@@ -134,10 +147,11 @@
         <button
             class="sticky-share__trigger"
             id="stickyShareTrigger"
-            aria-expanded="false"
+            :aria-expanded="isShareOpen ? 'true' : 'false'"
             aria-controls="stickySharePanel"
             :aria-label="t('floating.shareTriggerAria')"
             type="button"
+            @click="toggleSharePanel"
         >
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -179,7 +193,7 @@
 </template>
 
 <script setup>
-import { computed, inject } from 'vue';
+import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
 import { getPublicSiteBoot } from '@/utils/publicSite';
@@ -188,6 +202,8 @@ const { t } = useI18n();
 
 const injected = inject('dreSite', null);
 const dreSite = injected ?? computed(() => getPublicSiteBoot());
+const shareRootRef = ref(null);
+const isShareOpen = ref(false);
 
 const socialMap = computed(() => {
     const rows = Array.isArray(dreSite.value?.social) ? dreSite.value.social : [];
@@ -210,12 +226,12 @@ function whatsappHref(raw) {
     if (value === '' || value === '#') {
         return null;
     }
+    if (/^https?:\/\//i.test(value)) {
+        return value;
+    }
     const digits = value.replace(/\D+/g, '');
     if (digits !== '') {
         return `https://wa.me/${digits}`;
-    }
-    if (/^https?:\/\//i.test(value)) {
-        return value;
     }
 
     return `https://${value}`;
@@ -224,4 +240,42 @@ function whatsappHref(raw) {
 const whatsAppSocialHref = computed(() => whatsappHref(socialHref('whatsapp')) ?? whatsappHref(dreSite.value?.whatsappNumber));
 const whatsAppChatHref = computed(() => whatsappHref(dreSite.value?.whatsappNumber) ?? whatsAppSocialHref.value);
 const hasShareIcons = computed(() => ['facebook', 'twitter', 'linkedin', 'instagram', 'youtube'].some((network) => !!socialHref(network)) || !!whatsAppSocialHref.value);
+
+function closeSharePanel() {
+    isShareOpen.value = false;
+}
+
+function toggleSharePanel() {
+    isShareOpen.value = !isShareOpen.value;
+}
+
+function handleDocumentClick(event) {
+    if (!isShareOpen.value) {
+        return;
+    }
+    const root = shareRootRef.value;
+    if (!root) {
+        return;
+    }
+    if (event.target instanceof Node && root.contains(event.target)) {
+        return;
+    }
+    closeSharePanel();
+}
+
+function handleEscape(event) {
+    if (event.key === 'Escape') {
+        closeSharePanel();
+    }
+}
+
+onMounted(() => {
+    document.addEventListener('click', handleDocumentClick);
+    document.addEventListener('keydown', handleEscape);
+});
+
+onBeforeUnmount(() => {
+    document.removeEventListener('click', handleDocumentClick);
+    document.removeEventListener('keydown', handleEscape);
+});
 </script>

@@ -45,7 +45,18 @@
                                 </div>
                                 <div class="col--6">
                                     <label class="visually-hidden" for="contact-phone">{{ t('contact.form.phone') }}</label>
-                                    <input v-model="form.phone" class="form-control phone_number" :class="{ 'is-invalid': fieldErrors.phone || fieldErrors.phone_national || fieldErrors.phone_dial_code }" type="tel"  name="phone" id="contact-phone" :placeholder="t('contact.form.phone')" autocomplete="tel" required>
+                                    <!-- v-model omitted: intl-tel-input owns the value; Vue re-renders would reset the country selector -->
+                                    <input
+                                        ref="contactPhoneInput"
+                                        class="form-control phone_number"
+                                        :class="{ 'is-invalid': fieldErrors.phone || fieldErrors.phone_national || fieldErrors.phone_dial_code }"
+                                        type="tel"
+                                        name="phone"
+                                        id="contact-phone"
+                                        :placeholder="t('contact.form.phone')"
+                                        autocomplete="tel"
+                                        required
+                                    >
                                     <div v-if="fieldErrors.phone || fieldErrors.phone_national || fieldErrors.phone_dial_code" class="invalid-feedback d-block">{{ fieldErrors.phone || fieldErrors.phone_national || fieldErrors.phone_dial_code }}</div>
                                 </div>
                                 <div class="col--6">
@@ -160,7 +171,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import axios from 'axios';
@@ -176,6 +187,8 @@ const submitting = ref(false);
 const fieldErrors = ref({});
 const formBanner = ref('');
 const recaptchaToken = ref('');
+
+const contactPhoneInput = ref(null);
 
 const form = reactive({
     name: '',
@@ -264,7 +277,7 @@ function applyServerErrors(errors) {
 }
 
 function extractContactPhone() {
-    const input = document.querySelector('.contact-form .phone_number');
+    const input = contactPhoneInput.value || document.querySelector('.contact-form .phone_number');
     if (!input || typeof window.intlTelInputGlobals?.getInstance !== 'function') {
         const raw = String(input?.value ?? form.phone ?? '').trim();
         return { dial: '', national: '', full: raw, iso2: '', countryName: '' };
@@ -384,6 +397,15 @@ async function submitContactForm() {
             },
         });
         Object.assign(form, { name: '', email: '', phone: '', subject: '', message: '' });
+        const telInput = contactPhoneInput.value;
+        const iti = telInput && window.intlTelInputGlobals?.getInstance?.(telInput);
+        if (iti) {
+            try {
+                iti.setNumber('');
+            } catch (_e) {
+                /* noop */
+            }
+        }
         await router.push({ name: 'thank-you' });
     } catch (e) {
         if (e.message === 'recaptcha-not-loaded') {
@@ -402,4 +424,45 @@ async function submitContactForm() {
         submitting.value = false;
     }
 }
+
+function destroyContactIntlPhone() {
+    const input = contactPhoneInput.value;
+    if (!input || typeof window.intlTelInputGlobals?.getInstance !== 'function') {
+        return;
+    }
+    const iti = window.intlTelInputGlobals.getInstance(input);
+    if (iti) {
+        try {
+            iti.destroy();
+        } catch (_e) {
+            /* noop */
+        }
+    }
+}
+
+function initContactIntlPhone() {
+    if (typeof window.dreInitContactFormPhone === 'function') {
+        window.dreInitContactFormPhone();
+    }
+}
+
+onMounted(() => {
+    nextTick(() => {
+        requestAnimationFrame(() => {
+            initContactIntlPhone();
+        });
+    });
+});
+
+watch(locale, () => {
+    nextTick(() => {
+        requestAnimationFrame(() => {
+            initContactIntlPhone();
+        });
+    });
+});
+
+onBeforeUnmount(() => {
+    destroyContactIntlPhone();
+});
 </script>

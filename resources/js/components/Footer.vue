@@ -21,8 +21,8 @@
                     <div class="site-footer__col">
                         <p class="site-footer__heading">{{ t('footer.ourCompany') }}</p>
                         <ul class="site-footer__links">
-                            <li><RouterLink :to="{ name: 'our-property' }">{{ t('footer.coSale') }}</RouterLink></li>
-                            <li><RouterLink :to="{ name: 'our-property' }">{{ t('footer.coRent') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'our-property', query: { listing_type: 'sale' } }">{{ t('footer.coSale') }}</RouterLink></li>
+                            <li><RouterLink :to="{ name: 'our-property', query: { listing_type: 'rent' } }">{{ t('footer.coRent') }}</RouterLink></li>
                             <li><RouterLink :to="{ name: 'book-a-viewing' }">{{ t('footer.coBooking') }}</RouterLink></li>
                             <li><RouterLink :to="{ name: 'our-property' }">{{ t('footer.coAll') }}</RouterLink></li>
                         </ul>

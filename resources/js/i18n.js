@@ -34,7 +34,17 @@ function runtimeLocaleMessages() {
 function resolveMessages() {
     const runtimeMessages = runtimeLocaleMessages();
     const bundledMessages = bundledLocaleMessages();
-    const merged = { ...bundledMessages, ...(runtimeMessages ?? {}) };
+    const merged = { ...bundledMessages };
+
+    if (runtimeMessages) {
+        Object.entries(runtimeMessages).forEach(([code, payload]) => {
+            const base = bundledMessages[code] && typeof bundledMessages[code] === 'object'
+                ? bundledMessages[code]
+                : {};
+            const runtime = payload && typeof payload === 'object' ? payload : {};
+            merged[code] = { ...base, ...runtime };
+        });
+    }
 
     if (!merged.en || typeof merged.en !== 'object') {
         merged.en = {};

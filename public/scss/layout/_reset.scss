@@ -1476,17 +1476,26 @@ html[dir="rtl"]{
       flex-direction: row-reverse;
     }
   }
-  .banner-search .search-form{
-    span{
+  /* Hero search strip: keep horizontal order location → filters → search (industry standard).
+     Page is RTL but the form uses dir="ltr" in markup; isolate so nested rules don't flip the row. */
+  .banner-search .search-form {
+    direction: ltr;
+    unicode-bidi: isolate;
+    span {
       text-align: right;
-
     }
-    > div{
+    .search-field--location {
       flex-direction: row-reverse;
     }
-    .search-field--location{
+  }
+  .banner-search .search-results-dropdown {
+    text-align: right;
+    .search-results-title {
+      text-align: right;
+    }
+    .search-results-item {
+      text-align: right;
       flex-direction: row-reverse;
-
     }
   }
   .banner-search .search-field.dropdown > .dropdown-trigger{

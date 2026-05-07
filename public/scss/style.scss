@@ -1,3 +1,5 @@
+/*! Site stylesheet: compile from public/scss/style.scss (and partials). Do not edit public/scss/style.css by hand — it is overwritten by Sass. npm run sass:build / sass:watch */
+
 // Helpers
 @import "../scss/helpers/variables";
 @import "../scss/helpers/media-queries";

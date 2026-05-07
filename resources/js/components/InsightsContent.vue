@@ -24,11 +24,11 @@
             </div>
         </section>
 
-        <section v-if="insightsItems.length" class="insights-section commonPadding-120" aria-labelledby="insights-heading">
+        <section v-if="displayedInsights.length" class="insights-section commonPadding-120" aria-labelledby="insights-heading">
             <div class="container-ctn">
                 <h2 id="insights-heading" class="visually-hidden">Latest articles</h2>
                 <ul class="insights-grid">
-                    <li v-for="item in insightsItems" :key="item.id">
+                    <li v-for="item in displayedInsights" :key="item.id">
                         <article class="insight-card">
                             <RouterLink class="insight-card__link" :to="{ name: 'insights-details', params: { slug: item.slug } }">
                                 <div class="insight-card__media">
@@ -57,13 +57,19 @@
                         </article>
                     </li>
                 </ul>
+                <div
+                    v-if="hasMoreInsights"
+                    ref="loadMoreSentinel"
+                    class="insights-load-sentinel"
+                    aria-hidden="true"
+                />
             </div>
         </section>
     </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
@@ -71,10 +77,70 @@ import { getInsightsListingData } from '@/utils/publicContent';
 
 const { locale } = useI18n({ useScope: 'global' });
 const dummyImage = asset('public/images/news/blog-placeholder-new.png');
+const PAGE_SIZE = 6;
+const visibleCount = ref(PAGE_SIZE);
+const loadMoreSentinel = ref(null);
+let loadMoreObserver = null;
 
 const data = computed(() => getInsightsListingData(locale.value));
 const heading = computed(() => data.value.listingTitle || data.value.title || 'Insights');
 const insightsItems = computed(() => data.value.items);
+const displayedInsights = computed(() => insightsItems.value.slice(0, visibleCount.value));
+const hasMoreInsights = computed(() => visibleCount.value < insightsItems.value.length);
+
+function loadNextPage() {
+    if (!hasMoreInsights.value) {
+        return;
+    }
+    visibleCount.value = Math.min(visibleCount.value + PAGE_SIZE, insightsItems.value.length);
+}
+
+function disconnectObserver() {
+    if (loadMoreObserver) {
+        loadMoreObserver.disconnect();
+        loadMoreObserver = null;
+    }
+}
+
+function initLoadMoreObserver() {
+    disconnectObserver();
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) {
+        return;
+    }
+    const target = loadMoreSentinel.value;
+    if (!target || !hasMoreInsights.value) {
+        return;
+    }
+    loadMoreObserver = new IntersectionObserver(
+        (entries) => {
+            if (entries.some((entry) => entry.isIntersecting)) {
+                loadNextPage();
+            }
+        },
+        { root: null, rootMargin: '240px 0px', threshold: 0 },
+    );
+    loadMoreObserver.observe(target);
+}
+
+watch(locale, async () => {
+    visibleCount.value = PAGE_SIZE;
+    await nextTick();
+    initLoadMoreObserver();
+});
+
+watch(hasMoreInsights, async () => {
+    await nextTick();
+    initLoadMoreObserver();
+});
+
+onMounted(async () => {
+    await nextTick();
+    initLoadMoreObserver();
+});
+
+onBeforeUnmount(() => {
+    disconnectObserver();
+});
 
 function formatDate(raw) {
     if (!raw) return '';
@@ -94,3 +160,10 @@ function onImgError(event) {
     }
 }
 </script>
+
+<style scoped>
+.insights-load-sentinel {
+    width: 100%;
+    height: 1px;
+}
+</style>

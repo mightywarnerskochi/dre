@@ -217,20 +217,23 @@
 
                     @if(config('cms-kit.common.modules.enquiries', true) && $cmsUser->can('enquiries.view'))
                     <div class="nav-item sidebar-group">
-                        <a class="nav-link d-flex align-items-center sidebar-group-toggle @if(request()->routeIs('cms.enquiries.*') || request()->routeIs('cms.form-enquiries.*') || request()->routeIs('cms.property-enquiries.*') || request()->routeIs('cms.newsletter-signups.*')) active @endif" 
+                        <a class="nav-link d-flex align-items-center sidebar-group-toggle @if(request()->routeIs('cms.enquiries.*') || request()->routeIs('cms.form-enquiries.*') || request()->routeIs('cms.property-enquiries.*') || request()->routeIs('cms.book-viewing-enquiries.*') || request()->routeIs('cms.newsletter-signups.*')) active @endif" 
                            data-bs-toggle="collapse" href="#enquiryMenu" role="button" 
-                           aria-expanded="@if(request()->routeIs('cms.enquiries.*') || request()->routeIs('cms.form-enquiries.*') || request()->routeIs('cms.property-enquiries.*') || request()->routeIs('cms.newsletter-signups.*')) true @else false @endif">
+                           aria-expanded="@if(request()->routeIs('cms.enquiries.*') || request()->routeIs('cms.form-enquiries.*') || request()->routeIs('cms.property-enquiries.*') || request()->routeIs('cms.book-viewing-enquiries.*') || request()->routeIs('cms.newsletter-signups.*')) true @else false @endif">
                             <i class="fas fa-envelope"></i>
                             <span>Enquiries</span>
                             <i class="fas fa-chevron-down ms-auto sidebar-chevron"></i>
                         </a>
-                        <div class="collapse sidebar-submenu @if(request()->routeIs('cms.enquiries.*') || request()->routeIs('cms.form-enquiries.*') || request()->routeIs('cms.property-enquiries.*') || request()->routeIs('cms.newsletter-signups.*')) show @endif" id="enquiryMenu">
+                        <div class="collapse sidebar-submenu @if(request()->routeIs('cms.enquiries.*') || request()->routeIs('cms.form-enquiries.*') || request()->routeIs('cms.property-enquiries.*') || request()->routeIs('cms.book-viewing-enquiries.*') || request()->routeIs('cms.newsletter-signups.*')) show @endif" id="enquiryMenu">
                             <nav class="nav flex-column">
                                 <a class="nav-link py-2 @if(request()->routeIs('cms.form-enquiries.*') || request()->routeIs('cms.enquiries.*')) active @endif" href="{{ route('cms.form-enquiries.index') }}">
                                     Form Enquiries
                                 </a>
                                 <a class="nav-link py-2 @if(request()->routeIs('cms.property-enquiries.*')) active @endif" href="{{ route('cms.property-enquiries.index') }}">
                                     Properties Enquiries
+                                </a>
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.book-viewing-enquiries.*')) active @endif" href="{{ route('cms.book-viewing-enquiries.index') }}">
+                                    Book Viewing Enquiries
                                 </a>
                                 @if(config('cms-kit.common.modules.newsletter-signups', true) && $cmsUser->can('newsletter.view'))
                                 <a class="nav-link py-2 @if(request()->routeIs('cms.newsletter-signups.*')) active @endif" href="{{ route('cms.newsletter-signups.index') }}">

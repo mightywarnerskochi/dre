@@ -276,6 +276,7 @@ function collectFilterParams() {
     const out = { ...route.query };
 
     if (provided.location) out.location = provided.location;
+    if (provided.listing_type) out.listing_type = provided.listing_type;
     if (provided.property_type) out.type = provided.property_type;
     if (provided.categories) out.category = provided.categories;
     if (provided.sort) out.sort = provided.sort;

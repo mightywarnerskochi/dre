@@ -13,7 +13,7 @@ function assignBootObject(key, value) {
     window[key] = value;
 }
 
-/** Site contact data is loaded only from the bootstrap API (not inlined in HTML or cached). */
+/** Site contact data: merge `/api/public/bootstrap` with SSR-inlined `window.__DRE_SITE__` from app.blade.php. */
 function assignSitePublic(data) {
     window.__DRE_SITE__ =
         data && typeof data === 'object' && !Array.isArray(data) ? data : {};
@@ -66,7 +66,9 @@ async function hydrateBootPayload() {
     const endpoint = String(window.__DRE_BOOT_ENDPOINT__ || '/api/public/bootstrap').trim();
 
     if (endpoint === '') {
-        assignSitePublic(null);
+        if (!window.__DRE_SITE__ || typeof window.__DRE_SITE__ !== 'object' || Array.isArray(window.__DRE_SITE__)) {
+            assignSitePublic({});
+        }
         if (cached) {
             assignBootObject('__DRE_CONTENT__', cached.contentPublic);
             assignBootObject('__DRE_I18N__', cached.i18nMessages);
@@ -99,7 +101,9 @@ async function hydrateBootPayload() {
             writeBootCache(payload.contentPublic || {}, payload.i18nMessages || {});
         }
     } catch (_error) {
-        assignSitePublic(null);
+        if (!window.__DRE_SITE__ || typeof window.__DRE_SITE__ !== 'object' || Array.isArray(window.__DRE_SITE__)) {
+            assignSitePublic({});
+        }
         if (
             cached &&
             cached.contentPublic &&

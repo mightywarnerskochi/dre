@@ -93,6 +93,10 @@ class PropertyPageController extends Controller
             $query->where('property_type', $request->query('type'));
         }
 
+        if ($request->filled('listing_type')) {
+            $query->where('listing_type', (string) $request->query('listing_type'));
+        }
+
         if ($request->filled('category')) {
             $query->where('category', $request->query('category'));
         }
@@ -987,8 +991,8 @@ class PropertyPageController extends Controller
                 [
                     'title' => 'Our Company',
                     'links' => [
-                        ['label' => 'Property for Sale', 'href' => url('/properties')],
-                        ['label' => 'Property for Rent', 'href' => url('/properties')],
+                        ['label' => 'Property for Sale', 'href' => url('/properties?listing_type=sale')],
+                        ['label' => 'Property for Rent', 'href' => url('/properties?listing_type=rent')],
                         ['label' => 'Tenant Portal', 'href' => url('/').'#contact'],
                     ],
                 ],

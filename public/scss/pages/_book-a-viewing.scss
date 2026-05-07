@@ -39,15 +39,14 @@
     gap: clamp(15px, 1.1vw, 31px) 0;
   
   }
-  .d-flex,  .book-viewing-form__field {
-    width:100%;
-    @include min(992){
-      width:48.562%;
-
+  .book-viewing-form__col {
+    width: 100%;
+    @include min(992) {
+      width: 48.562%;
     }
-
   }
   .book-viewing-form__field {
+    width: 100%;
     border-radius: 5px;
     border: 1px solid #C9C9C9;
     background: #FFF;
@@ -70,6 +69,16 @@
     &:focus {
       border-color: #b7c4d8;
     }
+  }
+
+  /* Keep intl-tel-input from collapsing the phone field width. */
+  .iti {
+    width: 100%;
+    display: block;
+  }
+
+  .iti .book-viewing-form__field {
+    width: 100%;
   }
 
   .book-viewing-form__field-wrap {

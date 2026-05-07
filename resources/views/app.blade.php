@@ -156,6 +156,9 @@
         window.__DRE_BOOT_ENDPOINT__ = @json(url('/api/public/bootstrap'));
     </script>
     <script>
+        window.__DRE_SITE__ = @json($dreSitePublic);
+    </script>
+    <script>
         window.__DRE_RECAPTCHA_SITE_KEY__ = @json(config('services.recaptcha.site_key'));
         window.__DRE_RECAPTCHA_ENABLED__ = @json((bool) config('services.recaptcha.enabled'));
     </script>

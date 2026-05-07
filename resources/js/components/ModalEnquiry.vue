@@ -17,7 +17,7 @@
                     type="button"
                     class="btn-close"
                     data-bs-dismiss="modal"
-                    aria-label="Close"
+                    :aria-label="t('modalEnquiry.form.close')"
                     id="siteEnquiryFormClose"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 17 17" fill="none">
@@ -34,7 +34,7 @@
 
                 <div class="modal-body p-0">
                     <form class="enquiry-form border-0 bg-white" @submit.prevent="submitPropertyEnquiry">
-                        <h3 class="mb-4">Enquire Now</h3>
+                        <h3 class="mb-4">{{ t('modalEnquiry.title') }}</h3>
 
                         <div class="form-row d-flex flex-wrap">
                             <div class="form-group">
@@ -42,7 +42,7 @@
                                     v-model.trim="form.name"
                                     type="text"
                                     name="name"
-                                    placeholder="Name"
+                                    :placeholder="t('modalEnquiry.form.name')"
                                     :class="{ 'is-invalid': fieldErrors.name }"
                                     required
                                 />
@@ -55,7 +55,7 @@
                                     type="tel"
                                     name="phone"
                                     class="phone_number"
-                                    placeholder="Phone"
+                                    :placeholder="t('modalEnquiry.form.phone')"
                                     :class="{ 'is-invalid': fieldErrors.phone || fieldErrors.phone_national || fieldErrors.phone_dial_code }"
                                     required
                                 />
@@ -69,7 +69,7 @@
                                     v-model.trim="form.email"
                                     type="email"
                                     name="email"
-                                    placeholder="Email"
+                                    :placeholder="t('modalEnquiry.form.email')"
                                     :class="{ 'is-invalid': fieldErrors.email }"
                                     required
                                 />
@@ -81,8 +81,8 @@
                                     v-model.trim="form.property_title"
                                     type="text"
                                     name="property_title"
-                                    placeholder="Property Name"
-                                    readonly
+                                    :placeholder="t('modalEnquiry.form.propertyName')"
+                                    :readonly="prefillLocks.title"
                                 />
                             </div>
                             <div class="form-group">
@@ -91,7 +91,7 @@
                                     v-model.trim="form.location"
                                     type="text"
                                     name="location"
-                                    placeholder="Property Location"
+                                    :placeholder="t('modalEnquiry.form.propertyLocation')"
                                     :disabled="prefillLocks.location"
                                     :class="{ 'is-invalid': fieldErrors.location }"
                                     required
@@ -99,21 +99,63 @@
                                 <div v-if="fieldErrors.location" class="invalid-feedback d-block">{{ fieldErrors.location }}</div>
                             </div>
 
-                            <div class="form-group">
-                                <select
-                                    ref="propertyTypeInputEl"
-                                    v-model="form.property_type"
-                                    name="property_type"
-                                    :disabled="prefillLocks.type"
-                                    :class="{ 'is-invalid': fieldErrors.property_type }"
-                                    required
+                            <div
+                                ref="propertyTypeDropRef"
+                                class="form-group enquiry-form__select-field enquiry-form__property-type"
+                                :class="{ 'is-open': propertyTypeMenuOpen }"
+                            >
+                                <button
+                                    type="button"
+                                    class="enquiry-form__type-trigger"
+                                    :class="{
+                                        'is-invalid': fieldErrors.property_type,
+                                        'enquiry-form__select--placeholder': !form.property_type,
+                                        'is-open': propertyTypeMenuOpen,
+                                    }"
+                                    :disabled="prefillLocks.type || propertyTypesLoading"
+                                    :aria-expanded="propertyTypeMenuOpen ? 'true' : 'false'"
+                                    aria-haspopup="listbox"
+                                    :aria-label="t('listing.selectPropertyType')"
+                                    @click.stop="togglePropertyTypeMenu"
                                 >
-                                    <option value="" disabled hidden>Property Type</option>
-                                    <option value="apartment">Apartment</option>
-                                    <option value="villa">Villa</option>
-                                    <option value="townhouse">Townhouse</option>
-                                    <option value="plot">Plot</option>
-                                </select>
+                                    <span class="enquiry-form__type-trigger-text">{{ selectedPropertyTypeDisplay }}</span>
+                                    <svg
+                                        class="enquiry-form__type-chevron"
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        aria-hidden="true"
+                                    >
+                                        <path
+                                            d="M6 9L12 15L18 9"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                        />
+                                    </svg>
+                                </button>
+                                <div
+                                    v-show="propertyTypeMenuOpen"
+                                    class="enquiry-form__type-menu"
+                                    role="listbox"
+                                    :aria-label="t('listing.propertyTypeHeading')"
+                                >
+                                    <button
+                                        v-for="opt in propertyTypeOptions"
+                                        :key="opt.value"
+                                        type="button"
+                                        class="enquiry-form__type-menu-item"
+                                        :class="{ 'is-active': form.property_type === opt.value }"
+                                        role="option"
+                                        :aria-selected="form.property_type === opt.value ? 'true' : 'false'"
+                                        @click.stop="selectPropertyType(opt.value)"
+                                    >
+                                        {{ opt.label }}
+                                    </button>
+                                </div>
                                 <div v-if="fieldErrors.property_type" class="invalid-feedback d-block">{{ fieldErrors.property_type }}</div>
                             </div>
                             <div class="form-group">
@@ -122,7 +164,7 @@
                                     v-model.trim="form.property_size"
                                     type="text"
                                     name="property_size"
-                                    placeholder="Property Size"
+                                    :placeholder="t('modalEnquiry.form.propertySize')"
                                     :disabled="prefillLocks.size"
                                     :class="{ 'is-invalid': fieldErrors.property_size }"
                                     required
@@ -136,12 +178,12 @@
 
                         <div class="form-action">
                             <button type="submit" class="btn-theme" :disabled="submitting">
-                                {{ submitting ? 'Please wait...' : 'Send Enquiry' }}
+                                {{ submitting ? t('modalEnquiry.form.pleaseWait') : t('modalEnquiry.form.submit') }}
                             </button>
                         </div>
 
                         <div class="form-footer">
-                            <p>Our team will contact you within 24 hours.</p>
+                            <p>{{ t('modalEnquiry.form.footerNote') }}</p>
                         </div>
                     </form>
                 </div>
@@ -151,19 +193,23 @@
 </template>
 
 <script setup>
-import { nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 
 const router = useRouter();
 const route = useRoute();
+const { locale, t } = useI18n({ useScope: 'global' });
 
 const modalRoot = ref(null);
 const phoneInputEl = ref(null);
 const propertyTitleInputEl = ref(null);
 const locationInputEl = ref(null);
-const propertyTypeInputEl = ref(null);
+const propertyTypeDropRef = ref(null);
 const propertySizeInputEl = ref(null);
+
+const propertyTypeMenuOpen = ref(false);
 
 const submitting = ref(false);
 const fieldErrors = ref({});
@@ -181,10 +227,73 @@ const form = reactive({
 });
 
 const prefillLocks = reactive({
+    title: false,
     location: false,
     size: false,
     type: false,
 });
+
+const propertyTypeOptions = ref([]);
+const propertyTypesLoading = ref(false);
+
+const selectedPropertyTypeDisplay = computed(() => {
+    if (propertyTypesLoading.value) {
+        return t('common.loading');
+    }
+    if (!form.property_type) {
+        return t('listing.selectPropertyType');
+    }
+    const o = propertyTypeOptions.value.find((x) => x.value === form.property_type);
+    return o?.label ?? form.property_type;
+});
+
+function togglePropertyTypeMenu() {
+    if (prefillLocks.type || propertyTypesLoading.value) {
+        return;
+    }
+    propertyTypeMenuOpen.value = !propertyTypeMenuOpen.value;
+}
+
+function selectPropertyType(value) {
+    form.property_type = value;
+    propertyTypeMenuOpen.value = false;
+}
+
+function closePropertyTypeMenuOnOutsideClick(event) {
+    const root = propertyTypeDropRef.value;
+    if (!root || !propertyTypeMenuOpen.value) {
+        return;
+    }
+    const target = event.target;
+    if (target instanceof Node && root.contains(target)) {
+        return;
+    }
+    propertyTypeMenuOpen.value = false;
+}
+
+let propertyTypesLoadPromise = null;
+
+async function loadPropertyTypeOptions() {
+    if (propertyTypesLoadPromise) {
+        return propertyTypesLoadPromise;
+    }
+    propertyTypesLoadPromise = (async () => {
+        propertyTypesLoading.value = true;
+        try {
+            const { data } = await axios.get('/api/properties/filter-options', {
+                params: { lang: locale.value || 'en' },
+            });
+            const raw = Array.isArray(data?.property_types) ? data.property_types : [];
+            propertyTypeOptions.value = raw.filter((o) => o && String(o.value ?? '').trim() !== '');
+        } catch (_e) {
+            propertyTypeOptions.value = [];
+        } finally {
+            propertyTypesLoading.value = false;
+            propertyTypesLoadPromise = null;
+        }
+    })();
+    return propertyTypesLoadPromise;
+}
 
 function extractEnquiryFromTriggerDataset(triggerEl) {
     if (!triggerEl?.dataset) return null;
@@ -262,33 +371,31 @@ function extractEnquiryFromDetailMain() {
 
 function applyPropertyTypeFromLabel(typeLabelRaw) {
     const typeStr = String(typeLabelRaw || '').trim();
-    const sel = propertyTypeInputEl.value;
     if (!typeStr) {
         form.property_type = '';
         return;
     }
-    if (!sel) {
-        form.property_type = typeStr.toLowerCase();
-        return;
-    }
-
-    let matched = false;
-    Array.from(sel.options).forEach((opt) => {
-        if (opt.text.toLowerCase() === typeStr.toLowerCase()) {
-            form.property_type = opt.value;
-            matched = true;
+    const lower = typeStr.toLowerCase();
+    const opts = propertyTypeOptions.value;
+    for (const o of opts) {
+        const val = String(o.value ?? '').trim();
+        if (val.toLowerCase() === lower) {
+            form.property_type = val;
+            return;
         }
-    });
-    if (!matched) {
-        const value = typeStr.toLowerCase().replace(/\s+/g, '_');
-        const opt = new Option(typeStr, value);
-        sel.add(opt);
-        form.property_type = value;
+        const lab = String(o.label ?? '').trim().toLowerCase();
+        if (lab === lower) {
+            form.property_type = val;
+            return;
+        }
     }
+    form.property_type = typeStr.toLowerCase().replace(/\s+/g, '_');
 }
 
-function handleModalShow(e) {
+async function handleModalShow(e) {
     clearFieldErrors();
+    propertyTypeMenuOpen.value = false;
+    await loadPropertyTypeOptions();
     const trigger = e?.relatedTarget ?? lastEnquiryModalOpener ?? null;
     lastEnquiryModalOpener = null;
 
@@ -302,6 +409,7 @@ function handleModalShow(e) {
     form.property_size = ctx.size;
     applyPropertyTypeFromLabel(ctx.type);
 
+    prefillLocks.title = ctx.title !== '';
     prefillLocks.location = ctx.location !== '';
     prefillLocks.size = ctx.size !== '';
     prefillLocks.type = ctx.type !== '';
@@ -341,7 +449,6 @@ function syncFormFromDom() {
     form.phone = String(phoneInputEl.value?.value ?? form.phone ?? '').trim();
     form.property_title = String(propertyTitleInputEl.value?.value ?? form.property_title ?? '').trim();
     form.location = String(locationInputEl.value?.value ?? form.location ?? '').trim();
-    form.property_type = String(propertyTypeInputEl.value?.value ?? form.property_type ?? '').trim();
     form.property_size = String(propertySizeInputEl.value?.value ?? form.property_size ?? '').trim();
 }
 
@@ -445,47 +552,47 @@ function validateForm() {
 
     let ok = true;
     if (!form.name) {
-        fieldErrors.value.name = 'This field is required.';
+        fieldErrors.value.name = t('modalEnquiry.validation.required');
         ok = false;
     }
     if (!form.email) {
-        fieldErrors.value.email = 'This field is required.';
+        fieldErrors.value.email = t('modalEnquiry.validation.required');
         ok = false;
     } else if (!EMAIL_RE.test(form.email)) {
-        fieldErrors.value.email = 'Enter a valid email address.';
+        fieldErrors.value.email = t('modalEnquiry.validation.email');
         ok = false;
     }
     if (!form.location) {
-        fieldErrors.value.location = 'This field is required.';
+        fieldErrors.value.location = t('modalEnquiry.validation.required');
         ok = false;
     }
     if (!form.property_type) {
-        fieldErrors.value.property_type = 'This field is required.';
+        fieldErrors.value.property_type = t('modalEnquiry.validation.required');
         ok = false;
     }
     if (!form.property_size) {
-        fieldErrors.value.property_size = 'This field is required.';
+        fieldErrors.value.property_size = t('modalEnquiry.validation.required');
         ok = false;
     }
 
     const phone = extractPhone();
     if (!phone.dial || !/^[1-9]\d{0,4}$/.test(phone.dial)) {
-        fieldErrors.value.phone_dial_code = 'Select a valid country code.';
+        fieldErrors.value.phone_dial_code = t('modalEnquiry.validation.phoneDial');
         ok = false;
     }
     if (!phone.national || !/^\d{6,13}$/.test(phone.national)) {
-        fieldErrors.value.phone_national = 'Enter a phone number with 6 to 13 digits.';
+        fieldErrors.value.phone_national = t('modalEnquiry.validation.phoneNational');
         ok = false;
     }
 
     const pageSource = resolvePageSource();
     const pageUrl = resolvePageUrl();
     if (!pageSource) {
-        fieldErrors.value.page_source = 'Page source is required.';
+        fieldErrors.value.page_source = t('modalEnquiry.validation.pageSource');
         ok = false;
     }
     if (!pageUrl) {
-        fieldErrors.value.page_url = 'Page URL is required.';
+        fieldErrors.value.page_url = t('modalEnquiry.validation.pageUrl');
         ok = false;
     }
 
@@ -497,6 +604,7 @@ function buildPayload() {
     const phone = extractPhone();
 
     const payload = {
+        enquiry_type: 'property',
         name: form.name,
         email: form.email,
         phone: phone.full,
@@ -559,7 +667,7 @@ async function submitPropertyEnquiry() {
         await router.push({ name: 'thank-you' });
     } catch (e) {
         if (e.message === 'recaptcha-not-loaded') {
-            fieldErrors.value.recaptcha_token = 'Unable to verify reCAPTCHA. Please refresh and try again.';
+            fieldErrors.value.recaptcha_token = t('modalEnquiry.validation.recaptcha');
             return;
         }
         if (e.response?.status === 422) {
@@ -568,7 +676,7 @@ async function submitPropertyEnquiry() {
                 formBanner.value = String(e.response.data.message);
             }
         } else {
-            formBanner.value = 'Unable to submit now. Please try again.';
+            formBanner.value = t('modalEnquiry.validation.submitError');
         }
     } finally {
         submitting.value = false;
@@ -587,13 +695,22 @@ async function handleModalShown() {
 function handleModalHidden() {
     clearFieldErrors();
     resetForm();
+    propertyTypeMenuOpen.value = false;
+    prefillLocks.title = false;
     prefillLocks.location = false;
     prefillLocks.size = false;
     prefillLocks.type = false;
 }
 
+watch(locale, () => {
+    // Lazy load on demand per locale when modal opens.
+    propertyTypeOptions.value = [];
+    propertyTypesLoadPromise = null;
+});
+
 onMounted(() => {
     document.addEventListener('click', captureEnquiryModalOpener, true);
+    document.addEventListener('click', closePropertyTypeMenuOnOutsideClick, false);
     const element = modalRoot.value;
     if (!element) return;
     element.addEventListener('show.bs.modal', handleModalShow);
@@ -603,6 +720,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     document.removeEventListener('click', captureEnquiryModalOpener, true);
+    document.removeEventListener('click', closePropertyTypeMenuOnOutsideClick, false);
     const element = modalRoot.value;
     if (!element) return;
     element.removeEventListener('show.bs.modal', handleModalShow);

@@ -19,9 +19,11 @@ class ContactEnquirySubmitted extends Mailable
 
     public function envelope(): Envelope
     {
-        $isProperty = data_get($this->enquiry->extra_fields, 'enquiry_type') === 'property';
+        $type = (string) data_get($this->enquiry->extra_fields, 'enquiry_type', 'form');
+        $isProperty = $type === 'property';
+        $isBookViewing = $type === 'book_viewing';
         $subject = trim((string) $this->enquiry->subject);
-        $prefix = $isProperty ? 'New property enquiry' : 'New contact enquiry';
+        $prefix = $isProperty ? 'New property enquiry' : ($isBookViewing ? 'New book viewing enquiry' : 'New contact enquiry');
 
         return new Envelope(
             subject: $subject !== '' ? $prefix.': '.$subject : $prefix,

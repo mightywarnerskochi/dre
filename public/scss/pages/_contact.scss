@@ -29,6 +29,12 @@
   }
 
   .information-request-form {
+    /* intl-tel-input wraps the phone field */
+    .iti {
+      width: 100%;
+      display: block;
+    }
+
     input{
         height: clamp(36px, 2.71vw, 52px);
 

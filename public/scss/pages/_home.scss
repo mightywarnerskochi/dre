@@ -1654,17 +1654,19 @@
             }
 
             input,
-            select {
+            select,
+            .enquiry-form__select,
+            .enquiry-form__type-trigger {
                 width: 100%;
                 border: none;
                 border-bottom: 1px solid #e0e0e0;
                 padding: 10px 0;
-                padding-right: 20px;
-                /* space for arrow */
+                padding-right: 28px;
                 font-size: 16px;
                 color: #333;
                 background: transparent;
                 border-radius: 0;
+                transition: border-color 0.2s ease, color 0.2s ease;
 
                 &::placeholder {
                     color: #888;
@@ -1676,12 +1678,135 @@
                 }
             }
 
-            select {
+            .enquiry-form__type-trigger {
+                -webkit-appearance: none;
                 appearance: none;
-                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-                background-repeat: no-repeat;
-                background-position: right center;
+                text-align: start;
+                min-height: 2.75rem;
+                line-height: 1.35;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 8px;
                 cursor: pointer;
+                box-shadow: none;
+
+                &:disabled {
+                    opacity: 0.65;
+                    cursor: not-allowed;
+                }
+
+                &.is-invalid {
+                    border-bottom-color: $danger;
+                }
+            }
+
+            select,
+            .enquiry-form__select {
+                appearance: none;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234B5C77' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 2px center;
+                background-size: 14px 14px;
+                cursor: pointer;
+                color: #333;
+                line-height: 1.35;
+                min-height: 2.75rem;
+            }
+
+            /* Gray label text when nothing selected */
+            select.enquiry-form__select--placeholder,
+            .enquiry-form__select.enquiry-form__select--placeholder,
+            .enquiry-form__type-trigger.enquiry-form__select--placeholder {
+                color: #888;
+            }
+
+            select option,
+            .enquiry-form__select option {
+                color: #333;
+                background: #fff;
+                padding: 0.35rem 0.5rem;
+            }
+
+            &.enquiry-form__select-field {
+                position: relative;
+            }
+
+            &.enquiry-form__property-type {
+                z-index: 1;
+
+                &.is-open {
+                    z-index: 30;
+                }
+
+                .enquiry-form__type-trigger-text {
+                    flex: 1;
+                    min-width: 0;
+                    text-overflow: ellipsis;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-align: inherit;
+                }
+
+                .enquiry-form__type-chevron {
+                    flex-shrink: 0;
+                    width: 14px;
+                    height: 14px;
+                    color: #4b5c77;
+                    transition: transform 0.2s ease;
+                }
+
+                &.is-open .enquiry-form__type-chevron,
+                .enquiry-form__type-trigger.is-open .enquiry-form__type-chevron {
+                    transform: rotate(180deg);
+                }
+
+                .enquiry-form__type-menu {
+                    position: absolute;
+                    left: 0;
+                    right: 0;
+                    top: 100%;
+                    margin-top: 4px;
+                    padding: 0;
+                    background: #fff;
+                    border: 1px solid #c4c4c4;
+                    border-radius: 0;
+                    box-shadow: none;
+                    z-index: 1070;
+                    max-height: 260px;
+                    overflow-y: auto;
+                }
+
+                .enquiry-form__type-menu-item {
+                    display: block;
+                    width: 100%;
+                    margin: 0;
+                    padding: 10px 14px;
+                    border: none;
+                    border-radius: 0;
+                    background: transparent;
+                    font-family: inherit;
+                    font-size: 16px;
+                    font-weight: 400;
+                    line-height: 1.35;
+                    color: #1a1a1a;
+                    text-align: left;
+                    cursor: pointer;
+                    transition: background-color 0.15s ease, color 0.15s ease;
+
+                    // Ensure first paint matches native option feel
+                    &:hover,
+                    &:focus-visible {
+                        outline: none;
+                        background: $primaryColor;
+                        color: #fff;
+                    }
+
+                    &.is-active {
+                        background: $primaryColor;
+                        color: #fff;
+                    }
+                }
             }
         }
 
@@ -1747,6 +1872,35 @@
                 text-align: center;
                 margin: 0;
             }
+        }
+    }
+}
+
+html[dir='rtl'] .siteEnquiryForm .enquiry-form .form-group {
+    input,
+    select,
+    .enquiry-form__select,
+    .enquiry-form__type-trigger {
+        padding-right: 0;
+        padding-left: 28px;
+    }
+
+    select,
+    .enquiry-form__select {
+        background-position: left 2px center;
+    }
+
+    &.enquiry-form__property-type {
+        .enquiry-form__type-trigger {
+            flex-direction: row-reverse;
+        }
+
+        .enquiry-form__type-trigger-text {
+            text-align: right;
+        }
+
+        .enquiry-form__type-menu-item {
+            text-align: right;
         }
     }
 }

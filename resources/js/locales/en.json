@@ -195,8 +195,34 @@
     "qrImgAlt": "QR Code",
     "phoneAlt": "Mobile app preview"
   },
+  "modalEnquiry": {
+    "title": "Enquire Now",
+    "form": {
+      "close": "Close",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "propertyName": "Property Name",
+      "propertyLocation": "Property Location",
+      "propertySize": "Property Size",
+      "submit": "Send Enquiry",
+      "pleaseWait": "Please wait...",
+      "footerNote": "Our team will contact you within 24 hours."
+    },
+    "validation": {
+      "required": "This field is required.",
+      "email": "Enter a valid email address.",
+      "phoneDial": "Select a valid country code.",
+      "phoneNational": "Enter a phone number with 6 to 13 digits.",
+      "pageSource": "Page source is required.",
+      "pageUrl": "Page URL is required.",
+      "recaptcha": "Unable to verify reCAPTCHA. Please refresh and try again.",
+      "submitError": "Unable to submit now. Please try again."
+    }
+  },
   "common": {
-    "learnMore": "Learn More"
+    "learnMore": "Learn More",
+    "loading": "Loading…"
   },
   "legal": {
     "empty": "This page content will be published soon.",
@@ -330,6 +356,27 @@
       "whatsapp": "WhatsApp",
       "fax": "Fax"
     }
+  },
+  "bookViewing": {
+    "pageHeaderAria": "Page header",
+    "breadcrumbAria": "Breadcrumb",
+    "title": "Book a Viewing",
+    "home": "Home",
+    "formTitle": "Book a Viewing Form",
+    "name": "Name",
+    "email": "Email",
+    "phone": "Phone",
+    "date": "Date",
+    "time": "Time",
+    "message": "Message",
+    "submit": "Submit",
+    "pleaseWait": "Please wait...",
+    "validationRequired": "This field is required.",
+    "validationEmail": "Enter a valid email address.",
+    "validationPhoneDial": "Select a valid country code.",
+    "validationPhoneNational": "Enter a phone number with 6 to 13 digits.",
+    "validationRecaptcha": "Unable to verify reCAPTCHA. Please refresh and try again.",
+    "submitError": "Unable to submit now. Please try again."
   },
   "home": {
     "rentals": {

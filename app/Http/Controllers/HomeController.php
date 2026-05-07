@@ -418,8 +418,8 @@ class HomeController extends Controller
                 [
                     'title' => 'Our Company',
                     'links' => [
-                        ['label' => 'Property for Sale', 'href' => url('/properties')],
-                        ['label' => 'Property for Rent', 'href' => url('/properties')],
+                        ['label' => 'Property for Sale', 'href' => url('/properties?listing_type=sale')],
+                        ['label' => 'Property for Rent', 'href' => url('/properties?listing_type=rent')],
                         ['label' => 'Tenant Portal', 'href' => url('/').'#contact'],
                     ],
                 ],

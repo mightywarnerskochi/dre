@@ -14,6 +14,7 @@ use App\Http\Controllers\CmsKit\NeighborhoodController;
 use App\Http\Controllers\CmsKit\PropertyController;
 use App\Http\Controllers\CmsKit\SuccessfulJourneyController;
 use App\Http\Controllers\CmsKit\WhyChooseUsController;
+use App\Http\Controllers\BookViewingEnquiryController;
 use App\Http\Controllers\ContactEnquiryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PropertyPageController;
@@ -168,6 +169,12 @@ Route::middleware(['web'])->group(function () {
             Route::get('/property-enquiries/{id}', [CmsEnquiryController::class, 'propertyShow'])->name('cms.property-enquiries.show');
             Route::delete('/property-enquiries/{id}', [CmsEnquiryController::class, 'propertyDestroy'])->name('cms.property-enquiries.destroy');
             Route::post('/property-enquiries/bulk-action', [CmsEnquiryController::class, 'propertyBulkAction'])->name('cms.property-enquiries.bulk-action');
+
+            Route::get('/book-viewing-enquiries', [CmsEnquiryController::class, 'bookViewingIndex'])->name('cms.book-viewing-enquiries.index');
+            Route::get('/book-viewing-enquiries/export', [CmsEnquiryController::class, 'bookViewingExport'])->name('cms.book-viewing-enquiries.export');
+            Route::get('/book-viewing-enquiries/{id}', [CmsEnquiryController::class, 'bookViewingShow'])->name('cms.book-viewing-enquiries.show');
+            Route::delete('/book-viewing-enquiries/{id}', [CmsEnquiryController::class, 'bookViewingDestroy'])->name('cms.book-viewing-enquiries.destroy');
+            Route::post('/book-viewing-enquiries/bulk-action', [CmsEnquiryController::class, 'bookViewingBulkAction'])->name('cms.book-viewing-enquiries.bulk-action');
         });
 
         Route::middleware(['cms.permission:careers.show'])->group(function () {
@@ -221,6 +228,10 @@ Route::post('/contact-enquiry', [ContactEnquiryController::class, 'store'])
 Route::post('/property-enquiry', [PropertyEnquiryController::class, 'store'])
     ->middleware('throttle:20,1')
     ->name('property.enquiry.store');
+
+Route::post('/book-viewing-enquiry', [BookViewingEnquiryController::class, 'store'])
+    ->middleware('throttle:20,1')
+    ->name('book-viewing.enquiry.store');
 
 Route::get('/{any?}', function () {
     return response()

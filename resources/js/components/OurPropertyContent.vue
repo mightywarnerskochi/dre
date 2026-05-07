@@ -136,6 +136,7 @@ const currentView = ref('grid');
 
 // Consolidated active filters
 const activeFilters = ref({
+    listing_type: route.query.listing_type || '',
     property_type: route.query.property_type || route.query.type || '',
     categories: route.query.categories || route.query.category || '',
     bedrooms: route.query.bedrooms || route.query.beds || '',

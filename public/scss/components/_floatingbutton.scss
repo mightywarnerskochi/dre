@@ -288,6 +288,24 @@
     }
 }
 
+@include max(575) {
+    .insights-page {
+        .sticky-share {
+            right: 10px;
+            bottom: 96px;
+        }
+
+        .sticky-chat {
+            right: 10px;
+            bottom: 14px;
+        }
+
+        .sticky-chat__label {
+            display: none;
+        }
+    }
+}
+
 @keyframes chat-pulse {
     0% {
         box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.55);

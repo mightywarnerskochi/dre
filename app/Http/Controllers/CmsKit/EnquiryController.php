@@ -13,6 +13,7 @@ class EnquiryController extends Controller
 {
     private const TYPE_FORM = 'form';
     private const TYPE_PROPERTY = 'property';
+    private const TYPE_BOOK_VIEWING = 'book_viewing';
 
     public function formIndex(Request $request)
     {
@@ -34,6 +35,11 @@ class EnquiryController extends Controller
         return $this->showByType($request, $id, self::TYPE_PROPERTY);
     }
 
+    public function bookViewingShow(Request $request, $id)
+    {
+        return $this->showByType($request, $id, self::TYPE_BOOK_VIEWING);
+    }
+
     public function formExport(Request $request)
     {
         return $this->exportByType($request, self::TYPE_FORM);
@@ -42,6 +48,11 @@ class EnquiryController extends Controller
     public function propertyExport(Request $request)
     {
         return $this->exportByType($request, self::TYPE_PROPERTY);
+    }
+
+    public function bookViewingExport(Request $request)
+    {
+        return $this->exportByType($request, self::TYPE_BOOK_VIEWING);
     }
 
     public function formDestroy($id)
@@ -54,6 +65,11 @@ class EnquiryController extends Controller
         return $this->destroyByType($id, self::TYPE_PROPERTY);
     }
 
+    public function bookViewingDestroy($id)
+    {
+        return $this->destroyByType($id, self::TYPE_BOOK_VIEWING);
+    }
+
     public function formBulkAction(Request $request)
     {
         return $this->bulkActionByType($request, self::TYPE_FORM);
@@ -62,6 +78,16 @@ class EnquiryController extends Controller
     public function propertyBulkAction(Request $request)
     {
         return $this->bulkActionByType($request, self::TYPE_PROPERTY);
+    }
+
+    public function bookViewingBulkAction(Request $request)
+    {
+        return $this->bulkActionByType($request, self::TYPE_BOOK_VIEWING);
+    }
+
+    public function bookViewingIndex(Request $request)
+    {
+        return $this->indexByType($request, self::TYPE_BOOK_VIEWING);
     }
 
     public function index(Request $request)
@@ -218,7 +244,9 @@ class EnquiryController extends Controller
         $this->applyCommonFilters($query, $request, $type);
         $enquiries = $query->latest()->get();
 
-        $filenamePrefix = $type === self::TYPE_PROPERTY ? 'property_enquiries' : 'form_enquiries';
+        $filenamePrefix = $type === self::TYPE_PROPERTY
+            ? 'property_enquiries'
+            : ($type === self::TYPE_BOOK_VIEWING ? 'book_viewing_enquiries' : 'form_enquiries');
         $filename = $filenamePrefix.'_'.date('Y-m-d_H-i-s').'.csv';
         $headers = [
             'Content-type' => 'text/csv',
@@ -305,11 +333,17 @@ class EnquiryController extends Controller
 
         if ($type === self::TYPE_PROPERTY) {
             $query->where('extra_fields->enquiry_type', 'property');
+        } elseif ($type === self::TYPE_BOOK_VIEWING) {
+            $query->where('extra_fields->enquiry_type', self::TYPE_BOOK_VIEWING);
         } else {
             $query->where(function (Builder $innerQuery) {
                 $innerQuery
                     ->whereNull('extra_fields->enquiry_type')
-                    ->orWhere('extra_fields->enquiry_type', '!=', 'property');
+                    ->orWhere(function (Builder $typed) {
+                        $typed
+                            ->where('extra_fields->enquiry_type', '!=', self::TYPE_PROPERTY)
+                            ->where('extra_fields->enquiry_type', '!=', self::TYPE_BOOK_VIEWING);
+                    });
             });
         }
 
@@ -324,6 +358,14 @@ class EnquiryController extends Controller
                 'heading' => 'Properties Enquiries',
                 'list_heading' => 'Properties Enquiries List',
                 'type' => self::TYPE_PROPERTY,
+            ];
+        }
+        if ($type === self::TYPE_BOOK_VIEWING) {
+            return [
+                'route_prefix' => 'cms.book-viewing-enquiries',
+                'heading' => 'Book Viewing Enquiries',
+                'list_heading' => 'Book Viewing Enquiries List',
+                'type' => self::TYPE_BOOK_VIEWING,
             ];
         }
 

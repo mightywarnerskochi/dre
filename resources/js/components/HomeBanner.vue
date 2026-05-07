@@ -25,7 +25,7 @@
                     <RouterLink v-else :to="currentSlideActionTarget" class="banner-btn">{{ localizedSlideText(currentSlide.primaryActionLabel) }}</RouterLink>
 
                     <div class="banner-search">
-                        <form @submit.prevent="onSubmit" class="search-form">
+                        <form @submit.prevent="onSubmit" class="search-form" dir="ltr">
                             <div class="banner-search__pill">
                                 <div class="search-field search-field--location position-relative">
                                     <svg class="search-field__lead-icon" xmlns="http://www.w3.org/2000/svg" width="18"
@@ -40,13 +40,14 @@
                                         id="locationInput"
                                         v-model="formState.location"
                                         :placeholder="locationFilterLabel"
+                                        :dir="locale === 'ar' ? 'rtl' : 'ltr'"
                                         autocomplete="off"
                                         @focus="locationDropdownOpen = true"
                                         @blur="closeLocationDropdown"
                                         @input="locationDropdownOpen = true"
                                     >
                                     <div v-if="locationDropdownOpen && locationSuggestions.length > 0" class="search-results-dropdown show" id="searchResults">
-                                        <div class="search-results-title">Popular locations</div>
+                                        <div class="search-results-title">{{ t('listing.popularLocations') }}</div>
                                         <div class="search-results-list custom-scrollbar">
                                             <button
                                                 v-for="suggestion in locationSuggestions"
@@ -66,14 +67,14 @@
                                         </div>
                                     </div>
                                 </div>
-                                <button type="submit" class="search-btn search-btn--hero" aria-label="Search properties">
+                                <button type="submit" class="search-btn search-btn--hero" :aria-label="t('listing.searchAria')">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 15 15"
                                         fill="none" aria-hidden="true">
                                         <path
                                             d="M14.7982 13.7332L12.0157 10.9732C13.0957 9.62648 13.6188 7.91715 13.4773 6.19665C13.3358 4.47615 12.5404 2.87526 11.2548 1.72316C9.9692 0.571055 8.29103 -0.0446921 6.56537 0.00252822C4.8397 0.0497485 3.19772 0.756347 1.97703 1.97703C0.756347 3.19772 0.0497485 4.8397 0.00252822 6.56537C-0.0446921 8.29103 0.571055 9.9692 1.72316 11.2548C2.87526 12.5404 4.47615 13.3358 6.19665 13.4773C7.91715 13.6188 9.62648 13.0957 10.9732 12.0157L13.7332 14.7757C13.8029 14.846 13.8858 14.9018 13.9772 14.9398C14.0686 14.9779 14.1667 14.9975 14.2657 14.9975C14.3647 14.9975 14.4627 14.9779 14.5541 14.9398C14.6455 14.9018 14.7285 14.846 14.7982 14.7757C14.9334 14.6358 15.0089 14.4489 15.0089 14.2544C15.0089 14.0599 14.9334 13.873 14.7982 13.7332ZM6.76568 12.0157C5.72732 12.0157 4.71229 11.7078 3.84893 11.1309C2.98557 10.554 2.31267 9.73408 1.91531 8.77476C1.51795 7.81545 1.41398 6.75985 1.61655 5.74145C1.81912 4.72305 2.31914 3.78759 3.05336 3.05336C3.78759 2.31914 4.72305 1.81912 5.74145 1.61655C6.75985 1.41398 7.81545 1.51795 8.77476 1.91531C9.73408 2.31267 10.554 2.98557 11.1309 3.84893C11.7078 4.71229 12.0157 5.72732 12.0157 6.76568C12.0157 8.15806 11.4626 9.49342 10.478 10.478C9.49342 11.4626 8.15806 12.0157 6.76568 12.0157Z"
                                             fill="white" />
                                         </svg>
-                                    <span class="search-btn__text d-none d-lg-inline">{{ locale === 'ar' ? 'بحث' : 'Search' }}</span>
+                                    <span class="search-btn__text d-none d-lg-inline">{{ t('listing.search') }}</span>
                                 </button>
                             </div>
 
@@ -83,7 +84,8 @@
                                     <path d="M6 4.5H7.5M6 6.75H7.5M6 9H7.5" stroke="#4B5C77" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round" />
                                     <path d="M8.625 16.5V13.5C8.625 12.7927 8.625 12.4395 8.40525 12.2197C8.1855 12 7.83225 12 7.125 12H6.375C5.66775 12 5.3145 12 5.09475 12.2197C4.875 12.4395 4.875 12.7927 4.875 13.5V16.5" stroke="#4B5C77" stroke-width="1.125" stroke-linejoin="round" />
                                 </svg>
-                                <button type="button" class="dropdown-trigger bg-transparent border-0 w-100 text-start"
+                                <button type="button" class="dropdown-trigger bg-transparent border-0 w-100"
+                                    :class="locale === 'ar' ? 'text-end' : 'text-start'"
                                     data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                                     <span class="selected-text">{{ selectedPropertyTypeLabel }}</span>
                                 </button>
@@ -117,7 +119,8 @@
                                     <path d="M1.6875 14.625V10.6875C1.68926 10.0913 1.92688 9.52003 2.34846 9.09846C2.77003 8.67688 3.3413 8.43926 3.9375 8.4375H14.0625C14.6587 8.43926 15.23 8.67688 15.6515 9.09846C16.0731 9.52003 16.3107 10.0913 16.3125 10.6875V14.625M13.5 8.4375H3.375V4.78125C3.37611 4.40863 3.52463 4.05159 3.78811 3.78811C4.05159 3.52463 4.40863 3.37611 4.78125 3.375H13.2188C13.5914 3.37611 13.9484 3.52463 14.2119 3.78811C14.4754 4.05159 14.6239 4.40863 14.625 4.78125V8.4375H13.5Z" stroke="#4B5C77" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round" />
                                     <path d="M1.6875 14.625V14.3438C1.68815 14.1202 1.77725 13.9059 1.93535 13.7478C2.09344 13.5898 2.30767 13.5006 2.53125 13.5H15.4688C15.6923 13.5006 15.9066 13.5898 16.0647 13.7478C16.2227 13.9059 16.3119 14.1202 16.3125 14.3438V14.625M3.9375 8.4375V7.875C3.93833 7.57689 4.05713 7.29122 4.26793 7.08043C4.47872 6.86963 4.76439 6.75083 5.0625 6.75H7.875C8.17311 6.75083 8.45878 6.86963 8.66957 7.08043C8.88037 7.29122 8.99917 7.57689 9 7.875M9 7.875V8.4375M9 7.875C9.00083 7.57689 9.11963 7.29122 9.33043 7.08043C9.54122 6.86963 9.82689 6.75083 10.125 6.75H12.9375C13.2356 6.75083 13.5213 6.86963 13.7321 7.08043C13.9429 7.29122 14.0617 7.57689 14.0625 7.875V8.4375" stroke="#4B5C77" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round" />
                                 </svg>
-                                <button type="button" class="dropdown-trigger bg-transparent border-0 w-100 text-start"
+                                <button type="button" class="dropdown-trigger bg-transparent border-0 w-100"
+                                    :class="locale === 'ar' ? 'text-end' : 'text-start'"
                                     data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                                     <span class="selected-text">{{ selectedBedsBathsLabel }}</span>
                                 </button>
@@ -163,7 +166,7 @@ import { RouterLink, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
 
-const { locale } = useI18n({ useScope: 'global' });
+const { locale, t } = useI18n({ useScope: 'global' });
 const router = useRouter();
 
 const propertyTypesExpanded = ref(false);
@@ -294,7 +297,17 @@ const locationOptions = computed(() => {
     return options.filter(o => o.value !== '');
 });
 const locationFilterLabel = computed(() => {
-    return locationFilter.value?.label?.[locale.value] || locationFilter.value?.label || (locale.value === 'ar' ? 'الموقع، المجتمع أو المبنى' : 'Location, community or building');
+    const raw = locationFilter.value?.label;
+    if (raw && typeof raw === 'object') {
+        return raw[locale.value] || raw.en || t('listing.locationPlaceholder');
+    }
+    if (typeof raw === 'string' && raw.trim()) {
+        if (locale.value === 'ar') {
+            return t('listing.locationPlaceholder');
+        }
+        return raw;
+    }
+    return t('listing.locationPlaceholder');
 });
 
 const locationDropdownOpen = ref(false);

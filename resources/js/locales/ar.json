@@ -190,8 +190,34 @@
         "qrImgAlt": "QR Code",
         "phoneAlt": "Mobile app preview"
     },
+    "modalEnquiry": {
+        "title": "استفسر الآن",
+        "form": {
+            "close": "إغلاق",
+            "name": "الاسم",
+            "email": "البريد الإلكتروني",
+            "phone": "رقم الهاتف",
+            "propertyName": "اسم العقار",
+            "propertyLocation": "موقع العقار",
+            "propertySize": "مساحة العقار",
+            "submit": "إرسال الاستفسار",
+            "pleaseWait": "يرجى الانتظار...",
+            "footerNote": "سيتواصل معك فريقنا خلال 24 ساعة."
+        },
+        "validation": {
+            "required": "هذا الحقل مطلوب.",
+            "email": "يرجى إدخال بريد إلكتروني صحيح.",
+            "phoneDial": "يرجى اختيار رمز دولة صحيح.",
+            "phoneNational": "أدخل رقم هاتف من 6 إلى 13 رقمًا.",
+            "pageSource": "مصدر الصفحة مطلوب.",
+            "pageUrl": "رابط الصفحة مطلوب.",
+            "recaptcha": "تعذر التحقق من reCAPTCHA. يرجى تحديث الصفحة والمحاولة مرة أخرى.",
+            "submitError": "تعذر الإرسال الآن. يرجى المحاولة مرة أخرى."
+        }
+    },
     "common": {
-        "learnMore": "اعرف المزيد"
+        "learnMore": "اعرف المزيد",
+        "loading": "جاري التحميل…"
     },
     "legal": {
         "empty": "سيتم نشر محتوى هذه الصفحة قريبًا.",
@@ -325,6 +351,27 @@
             "whatsapp": "واتساب",
             "fax": "الفاكس"
         }
+    },
+    "bookViewing": {
+        "pageHeaderAria": "رأس الصفحة",
+        "breadcrumbAria": "مسار التنقل",
+        "title": "احجز معاينة",
+        "home": "الرئيسية",
+        "formTitle": "نموذج حجز معاينة",
+        "name": "الاسم",
+        "email": "البريد الإلكتروني",
+        "phone": "الهاتف",
+        "date": "التاريخ",
+        "time": "الوقت",
+        "message": "الرسالة",
+        "submit": "إرسال",
+        "pleaseWait": "يرجى الانتظار...",
+        "validationRequired": "هذا الحقل مطلوب.",
+        "validationEmail": "يرجى إدخال بريد إلكتروني صحيح.",
+        "validationPhoneDial": "يرجى اختيار رمز دولة صحيح.",
+        "validationPhoneNational": "أدخل رقم هاتف من 6 إلى 13 رقمًا.",
+        "validationRecaptcha": "تعذر التحقق من reCAPTCHA. يرجى تحديث الصفحة والمحاولة مرة أخرى.",
+        "submitError": "تعذر الإرسال الآن. يرجى المحاولة مرة أخرى."
     },
     "home": {
         "rentals": {

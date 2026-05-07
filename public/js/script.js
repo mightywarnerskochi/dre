@@ -81,6 +81,7 @@ jQuery(function () {
     header.classList.add("header-white");
   }
   window.addEventListener("scroll", () => {
+    if (!header) return;
     if (window.scrollY > 50) {
       header.classList.add("scrolled");
     } else {
@@ -1567,6 +1568,16 @@ window.dreInitSiteEnquiryPhone = function () {
   initializePhoneInput("#siteEnquiryForm");
 };
 
+/** Contact page (Vue SPA) — phone input may not exist at first DOMContentLoaded; safe to call again after mount. */
+window.dreInitContactFormPhone = function () {
+  initializePhoneInput(".contact-form");
+};
+
+/** Book a Viewing page (Vue SPA). */
+window.dreInitBookViewingPhone = function () {
+  initializePhoneInput(".book-viewing-form", { skipContactPhoneBlur: true });
+};
+
 function contactPhone(selector, phoneInput) {
   let phoneNumber = phoneInput.getNumber(); // Get full international number
 
@@ -1582,6 +1593,7 @@ function contactPhone(selector, phoneInput) {
 initializePhoneInput("#careerApplyModal", { skipContactPhoneBlur: true });
 initializePhoneInput("#siteEnquiryForm");
 initializePhoneInput(".contact-form");
+initializePhoneInput(".book-viewing-form", { skipContactPhoneBlur: true });
 
 
 (function attachSpaRouteReinitializer() {

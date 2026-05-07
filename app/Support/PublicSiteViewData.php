@@ -69,6 +69,11 @@ class PublicSiteViewData
             ['network' => 'linkedin', 'url' => $info->linkedin],
             ['network' => 'instagram', 'url' => $info->instagram],
             ['network' => 'youtube', 'url' => $info->youtube],
+            ['network' => 'tiktok', 'url' => $info->tiktok],
+            ['network' => 'snapchat', 'url' => $info->snapchat],
+            ['network' => 'pinterest', 'url' => $info->pinterest],
+            ['network' => 'vimeo', 'url' => $info->vimeo],
+            ['network' => 'skype', 'url' => $info->skype],
             ['network' => 'whatsapp', 'url' => $info->whatsapp_social],
         ];
 
@@ -270,6 +275,11 @@ class PublicSiteViewData
             'linkedin' => 'LinkedIn',
             'instagram' => 'Instagram',
             'youtube' => 'YouTube',
+            'tiktok' => 'TikTok',
+            'snapchat' => 'Snapchat',
+            'pinterest' => 'Pinterest',
+            'vimeo' => 'Vimeo',
+            'skype' => 'Skype',
             'whatsapp' => 'WhatsApp',
         ];
 
