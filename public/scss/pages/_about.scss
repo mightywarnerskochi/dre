@@ -1,0 +1,387 @@
+.about-intro {
+  .head {
+    p {
+      line-height: 160%;
+      width: 100%;
+      @include min(768){
+        width: 77.705%;
+
+      }
+    }
+  }
+}
+
+.about-gallery__track {
+  padding-top: clamp(40px, 4.43vw, 85px);
+
+  figure {
+    width: 22.116%;
+
+    &:nth-child(even) {
+      margin-top: clamp(30px, 2.66vw, 51px);
+    }
+  }
+
+  img {
+    object-fit: cover;
+    height: clamp(150px, 25.58vw, 491px);
+    width: 100%;
+
+  }
+}
+
+.about-values {
+  position: relative;
+  // margin-top: 250px;
+  padding-bottom: clamp(35px, 4.1vw, 78px);
+  padding-top: clamp(60px, 6.5vw, 124px);
+
+  &::after {
+    @extend .position;
+    width: 100%;
+    height: 50%;
+    bottom: 0;
+    background: rgba(229, 234, 243, 0.38);
+    z-index: -1;
+
+  }
+
+  &__grid {
+    counter-reset: about-value;
+    @include max(767){
+      gap: 20px;
+    }
+    .about-value-card__index {
+      width: fit-content;
+      position: relative;
+      color: #D8DCE6;
+      line-height: normal;
+      font-size: clamp(45px, 5vw, 96px);
+      padding-bottom: clamp(15px, 1.2vw, 22px);
+      margin-bottom: clamp(10px, 0.7vw, 12px);
+
+      &::before {
+        content: counter(about-value, decimal-leading-zero);
+        display: block;
+      }
+
+      &::after {
+        @extend .position;
+        width: 100%;
+        height: 3px;
+        border-radius: 100px;
+        background-color: $primaryColor;
+        left: 0;
+        bottom: 0;
+
+      }
+
+    }
+
+    picture {
+      position: absolute;
+      z-index: 0;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      transition: 0.5s ease all;
+      border-radius: 50px 0;
+      overflow: hidden;
+      img{
+        width: 100%;
+        height: 100%;
+      }
+
+      &::after {
+        @extend .position;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+
+        background: linear-gradient(180deg, rgba(42, 85, 156, 0.50) 0%, rgba(102, 102, 102, 0.50) 100%);
+      }
+    }
+
+    article {
+      counter-increment: about-value;
+      border-radius: clamp(30px, 3.89vw, 50px) 0;
+      background: #FFF;
+      width: 100%;
+      @include min(768) {
+        width: 31.561%;
+      }
+
+      &:hover {
+        picture {
+          opacity: 1;
+          transition: 0.5s ease all;
+        }
+
+        .about-value-card__index {
+          &::after {
+            background: #fff;
+          }
+        }
+
+        h3,
+        p {
+          color: #FFF;
+        }
+      }
+
+      >div {
+        height: 100%;
+
+        z-index: 1;
+        position: relative;
+        padding: clamp(30px, 2.61vw, 50px) clamp(30px, 2.5vw, 48px) clamp(30px, 2.61vw, 50px) clamp(16px, 1.3vw, 24px);
+
+      }
+
+      h3 {
+        color: #000;
+        line-height: 80%;
+        margin-bottom: clamp(10px, 1vw, 16px);
+        font-size: clamp(24px, 2.1vw, 40px);
+
+      }
+
+      p {
+        color: $bodyText;
+        line-height: 160%;
+      }
+    }
+  }
+}
+
+// "Our Successful Journey" — horizontal timeline (left-aligned stack per column: year / dot / text)
+$journey-bg: #E5EAF3;
+$journey-line: #B1BCCD;
+$journey-text: #4a5568;
+$journey-year-lh: 1.2;
+$journey-year-gap: 8px; // year → line (matches comp spacing)
+$j-year-desktop: 26px; // 24–28px band
+$j-year-mobile: 24px; // slightly smaller in horizontal scroll rows
+$journey-line-top-dt: $j-year-desktop * $journey-year-lh + $journey-year-gap + 6px;
+$journey-line-top-mb: $j-year-mobile * $journey-year-lh + $journey-year-gap + 6px;
+
+.our-journey {
+  background: $journey-bg;
+  padding: clamp(50px, 7vw,60px) 0;
+
+  @include max(767) {
+    padding-left: clamp(16px, 4vw, 24px);
+    padding-right: clamp(16px, 4vw, 24px);
+  }
+
+  .container-ctn {
+    max-width: 98%;
+
+    @include min(1200) {
+      max-width: 95%;
+    }
+  }
+
+  &__title {
+
+    margin: 0 0 clamp(23px, 2.396vw, 46px);
+  }
+}
+
+// ≤767px: vertical timeline; ≥768px: horizontal track + wheel (see script.js)
+.journey-timeline {
+  @include max(767) {
+    overflow: visible;
+    margin: 0;
+    padding: 0 0 8px;
+    scroll-behavior: auto;
+  }
+
+  @include min(768) {
+    overflow-x: auto;
+    overflow-y: hidden;
+    // Wheel smoothness is driven in script.js (rAF) so it doesn’t fight scrollTo/animations
+    scroll-behavior: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-left: -10px;
+    margin-right: -10px;
+    padding: 0 10px 8px;
+    // Scrolling: mouse wheel (JS) + touch/trackpad; bar hidden
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+
+
+    @include min(768) {
+      padding: 0px 20px;
+      display: flex;
+      flex-direction: row;
+      flex-wrap: nowrap;
+      align-items: flex-start;
+      // gap: clamp(10px, 1.5vw, 24px);
+      width: max-content;
+    }
+
+    // Single horizontal line: height tracks year (992+ uses larger type)
+    &::after {
+      @include min(768) {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: $journey-line-top-mb;
+        height: 2px;
+        background: #B1BCCD;
+        z-index: 0;
+        pointer-events: none;
+
+        @include min(992) {
+          top: 21%;
+        }
+      }
+    }
+
+    @include max(767) {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 100%;
+      align-items: stretch;
+      gap: 0;
+      border-left: 2px solid $journey-line;
+      padding-left: 1.25rem;
+    }
+  }
+
+  &__item {
+    position: relative;
+    z-index: 1;
+
+    @include min(768) {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      flex: 0 0 auto;
+      width: fit-content;
+      min-width: 256px;
+      max-width: 320px;
+      padding:  0 clamp(20px, 2.5vw, 30px);
+    }
+
+    @include max(767) {
+      width: 100%;
+      min-width: 0;
+      max-width: 100%;
+      padding: 0 0 1.5rem;
+      display: block;
+
+      &::before {
+        content: "";
+        position: absolute;
+        left: -1.3rem;
+        top: 5px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: $primaryColor;
+        box-shadow: 0 0 0 3px $journey-bg;
+        transform: translateX(-50%);
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      &:last-child {
+        padding-bottom: 0;
+      }
+    }
+  }
+
+  &__year {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font-size: $j-year-mobile;
+    font-weight: 400;
+    color: #000;
+    line-height: $journey-year-lh;
+    margin: 0 0 $journey-year-gap;
+
+    @include min(992) {
+      font-size: clamp(24px, 2.49vw, 48px);    
+      line-height: 58px;
+    }
+  }
+
+  &__axis {
+    position: relative;
+    width: 100%;
+    height: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    z-index: 1;
+    margin-bottom: 31px;
+
+    @include max(767) {
+      display: none;
+    }
+  }
+
+  &__dot {
+    display: block;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: $primaryColor;
+    box-shadow: 0 0 0 3px $journey-bg;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  &__content {
+
+
+    p {
+      font-size: clamp(13px, 1.2vw, 16px);
+      color: #2F3F58;
+      font-weight: 500;
+
+      line-height:  150%;
+
+    }
+  }
+
+  &__thumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: clamp(10px, 0.8vw, 16px);
+
+    img {
+      width: calc(50% - 2.5px);
+      max-width: 86px;
+      height: auto;
+      aspect-ratio: 3 / 2;
+      object-fit: cover;
+
+    }
+
+    &--single img {
+      width: 100%;
+      max-width: 100%;
+      aspect-ratio: 4 / 3;
+    }
+  }
+}

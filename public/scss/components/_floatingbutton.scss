@@ -1,0 +1,333 @@
+// ─── Old floating contact (keep for legacy) ──────────────────────────────────
+.floating-contact {
+    position: fixed;
+    right: 25px;
+    bottom: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 2000;
+
+    .floating-btn {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        text-decoration: none;
+
+        &:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        &.whatsapp {
+            background-color: #25D366;
+            animation: whatsapp-glow 2s infinite;
+        }
+
+        &.call {
+            background-color: $primaryColor;
+        }
+
+        @include max(767) {
+            width: 40px;
+            height: 40px;
+            right: 15px;
+            bottom: 20px;
+
+            svg {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    }
+}
+
+@keyframes whatsapp-glow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.7);
+    }
+
+    100% {
+        box-shadow: 0 0 0 25px rgba(37, 211, 102, 0);
+    }
+}
+
+// ─── Sticky Share Button ──────────────────────────────────────────────────────
+.sticky-share {
+    position: fixed;
+    right: 10px;
+    bottom: 15%;
+    z-index: 2000;
+
+    @include max(767) {
+        right: 8px;
+        bottom: 22%;
+    }
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+
+    // The pill panel (hidden by default, slides in from right)
+    &__panel {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        background: #fff;
+        border-radius: 100px;
+        padding: 14px 16px 14px 20px;
+        box-shadow: -4px 8px 32px rgba(0, 0, 0, 0.18);
+        // Hidden state
+        opacity: 0;
+        pointer-events: none;
+        transform: translateX(110%);
+        transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.34, 1.2, 0.64, 1);
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%) translateX(110%);
+        white-space: nowrap;
+
+        &.is-open {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateY(-50%) translateX(0);
+            z-index: 11;
+        }
+    }
+
+    &__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #2A559C;
+        transition: color 0.2s ease, transform 0.2s ease;
+        text-decoration: none;
+        flex-shrink: 0;
+
+        &:hover {
+            color: #1a3660;
+            transform: scale(1.2);
+        }
+    }
+
+    &__close {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 2px;
+        color: #6b7280;
+        transition: color 0.2s ease, transform 0.2s ease;
+        flex-shrink: 0;
+
+        &:hover {
+            color: #111;
+            transform: scale(1.15) rotate(90deg);
+        }
+    }
+
+    // The trigger button (always visible on the right edge)
+    &__trigger {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        width: 46px;
+        height: auto;
+        min-height: 46px;
+        padding: 14px 0;
+        background: #2A559C;
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        writing-mode: vertical-rl;
+        box-shadow: -2px 0 16px rgba(42, 85, 156, 0.3);
+        transition: background 0.2s ease, box-shadow 0.2s ease;
+
+        span {
+            writing-mode: vertical-rl;
+            letter-spacing: 1px;
+        }
+
+        svg {
+            transform: rotate(0deg);
+        }
+
+        &:hover,
+        &[aria-expanded="true"] {
+            background: #1a3660;
+            box-shadow: -2px 0 20px rgba(42, 85, 156, 0.45);
+        }
+
+        @include max(767) {
+            padding: 10px 0;
+            font-size: 10px;
+        }
+    }
+}
+
+
+// ─── Sticky Chat (WhatsApp) ───────────────────────────────────────────────────
+.sticky-chat {
+    position: fixed;
+    right: 24px;
+    bottom: 32px;
+    z-index: 2000;
+
+    @include max(767) {
+        right: 12px;
+        bottom: 50px;
+    }
+
+    &__btn {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        text-decoration: none;
+
+        &:hover {
+            .sticky-chat__avatar {
+                transform: scale(1.06);
+            }
+        }
+    }
+
+    // Speech-bubble label
+    &__label {
+        background: #fff;
+        color: #2A559C;
+        font-size: clamp(15px, 1.2vw, 18px);
+        font-weight: 500;
+        padding:clamp(8px, 1.2vw, 10px) clamp(16px, 1.2vw, 20px);
+        border-radius: 50px;
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+        white-space: nowrap;
+        position: relative;
+        transition: opacity 0.25s ease, transform 0.25s ease;
+
+        // Speech bubble tail pointing right
+        &::after {
+            content: '';
+            position: absolute;
+            right: -7px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-width: 8px 0 8px 9px;
+            border-style: solid;
+            border-color: transparent transparent transparent #fff;
+        }
+    }
+
+    // Avatar circle
+    &__avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background: #25D366;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        flex-shrink: 0;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        animation: chat-pulse 2.5s infinite;
+        @include min(992){
+            width: 65px;
+            height: 65px;
+        }
+
+        &::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            border: 4px solid #fff;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+
+      
+    }
+
+    // Green online dot
+    &__online {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        width: 22px;
+        height: 22px;
+        background: #29b85c;
+        border: 4px solid #fff;
+        border-radius: 50%;
+        display: block;
+        z-index: 2;
+        animation: online-blink 2s infinite;
+    }
+}
+
+@include max(575) {
+    .insights-page {
+        .sticky-share {
+            right: 10px;
+            bottom: 96px;
+        }
+
+        .sticky-chat {
+            right: 10px;
+            bottom: 14px;
+        }
+
+        .sticky-chat__label {
+            display: none;
+        }
+    }
+}
+
+@keyframes chat-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.55);
+    }
+
+    70% {
+        box-shadow: 0 0 0 14px rgba(37, 211, 102, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
+    }
+}
+
+@keyframes online-blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}

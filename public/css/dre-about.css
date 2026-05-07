@@ -1,0 +1,365 @@
+/* About page — mission/vision, why choose us, timeline (hero: dre-page-shell.css) */
+
+/* Intro */
+.dre-about-intro {
+    padding: 3.5rem 0 2rem;
+    text-align: center;
+}
+
+.dre-about-intro__eyebrow {
+    margin: 0 0 0.5rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dre-primary);
+}
+
+.dre-about-intro__title {
+    margin: 0 auto 1.25rem;
+    max-width: 36rem;
+    font-size: clamp(1.75rem, 3vw, 2.35rem);
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.dre-about-intro__prose {
+    margin: 0 auto 2.5rem;
+    max-width: 42rem;
+    color: var(--dre-text-muted);
+    line-height: 1.65;
+    text-align: left;
+}
+
+.dre-about-intro__prose :where(p, ul, ol) {
+    margin: 0 0 0.85rem;
+}
+
+.dre-about-intro__gallery {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 900px) {
+    .dre-about-intro__gallery {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+.dre-about-intro__gallery img {
+    width: 100%;
+    aspect-ratio: 3 / 4;
+    object-fit: cover;
+    border-radius: var(--dre-radius-lg);
+    box-shadow: var(--dre-shadow-md);
+}
+
+/* Mission / Vision */
+.dre-mvv {
+    padding: 2.5rem 0 3.5rem;
+    background: var(--dre-bg-soft);
+}
+
+.dre-mvv__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+}
+
+@media (max-width: 960px) {
+    .dre-mvv__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dre-mvv-card {
+    position: relative;
+    border-radius: var(--dre-radius-xl);
+    padding: 1.75rem 1.5rem 1.75rem;
+    min-height: 240px;
+    background: #fff;
+    box-shadow: var(--dre-shadow-sm);
+    overflow: hidden;
+}
+
+.dre-mvv-card__num {
+    position: absolute;
+    top: 0.85rem;
+    right: 1rem;
+    font-size: 2.75rem;
+    font-weight: 700;
+    line-height: 1;
+    color: rgba(30, 58, 138, 0.12);
+}
+
+.dre-mvv-card__title {
+    position: relative;
+    margin: 0 0 0.75rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--dre-primary);
+}
+
+.dre-mvv-card__body {
+    position: relative;
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--dre-text-muted);
+    line-height: 1.55;
+    white-space: pre-line;
+}
+
+.dre-mvv-card--overlay {
+    color: #fff;
+}
+
+.dre-mvv-card--overlay .dre-mvv-card__num {
+    color: rgba(255, 255, 255, 0.22);
+}
+
+.dre-mvv-card--overlay .dre-mvv-card__title {
+    color: #fff;
+}
+
+.dre-mvv-card--overlay .dre-mvv-card__body {
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.dre-mvv-card__media {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+}
+
+.dre-mvv-card__shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(30, 58, 138, 0.15), rgba(30, 58, 138, 0.82));
+}
+
+.dre-mvv-card--overlay .dre-mvv-card__title,
+.dre-mvv-card--overlay .dre-mvv-card__body,
+.dre-mvv-card--overlay .dre-mvv-card__num {
+    z-index: 1;
+}
+
+/* Why choose us */
+.dre-why-about {
+    padding: 3.5rem 0;
+    background: #fff;
+}
+
+.dre-why-about__head {
+    text-align: center;
+    max-width: 40rem;
+    margin: 0 auto 2.5rem;
+}
+
+.dre-why-about__eyebrow {
+    margin: 0 0 0.35rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--dre-primary);
+}
+
+.dre-why-about__title {
+    margin: 0 0 0.75rem;
+    font-size: clamp(1.65rem, 2.8vw, 2.1rem);
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.dre-why-about__intro {
+    margin: 0;
+    color: var(--dre-text-muted);
+    line-height: 1.6;
+}
+
+.dre-why-about__layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media (max-width: 960px) {
+    .dre-why-about__layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dre-why-about__features {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 640px) {
+    .dre-why-about__features {
+        grid-template-columns: 1fr;
+    }
+}
+
+.dre-why-feature {
+    padding: 1.25rem 1.1rem;
+    border-radius: var(--dre-radius-lg);
+    background: var(--dre-bg-soft);
+    border: 1px solid var(--dre-border);
+}
+
+.dre-why-feature__num {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #cbd5e1;
+    line-height: 1;
+    margin-bottom: 0.35rem;
+}
+
+.dre-why-feature__title {
+    margin: 0 0 0.45rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--dre-primary);
+}
+
+.dre-why-feature__text {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--dre-text-muted);
+    line-height: 1.5;
+    white-space: pre-line;
+}
+
+.dre-why-about__collage {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 0.65rem;
+    min-height: 320px;
+}
+
+.dre-why-about__collage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: var(--dre-radius-lg);
+    box-shadow: var(--dre-shadow-sm);
+}
+
+.dre-why-about__collage-main {
+    grid-row: span 2;
+}
+
+.dre-why-about__collage-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+/* Journey timeline */
+.dre-journey {
+    padding: 3.5rem 0 3rem;
+    background: var(--dre-bg-soft);
+}
+
+.dre-journey__title {
+    margin: 0 0 2rem;
+    text-align: center;
+    font-size: clamp(1.75rem, 3vw, 2.35rem);
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.dre-journey__scroll {
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    margin: 0 -1rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.dre-journey__track {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    min-width: min(100%, 960px);
+    margin: 0 auto;
+    position: relative;
+    padding-top: 1.25rem;
+}
+
+.dre-journey__track::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0.55rem;
+    height: 2px;
+    background: linear-gradient(90deg, var(--dre-primary), rgba(59, 130, 246, 0.45));
+    border-radius: 2px;
+}
+
+.dre-journey-item {
+    flex: 1;
+    min-width: 140px;
+    padding: 0 0.5rem;
+    position: relative;
+    text-align: center;
+}
+
+.dre-journey-item__dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--dre-primary);
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.25);
+    margin: 0 auto 0.85rem;
+    position: relative;
+    z-index: 1;
+}
+
+.dre-journey-item__year {
+    margin: 0 0 0.35rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--dre-primary);
+}
+
+.dre-journey-item__prose {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--dre-text-muted);
+    line-height: 1.45;
+    text-align: left;
+}
+
+.dre-journey-item__prose :where(p) {
+    margin: 0 0 0.4rem;
+}
+
+.dre-journey-item__thumbs {
+    display: flex;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.dre-journey-item__thumbs img {
+    width: 52px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+/* CMS rich text (trusted admin content) */
+.dre-cms-html :where(p, ul, ol):last-child {
+    margin-bottom: 0;
+}

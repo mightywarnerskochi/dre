@@ -1,0 +1,145 @@
+.example.example1 {
+    background-color: transparent;
+  }
+  
+  .example.example1 * {
+    font-family: Roboto, Open Sans, Segoe UI, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+  }
+  
+  .example.example1 fieldset {
+    margin: 0 0 20px 0;
+    padding: 0;
+    border-style: none;
+    background-color: #fff;
+    box-shadow: 0px 6px 12px #00000029;
+    border-radius: 4px;
+  }
+  
+  .example.example1 .row {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-align: center;
+    align-items: center;
+  }
+  
+  /* .example.example1 .row + .row {
+    border-top: 1px solid #B1968F;
+  } */
+  
+  .example.example1 label {
+    width: 15%;
+    min-width: 70px;
+    color: #634E55;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 0;
+    font-weight: 700;
+  }
+  
+  /* .example.example1 input, .example.example1 button {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    outline: none;
+    border-style: none;
+  } */
+  
+  .example.example1 input:-webkit-autofill {
+    -webkit-text-fill-color: #B1968F;
+    transition: background-color 100000000s;
+    -webkit-animation: 1ms void-animation-out;
+  }
+  
+  .example.example1 .StripeElement--webkit-autofill {
+    background: transparent !important;
+  }
+  
+  .example.example1 .StripeElement {
+    width: 100%;
+    padding: 11px 15px 11px 0;
+  }
+  
+  .example.example1 input {
+    width: 100%;
+    color: #B1968F;
+    background-color: transparent;
+    border: none;
+    outline: none;
+    -webkit-animation: 1ms void-animation-out;
+    font-weight: 400;
+    border-bottom: 1px #DFCFCA solid;
+  }
+  
+  .example.example1 input:active, input:focus {
+   outline: none;
+   border: none;
+  }
+  
+  .example.example1 input::-webkit-input-placeholder {
+    color: #B4B4B4;
+  }
+  
+  .example.example1 input::-moz-placeholder {
+    color: #B4B4B4;
+  }
+  
+  .example.example1 input:-ms-input-placeholder {
+    color: #B4B4B4;
+  }
+  
+  /* .example.example1 button {
+    display: block;
+    width: calc(100% - 30px);
+    height: 40px;
+    margin: 40px 15px 0;
+    background-color: #f6a4eb;
+    box-shadow: 0 6px 9px rgba(50, 50, 93, 0.06), 0 2px 5px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 #ffb9f6;
+    border-radius: 4px;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  
+  .example.example1 button:active {
+    background-color: #d782d9;
+    box-shadow: 0 6px 9px rgba(50, 50, 93, 0.06), 0 2px 5px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 #e298d8;
+  } */
+  
+  .example.example1 .error svg .base {
+    fill: #634E55;
+  }
+  
+  .example.example1 .error svg .glyph {
+    fill: #fff;
+  }
+  
+  .example.example1 .error .message {
+    color: #634E55;
+    padding-left: 10px;
+  }
+  
+  .example.example1 .success .icon .border {
+    stroke: #B1968F;
+  }
+  
+  .example.example1 .success .icon .checkmark {
+    stroke: #634E55;
+  }
+  
+  .example.example1 .success .title {
+    color: #634E55;
+  }
+  
+  .example.example1 .success .message {
+    color: #634E55;
+  }
+  
+  .example.example1 .success .reset path {
+    fill: #fff;
+  }
+  

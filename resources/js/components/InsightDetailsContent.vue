@@ -1,0 +1,314 @@
+<template>
+    <section v-if="detail" class="banner banner--page banner--page--listing position-relative" aria-label="Page header">
+        <div class="banner--page__bg">
+            <picture>
+                <img :src="asset('public/images/inner-banner.jpg')" alt="Insights banner" width="1920" height="403" loading="eager">
+            </picture>
+        </div>
+        <div class="banner--page__content">
+            <div class="container-ctn">
+                <h1 class="banner--page__title">{{ detail.current.title }}</h1>
+                <ol class="breadcrumb-minimal" :aria-label="t('insightsDetail.breadcrumbAria')">
+                    <li>
+                        <RouterLink to="/" aria-label="Home">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <path d="M3 10.5L12 3L21 10.5V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V10.5Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </RouterLink>
+                    </li>
+                    <li class="breadcrumb-minimal__sep" aria-hidden="true">/</li>
+                    <li class="breadcrumb-minimal__sep">{{ t('insightsDetail.insights') }} /</li>
+                    <li class="breadcrumb-minimal__current" aria-current="page">{{ detail.current.title }}</li>
+                </ol>
+            </div>
+        </div>
+    </section>
+
+    <section v-if="detail" class="insight-detail commonPadding-120" aria-labelledby="insight-detail-title">
+        <div class="container-article">
+            <div class="insight-detail__meta d-flex align-items-center justify-content-center" aria-label="Post meta">
+                <span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M15.6599 12.6687C16.637 11.8999 17.3503 10.8457 17.7004 9.65262C18.0505 8.45956 18.02 7.18705 17.6132 6.01212C17.2064 4.83719 16.4435 3.81827 15.4307 3.09711C14.4178 2.37594 13.2054 1.9884 11.962 1.9884C10.7187 1.9884 9.50623 2.37594 8.49338 3.09711C7.48053 3.81827 6.71764 4.83719 6.31084 6.01212C5.90405 7.18705 5.87358 8.45956 6.22368 9.65262C6.57377 10.8457 7.28702 11.8999 8.2642 12.6687C6.58979 13.3396 5.12881 14.4522 4.03701 15.8881C2.94521 17.3239 2.26351 19.0291 2.06461 20.8219C2.05021 20.9528 2.06173 21.0852 2.09852 21.2117C2.13531 21.3381 2.19664 21.4561 2.27901 21.5588C2.44537 21.7663 2.68734 21.8992 2.95169 21.9283C3.21603 21.9573 3.4811 21.8802 3.68859 21.7139C3.89607 21.5475 4.02897 21.3055 4.05804 21.0412C4.27691 19.0928 5.20595 17.2933 6.66767 15.9866C8.1294 14.6799 10.0213 13.9575 11.982 13.9575C13.9426 13.9575 15.8345 14.6799 17.2963 15.9866C18.758 17.2933 19.687 19.0928 19.9059 21.0412C19.933 21.2861 20.0498 21.5123 20.2339 21.6761C20.418 21.8399 20.6562 21.9298 20.9026 21.9283H21.0122C21.2735 21.8982 21.5123 21.7661 21.6766 21.5607C21.8409 21.3554 21.9174 21.0934 21.8894 20.8319C21.6895 19.034 21.0041 17.3244 19.9067 15.8864C18.8093 14.4483 17.3412 13.336 15.6599 12.6687ZM11.962 11.9611C11.1735 11.9611 10.4027 11.7272 9.74704 11.2892C9.0914 10.8511 8.58039 10.2284 8.27863 9.49991C7.97688 8.7714 7.89792 7.96978 8.05176 7.1964C8.20559 6.42302 8.58531 5.71262 9.14288 5.15505C9.70046 4.59747 10.4109 4.21776 11.1842 4.06393C11.9576 3.91009 12.7592 3.98905 13.4877 4.2908C14.2162 4.59256 14.8389 5.10357 15.277 5.75921C15.7151 6.41485 15.9489 7.18567 15.9489 7.9742C15.9489 9.03158 15.5289 10.0457 14.7812 10.7933C14.0335 11.541 13.0194 11.9611 11.962 11.9611Z" fill="black"/>
+                    </svg>
+                     {{ asLocalizedText(detail.current.author, 'DRE Admin') }}
+                </span>
+                <span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M3.17773 9.04776H20.2968M7.19924 4.64573V2.68927M16.2479 4.64573V2.68927M16.873 4.64573H6.60154C5.69349 4.64573 4.82263 5.00645 4.18054 5.64854C3.53846 6.29063 3.17773 7.16148 3.17773 8.06953V17.3627C3.17773 18.2708 3.53846 19.1416 4.18054 19.7837C4.82263 20.4258 5.69349 20.7865 6.60154 20.7865H16.873C17.781 20.7865 18.6519 20.4258 19.2939 19.7837C19.936 19.1416 20.2968 18.2708 20.2968 17.3627V8.06953C20.2968 7.16148 19.936 6.29063 19.2939 5.64854C18.6519 5.00645 17.781 4.64573 16.873 4.64573Z" stroke="black" stroke-width="1.56522" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    {{ formatDate(detail.current.publishedAt) }}
+                </span>
+                <span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+                        <path d="M7.5 1.5C6.70435 1.5 5.94129 1.81607 5.37868 2.37868C4.81607 2.94129 4.5 3.70435 4.5 4.5V19.5C4.5 20.2956 4.81607 21.0587 5.37868 21.6213C5.94129 22.1839 6.70435 22.5 7.5 22.5H16.5C17.2956 22.5 18.0587 22.1839 18.6213 21.6213C19.1839 21.0587 19.5 20.2956 19.5 19.5V8.121C19.4995 7.52446 19.2621 6.95255 18.84 6.531L14.4705 2.1585C14.2615 1.9496 14.0133 1.78393 13.7403 1.67094C13.4672 1.55795 13.1745 1.49987 12.879 1.5H7.5ZM6 4.5C6 4.10218 6.15804 3.72064 6.43934 3.43934C6.72064 3.15804 7.10218 3 7.5 3H12V6.75C12 7.34674 12.2371 7.91903 12.659 8.34099C13.081 8.76295 13.6533 9 14.25 9H18V19.5C18 19.8978 17.842 20.2794 17.5607 20.5607C17.2794 20.842 16.8978 21 16.5 21H7.5C7.10218 21 6.72064 20.842 6.43934 20.5607C6.15804 20.2794 6 19.8978 6 19.5V4.5ZM17.6895 7.5H14.25C14.0511 7.5 13.8603 7.42098 13.7197 7.28033C13.579 7.13968 13.5 6.94891 13.5 6.75V3.3105L17.6895 7.5Z" fill="black"/>
+                    </svg>
+                    {{ detail.current.type || detail.current.category || t('insightsDetail.general') }}
+                </span>
+            </div>
+
+            <div class="insight-detail__layout d-flex flex-wrap justify-content-between">
+                <figure class="insight-detail__hero">
+                    <img :src="detail.current.detailImage || dummyImage" :alt="detail.current.detailImageAlt || 'Insight image'" width="1547" height="1032" loading="lazy" @error="onImgError">
+                </figure>
+                <article class="insight-detail__content list">
+                    <div id="insight-detail-title" v-html="detail.current.content"></div>
+                    <div class="insight-detail__gallery" v-if="detail.current.image3 || detail.current.image4">
+                            <img :src="detail.current.image3" :alt="detail.current.image3Alt || 'Insight image'"  v-if="detail.current.image3" width="469" height="313" loading="lazy" @error="onImgError">
+                            <img :src="detail.current.image4" :alt="detail.current.image4Alt || 'Insight image'" v-if="detail.current.image4" width="469" height="313" loading="lazy" @error="onImgError">
+                    </div>
+                    
+                    <div v-if="detail.current.secondDescription" v-html="detail.current.secondDescription" class="mt-4"></div>
+                    <div class="insight-detail__footer">
+                    <ul class="insight-detail__social-list" :aria-label="t('floating.shareListAria')">
+                        <li v-if="insightShare.facebook">
+                            <a :href="insightShare.facebook" :aria-label="t('floating.shareFacebook')" target="_blank" rel="noopener noreferrer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M7.866 2.841C8.60433 2.10255 9.60576 1.68762 10.65 1.6875H12.675C12.8242 1.6875 12.9673 1.74676 13.0727 1.85225C13.1782 1.95774 13.2375 2.10082 13.2375 2.25V4.95C13.2375 5.09918 13.1782 5.24226 13.0727 5.34775C12.9673 5.45324 12.8242 5.5125 12.675 5.5125H10.65C10.6352 5.5125 10.6206 5.51541 10.6069 5.52106C10.5933 5.52672 10.5809 5.535 10.5705 5.54545C10.56 5.5559 10.5517 5.5683 10.5461 5.58195C10.5404 5.5956 10.5375 5.61023 10.5375 5.625V7.0875H12.675C12.7605 7.08745 12.8449 7.1069 12.9218 7.14437C12.9987 7.18184 13.066 7.23635 13.1186 7.30374C13.1712 7.37113 13.2078 7.44964 13.2256 7.53329C13.2433 7.61694 13.2418 7.70354 13.221 7.7865L12.546 10.4865C12.5155 10.6082 12.4453 10.7163 12.3463 10.7935C12.2474 10.8707 12.1255 10.9126 12 10.9125H10.5375V15.75C10.5375 15.8992 10.4782 16.0423 10.3727 16.1477C10.2673 16.2532 10.1242 16.3125 9.975 16.3125H7.275C7.12582 16.3125 6.98274 16.2532 6.87725 16.1477C6.77176 16.0423 6.7125 15.8992 6.7125 15.75V10.9125H5.25C5.10082 10.9125 4.95774 10.8532 4.85225 10.7477C4.74676 10.6423 4.6875 10.4992 4.6875 10.35V7.65C4.6875 7.57613 4.70205 7.50299 4.73032 7.43474C4.75859 7.3665 4.80002 7.30449 4.85225 7.25225C4.90449 7.20002 4.96649 7.15859 5.03474 7.13032C5.10299 7.10205 5.17613 7.0875 5.25 7.0875H6.7125V5.625C6.71262 4.58076 7.12755 3.57933 7.866 2.841ZM10.65 2.8125C9.90408 2.8125 9.18871 3.10882 8.66126 3.63626C8.13382 4.16371 7.8375 4.87908 7.8375 5.625V7.65C7.8375 7.79918 7.77824 7.94226 7.67275 8.04775C7.56726 8.15324 7.42418 8.2125 7.275 8.2125H5.8125V9.7875H7.275C7.42418 9.7875 7.56726 9.84676 7.67275 9.95225C7.77824 10.0577 7.8375 10.2008 7.8375 10.35V15.1875H9.4125V10.35C9.4125 10.2008 9.47176 10.0577 9.57725 9.95225C9.68274 9.84676 9.82582 9.7875 9.975 9.7875H11.5605L11.9543 8.2125H9.975C9.82582 8.2125 9.68274 8.15324 9.57725 8.04775C9.47176 7.94226 9.4125 7.79918 9.4125 7.65V5.625C9.4125 5.29679 9.54288 4.98203 9.77496 4.74996C10.007 4.51788 10.3218 4.3875 10.65 4.3875H12.1125V2.8125H10.65Z" fill="#212121"></path>
+                                </svg>
+                            </a>
+                        </li>
+                        <li v-if="insightShare.twitter">
+                            <a :href="insightShare.twitter" :aria-label="t('floating.shareTwitter')" target="_blank" rel="noopener noreferrer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                    <path d="M17.25 2.25754C17.25 2.25754 15.7365 3.15154 14.895 3.40504C14.4433 2.88567 13.843 2.51756 13.1753 2.35049C12.5076 2.18341 11.8046 2.22544 11.1616 2.47088C10.5185 2.71633 9.96633 3.15334 9.57974 3.72283C9.19314 4.29232 8.99077 4.96679 9 5.65504V6.40504C7.68198 6.43922 6.37596 6.1469 5.19826 5.55413C4.02056 4.96135 3.00774 4.08652 2.25 3.00754C2.25 3.00754 -0.75 9.75754 6 12.7575C4.4554 13.806 2.61537 14.3317 0.75 14.2575C7.5 18.0075 15.75 14.2575 15.75 5.63254C15.7495 5.42354 15.7295 5.21604 15.69 5.01004C16.455 4.25554 17.25 2.25754 17.25 2.25754Z" stroke="#212121" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </a>
+                        </li>
+                        <li v-if="insightShare.linkedin">
+                            <a :href="insightShare.linkedin" :aria-label="t('floating.shareLinkedIn')" target="_blank" rel="noopener noreferrer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                    <path d="M4.59572 2.27158C4.59921 2.71616 4.42757 3.14425 4.11792 3.46328C3.80827 3.78231 3.3855 3.96665 2.94101 3.97644C2.49745 3.96032 2.07704 3.7744 1.76668 3.4571C1.45632 3.1398 1.27974 2.71538 1.27344 2.27158C1.29261 1.83907 1.4756 1.43005 1.78529 1.12753C2.09498 0.824998 2.50817 0.651622 2.94101 0.642578C3.37257 0.651795 3.78429 0.825606 4.0919 1.12844C4.39951 1.43127 4.57975 1.84021 4.59572 2.27158ZM1.45215 7.00558C1.45215 6.02586 2.07572 6.17886 2.94101 6.17886C3.80629 6.17886 4.41701 6.02586 4.41701 7.00558V16.5507C4.41701 17.5433 3.79344 17.3401 2.94101 17.3401C2.08858 17.3401 1.45215 17.5433 1.45215 16.5507V7.00558ZM6.98844 7.00686C6.98844 6.45915 7.19158 6.25472 7.50915 6.19172C7.82672 6.12872 8.92344 6.19172 9.30401 6.19172C9.68587 6.19172 9.83887 6.81529 9.82601 7.28586C10.153 6.84807 10.5866 6.50127 11.0856 6.27846C11.5845 6.05566 12.1322 5.96427 12.6764 6.01301C13.211 5.98037 13.7464 6.06053 14.2479 6.24828C14.7495 6.43604 15.2059 6.72718 15.5876 7.10281C15.9693 7.47845 16.2677 7.93016 16.4635 8.42863C16.6592 8.9271 16.7479 9.46116 16.7239 9.99615V16.5121C16.7239 17.5047 16.1132 17.3016 15.2466 17.3016C14.38 17.3016 13.7706 17.5047 13.7706 16.5121V11.422C13.793 11.1601 13.7588 10.8964 13.6702 10.6488C13.5817 10.4013 13.441 10.1757 13.2575 9.9874C13.0741 9.79908 12.8523 9.65245 12.6071 9.55745C12.362 9.46246 12.0993 9.42133 11.8369 9.43686C11.5754 9.42998 11.3156 9.47874 11.0744 9.57992C10.8333 9.6811 10.6164 9.83239 10.4382 10.0238C10.2599 10.2151 10.1244 10.4422 10.0406 10.6899C9.95679 10.9376 9.92659 11.2003 9.95201 11.4606V16.5507C9.95201 17.5433 9.32844 17.3401 8.46315 17.3401C7.59787 17.3401 6.98715 17.5433 6.98715 16.5507L6.98844 7.00686Z" stroke="#212121" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </a>
+                        </li>
+
+                        <li v-if="insightShare.snapchat">
+                            <a :href="insightShare.snapchat" :aria-label="'Snapchat'" target="_blank" rel="noopener noreferrer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                    <path d="M17.9361 12.9668C17.8112 12.6259 17.5727 12.4436 17.3016 12.2929C17.2572 12.2657 17.211 12.2416 17.1632 12.2209L16.9169 12.096C16.0709 11.6471 15.4105 11.0812 14.9526 10.4107C14.8224 10.2221 14.7095 10.0222 14.6151 9.81337C14.5769 9.70087 14.5791 9.63787 14.6061 9.5805C14.6332 9.53496 14.6705 9.49642 14.7152 9.468C14.8604 9.37125 15.01 9.27338 15.1112 9.20813C15.2935 9.09113 15.4364 8.99775 15.5286 8.9325C15.8762 8.6895 16.1192 8.43075 16.2711 8.14275C16.3767 7.94347 16.4383 7.72383 16.4517 7.49868C16.4651 7.27354 16.43 7.04815 16.3487 6.83775C16.1181 6.2325 15.5466 5.85675 14.8536 5.85675C14.6685 5.85597 14.4842 5.88057 14.3057 5.92987C14.3125 5.51587 14.3035 5.07825 14.2664 4.6485C14.1359 3.1365 13.606 2.3445 13.0547 1.71225C12.7012 1.31655 12.2851 0.981706 11.8229 0.721125C10.9847 0.243 10.0352 0 8.99912 0C7.96299 0 7.01912 0.243 6.18099 0.721125C5.71749 0.982125 5.30124 1.31738 4.94687 1.7145C4.39562 2.34675 3.86687 3.13987 3.73524 4.65075C3.69812 5.0805 3.69024 5.51925 3.69474 5.931C3.51632 5.8817 3.33197 5.85709 3.14687 5.85787C2.45499 5.85787 1.88237 6.23475 1.65287 6.84C1.5711 7.0504 1.53551 7.27591 1.54852 7.50126C1.56152 7.72661 1.62282 7.94653 1.72824 8.14613C1.88124 8.43413 2.12424 8.69287 2.47074 8.93475C2.56299 9 2.70699 9.09225 2.88812 9.2115L3.26949 9.46013C3.31804 9.49299 3.35969 9.53503 3.39212 9.58388C3.42137 9.6435 3.42249 9.70763 3.37862 9.828C3.28538 10.0324 3.17433 10.2281 3.04674 10.413C2.59899 11.0689 1.95774 11.6246 1.13874 12.069C0.705616 12.2985 0.254491 12.4515 0.0643658 12.969C-0.0796342 13.3605 0.0148658 13.8049 0.379366 14.1784C0.514366 14.3201 0.667741 14.4364 0.839491 14.5271C1.19465 14.7226 1.57248 14.8738 1.96449 14.9771C2.04513 14.9986 2.12183 15.0328 2.19174 15.0784C2.32449 15.1954 2.30649 15.3709 2.48312 15.6274C2.57312 15.7609 2.68412 15.8734 2.81612 15.9649C3.18737 16.2225 3.60474 16.2383 4.04799 16.2551C4.44737 16.2709 4.90074 16.2889 5.41712 16.4576C5.63087 16.5296 5.85474 16.6669 6.11237 16.8266C6.73112 17.2069 7.58049 17.7289 8.99912 17.7289C10.4189 17.7289 11.2716 17.2015 11.8971 16.8221C12.1525 16.6646 12.3741 16.5296 12.5822 16.461C13.0997 16.29 13.5531 16.272 13.9525 16.2574C14.3946 16.2405 14.812 16.2236 15.1844 15.9671C15.3394 15.8587 15.4684 15.7173 15.5624 15.5531C15.6906 15.3371 15.6861 15.1852 15.8065 15.0806C15.8715 15.0357 15.9438 15.0026 16.0202 14.9827C16.4175 14.8781 16.8006 14.7255 17.161 14.5282C17.341 14.4304 17.5052 14.3033 17.6436 14.1503L17.6481 14.1446C17.9901 13.779 18.0756 13.347 17.9361 12.9668Z" fill="#212121"></path>
+                                </svg>
+                            </a>
+                        </li>
+                        <li v-if="insightShare.pinterest">
+                            <a :href="insightShare.pinterest" :aria-label="'Pinterest'" target="_blank" rel="noopener noreferrer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                    <path d="M9 17.25C13.5563 17.25 17.25 13.5563 17.25 9C17.25 4.44365 13.5563 0.75 9 0.75C4.44365 0.75 0.75 4.44365 0.75 9C0.75 13.5563 4.44365 17.25 9 17.25Z" stroke="#212121" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    <path d="M6 16.4996L8.25 8.24957C7.70299 8.74685 7.37593 9.44106 7.34077 10.1795C7.3056 10.9179 7.56522 11.6401 8.0625 12.1871C8.55978 12.7341 9.25399 13.0611 9.99242 13.0963C10.7308 13.1315 11.453 12.8718 12 12.3746C12.5588 11.8747 12.9839 11.2432 13.2366 10.5373C13.4893 9.83147 13.5617 9.07365 13.4471 8.33272C13.3325 7.59179 13.0346 6.89123 12.5804 6.29469C12.1263 5.69815 11.5303 5.22453 10.8466 4.91686C10.1629 4.6092 9.41315 4.47723 8.66548 4.53296C7.91782 4.58868 7.19592 4.83033 6.56538 5.23595C5.93484 5.64157 5.41564 6.19831 5.05494 6.85558C4.69425 7.51286 4.50349 8.24984 4.5 8.99957" stroke="#212121" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                </svg>
+                            </a>
+                        </li>
+
+                        <li v-if="insightShare.whatsapp">
+                            <a :href="insightShare.whatsapp" :aria-label="t('floating.shareWhatsApp')" target="_blank" rel="noopener noreferrer">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                    <path d="M8.63767 1.50941C4.65517 1.69691 1.51342 4.98941 1.52542 8.94716C1.52746 10.1121 1.80637 11.2599 2.33917 12.2959L1.54567 16.1217C1.53599 16.1695 1.53853 16.219 1.55305 16.2656C1.56756 16.3122 1.59359 16.3544 1.62873 16.3882C1.66387 16.4221 1.70698 16.4466 1.75408 16.4593C1.80117 16.4721 1.85073 16.4729 1.89817 16.4614L5.67368 15.5734C6.6738 16.0671 7.77145 16.3315 8.88667 16.3474C12.9569 16.4097 16.3499 13.2012 16.4767 9.16241C16.6132 4.83116 13.0139 1.30166 8.63767 1.50866V1.50941Z" fill="#212121"></path>
+                                    <path d="M12.6328 10.5342L11.1845 10.1217C11.0911 10.0947 10.9921 10.0933 10.8979 10.1179C10.8038 10.1424 10.7181 10.192 10.6498 10.2612L10.2958 10.6197C10.2224 10.6937 10.1289 10.7445 10.0269 10.7658C9.9249 10.7871 9.8189 10.7781 9.72201 10.7397C9.03726 10.4645 7.59576 9.19249 7.22751 8.55574C7.17549 8.46592 7.15168 8.36254 7.15917 8.25902C7.16666 8.1555 7.20511 8.05663 7.26951 7.97524L7.57851 7.57774C7.638 7.50158 7.67564 7.41066 7.6874 7.31474C7.69916 7.21882 7.68459 7.12151 7.64526 7.03324L7.03626 5.66524C7.00182 5.58877 6.95011 5.52134 6.8852 5.46825C6.82029 5.41515 6.74395 5.37783 6.66218 5.35922C6.58041 5.34061 6.49544 5.34122 6.41394 5.36101C6.33245 5.38079 6.25665 5.41921 6.19251 5.47324C5.78826 5.81299 5.30826 6.32824 5.25051 6.90049C5.14776 7.90774 5.58276 9.17749 7.22826 10.703C9.12951 12.4647 10.6528 12.698 11.6435 12.4587C12.206 12.3237 12.656 11.7815 12.9388 11.3382C12.984 11.2678 13.0121 11.1878 13.0207 11.1046C13.0294 11.0213 13.0184 10.9372 12.9886 10.859C12.9588 10.7808 12.9111 10.7107 12.8493 10.6543C12.7875 10.5979 12.7134 10.5568 12.6328 10.5342Z" fill="#212121"></path>
+                                </svg>
+                            </a>
+                        </li>
+                    </ul>
+                        <nav class="insight-detail__pager" aria-label="Article navigation">
+                            <RouterLink v-if="detail.prev" :to="{ name: 'insights-details', params: { slug: detail.prev.slug } }" rel="prev">{{ t('insightsDetail.prev') }}</RouterLink>
+                            <RouterLink v-if="detail.next" :to="{ name: 'insights-details', params: { slug: detail.next.slug } }" rel="next">{{ t('insightsDetail.next') }}</RouterLink>
+                        </nav>
+                    </div>
+                </article>
+
+                <aside class="insight-related" aria-labelledby="related-posts-title">
+                    <div class="insight-related__card">
+                        <h3 id="related-posts-title">{{ t('insightsDetail.relatedPosts') }}</h3>
+                        <ul>
+                            <li v-for="post in detail.related" :key="post.id">
+                                <RouterLink :to="{ name: 'insights-details', params: { slug: post.slug } }">
+                                    <img :src="post.image || dummyImage" :alt="post.imageAlt || 'Insight image'" width="90" height="64" loading="lazy" @error="onImgError">
+                                    <span>{{ post.title }}</span>
+                                </RouterLink>
+                            </li>
+                        </ul>
+                        <RouterLink to="/insights" class="insight-related__more">{{ t('insightsDetail.morePosts') }}</RouterLink>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </section>
+</template>
+
+<script setup>
+import { computed, inject, watch } from 'vue';
+import { RouterLink, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { asset } from '@/utils/asset';
+import { getInsightDetailData } from '@/utils/publicContent';
+import { applyGlobalImageAltFallback, applySeoPayload } from '@/utils/seo';
+import { getPublicSiteBoot } from '@/utils/publicSite';
+
+const route = useRoute();
+const { locale, t } = useI18n({ useScope: 'global' });
+const dummyImage = asset('public/images/news/blog-placeholder-new.png');
+
+const detail = computed(() => getInsightDetailData(route.params.slug, locale.value));
+
+const injectedSite = inject('dreSite', null);
+const dreSiteRef = injectedSite ?? computed(() => getPublicSiteBoot());
+
+function plainText(input, maxLength = 180) {
+    const text = String(input || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    if (text.length <= maxLength) {
+        return text;
+    }
+    return `${text.slice(0, maxLength).trimEnd()}...`;
+}
+
+function asLocalizedText(value, fallback = '') {
+    if (typeof value === 'string') {
+        const text = value.trim();
+        if (text === '') return fallback;
+
+        // Some payloads may arrive as JSON-like strings instead of objects.
+        if (text.includes('"en"') || text.includes('"ar"')) {
+            try {
+                const parsed = JSON.parse(text);
+                if (parsed && typeof parsed === 'object') {
+                    return asLocalizedText(parsed, fallback);
+                }
+            } catch (_error) {
+                const arMatch = text.match(/"ar"\s*:\s*"([^"]+)"/);
+                const enMatch = text.match(/"en"\s*:\s*"([^"]+)"/);
+                const preferred = locale.value === 'ar' ? arMatch?.[1] : enMatch?.[1];
+                if (preferred && preferred.trim() !== '') return preferred.trim();
+                if (enMatch?.[1] && enMatch[1].trim() !== '') return enMatch[1].trim();
+                if (arMatch?.[1] && arMatch[1].trim() !== '') return arMatch[1].trim();
+            }
+        }
+
+        return text;
+    }
+    if (!value || typeof value !== 'object') {
+        return fallback;
+    }
+
+    const lang = locale.value === 'ar' ? 'ar' : 'en';
+    const preferred = typeof value[lang] === 'string' ? value[lang].trim() : '';
+    if (preferred !== '') {
+        return preferred;
+    }
+
+    const english = typeof value.en === 'string' ? value.en.trim() : '';
+    if (english !== '') {
+        return english;
+    }
+
+    const arabic = typeof value.ar === 'string' ? value.ar.trim() : '';
+    return arabic !== '' ? arabic : fallback;
+}
+
+function formatDate(raw) {
+    if (!raw) return '';
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat(locale.value === 'ar' ? 'ar' : 'en', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+    }).format(date);
+}
+
+/** Article-level share targets: most use current URL; Snapchat uses site profile from site info when set. */
+const insightShare = computed(() => {
+    const empty = { facebook: null, twitter: null, linkedin: null, pinterest: null, snapchat: null, whatsapp: null };
+    if (typeof window === 'undefined') {
+        return empty;
+    }
+    const current = detail.value?.current;
+    if (!current) {
+        return empty;
+    }
+
+    const pageUrl = window.location.href;
+    const enc = encodeURIComponent(pageUrl);
+    const rawTitle = asLocalizedText(current.title, '');
+    const titleEnc = encodeURIComponent(rawTitle);
+    const desc = encodeURIComponent(plainText(asLocalizedText(current.excerpt, ''), 200));
+
+    const site = dreSiteRef.value;
+    const rows = Array.isArray(site?.social) ? site.social : [];
+    const snapRow = rows.find((r) => r.network === 'snapchat');
+    const snapProfile = snapRow?.href && typeof snapRow.href === 'string' ? snapRow.href.trim() : '';
+
+    return {
+        facebook: `https://www.facebook.com/sharer/sharer.php?u=${enc}`,
+        twitter: `https://twitter.com/intent/tweet?url=${enc}&text=${titleEnc}`,
+        linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${enc}`,
+        pinterest: `https://www.pinterest.com/pin/create/button/?url=${enc}&description=${desc}`,
+        snapchat: snapProfile !== '' ? snapProfile : null,
+        whatsapp: `https://wa.me/?text=${encodeURIComponent(`${rawTitle}\n${pageUrl}`.trim())}`,
+    };
+});
+
+function onImgError(event) {
+    if (!event?.target) return;
+    if (event.target.src !== dummyImage) {
+        event.target.src = dummyImage;
+    }
+}
+
+watch(
+    [detail, locale],
+    ([value, activeLocale]) => {
+        if (!value?.current) {
+            return;
+        }
+
+        applySeoPayload(value.current.seo || {}, activeLocale, {
+            title: value.current.title || 'Insight',
+            description: plainText(value.current.excerpt || value.current.content || value.current.secondDescription || value.current.title || 'Insight'),
+            canonicalUrl: window.location.href,
+            ogImage: value.current.detailImage || value.current.image || dummyImage,
+        });
+        applyGlobalImageAltFallback('DRE image');
+    },
+    { immediate: true }
+);
+</script>
+
+<style scoped>
+.insight-detail__social-list {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.insight-detail__social-list li {
+    margin: 0;
+    padding: 0;
+}
+
+.insight-detail__social-list li::before {
+    content: none !important;
+    display: none !important;
+}
+
+.insight-detail__social-list a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    color: #2a559c;
+    text-decoration: none;
+}
+
+.insight-detail__social-list a:hover {
+    opacity: 0.8;
+}
+
+.insight-detail__social-list svg {
+    width: 18px;
+    height: 18px;
+}
+
+</style>

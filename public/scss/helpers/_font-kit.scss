@@ -1,0 +1,2 @@
+// Re-export: actual @font-face rules live next to style.scss so `../font/` resolves to public/font/
+@import "../font-kit";
