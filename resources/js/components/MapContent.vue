@@ -306,6 +306,14 @@ function popupMetaLine(item) {
     return `${beds} ${bedLabel} | ${baths} ${bathLabel}`;
 }
 
+function closeMobileSearchOffcanvas() {
+    const panel = document.getElementById('listingSearchOffcanvas');
+    if (!panel?.classList.contains('show')) return;
+
+    const offcanvas = window.bootstrap?.Offcanvas?.getOrCreateInstance(panel);
+    offcanvas?.hide();
+}
+
 function onSearch(submittedFilters = null) {
     if (submittedFilters && typeof submittedFilters === 'object') {
         activeFilters.value = {
@@ -314,6 +322,7 @@ function onSearch(submittedFilters = null) {
         };
     }
     fetchMarkers({ fitResults: true, includeBounds: false });
+    closeMobileSearchOffcanvas();
 }
 
 function onViewportChanged() {

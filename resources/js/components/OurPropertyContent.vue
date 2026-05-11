@@ -40,13 +40,13 @@
                     <h2 class="mb-0">{{ t('listing.exploreTitle') }}</h2>
                 </div>
                 <div class="listing-toolbar">
-                    <RouterLink :to="{ name: 'map', query: dreVueListingFilters }" class="listing-toolbar__btn text-decoration-none">
+                    <a :href="mapHref" class="listing-toolbar__btn text-decoration-none">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                             <path d="M20 10C20 16.5 12 22 12 22C12 22 4 16.5 4 10C4 7.87827 4.84285 5.84344 6.34315 4.34315C7.84344 2.84285 9.87827 2 12 2C14.1217 2 16.1566 2.84285 17.6569 4.34315C19.1571 5.84344 20 7.87827 20 10Z" stroke="currentColor" stroke-width="2"/>
                             <path d="M15 10C15 10.7956 14.6839 11.5587 14.1213 12.1213C13.5587 12.6839 12.7956 13 12 13C11.2044 13 10.4413 12.6839 9.87868 12.1213C9.31607 11.5587 9 10.7956 9 10C9 9.20435 9.31607 8.44129 9.87868 7.87868C10.4413 7.31607 11.2044 7 12 7C12.7956 7 13.5587 7.31607 14.1213 7.87868C14.6839 8.44129 15 9.20435 15 10Z" stroke="currentColor" stroke-width="2"/>
                         </svg>
                         {{ t('listing.map') }}
-                    </RouterLink>
+                    </a>
 
                     <div class="dropdown">
                         <button
@@ -116,6 +116,7 @@
         <ListingMobileExtras
             :sort-options="sortOptions"
             :active-sort="selectedSort"
+            :map-href="mapHref"
             @sort-change="selectSort"
         />
     </section>
@@ -162,6 +163,20 @@ const dreVueListingFilters = computed(() => ({
     sort: selectedSort.value,
     view: currentView.value,
 }));
+
+const mapHref = computed(() => {
+    const params = new URLSearchParams();
+
+    Object.entries(dreVueListingFilters.value).forEach(([key, value]) => {
+        const normalized = String(value ?? '').trim();
+        if (normalized !== '') {
+            params.set(key, normalized);
+        }
+    });
+
+    const query = params.toString();
+    return query ? `/map?${query}` : '/map';
+});
 
 // Provide filters to children components (ListingGrid)
 provide('dreVueListingFilters', dreVueListingFilters);

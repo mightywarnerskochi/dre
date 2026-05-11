@@ -36,13 +36,24 @@
             </svg>
         </button>
 
-        <RouterLink :to="{ name: 'map' }" class="listing-mobile-bar__action listing-mobile-bar__action--link">
+        <RouterLink v-if="!mapHref" :to="mapRoute" class="listing-mobile-bar__action listing-mobile-bar__action--link">
+            <svg v-if="!isMapPage" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M20 10C20 16.5 12 22 12 22C12 22 4 16.5 4 10C4 7.87827 4.84285 5.84344 6.34315 4.34315C7.84344 2.84285 9.87827 2 12 2C14.1217 2 16.1566 2.84285 17.6569 4.34315C19.1571 5.84344 20 7.87827 20 10Z" stroke="currentColor" stroke-width="2" />
+                <path d="M15 10C15 10.7956 14.6839 11.5587 14.1213 12.1213C13.5587 12.6839 12.7956 13 12 13C11.2044 13 10.4413 12.6839 9.87868 12.1213C9.31607 11.5587 9 10.7956 9 10C9 9.20435 9.31607 8.44129 9.87868 7.87868C10.4413 7.31607 11.2044 7 12 7C12.7956 7 13.5587 7.31607 14.1213 7.87868C14.6839 8.44129 15 9.20435 15 10Z" stroke="currentColor" stroke-width="2" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 6.5H20M4 12H20M4 17.5H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M7 4.5V8.5M7 10V14M7 15.5V19.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+            <span v-if="!isMapPage">{{ mapLabel }}</span>
+        </RouterLink>
+        <a v-else :href="mapHref" class="listing-mobile-bar__action listing-mobile-bar__action--link">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <path d="M20 10C20 16.5 12 22 12 22C12 22 4 16.5 4 10C4 7.87827 4.84285 5.84344 6.34315 4.34315C7.84344 2.84285 9.87827 2 12 2C14.1217 2 16.1566 2.84285 17.6569 4.34315C19.1571 5.84344 20 7.87827 20 10Z" stroke="currentColor" stroke-width="2" />
                 <path d="M15 10C15 10.7956 14.6839 11.5587 14.1213 12.1213C13.5587 12.6839 12.7956 13 12 13C11.2044 13 10.4413 12.6839 9.87868 12.1213C9.31607 11.5587 9 10.7956 9 10C9 9.20435 9.31607 8.44129 9.87868 7.87868C10.4413 7.31607 11.2044 7 12 7C12.7956 7 13.5587 7.31607 14.1213 7.87868C14.6839 8.44129 15 9.20435 15 10Z" stroke="currentColor" stroke-width="2" />
             </svg>
-            <span>{{ t('listing.map') }}</span>
-        </RouterLink>
+            <span v-if="!isMapPage">{{ mapLabel }}</span>
+        </a>
 
         <div class="listing-mobile-bar__views" role="group" :aria-label="t('listing.layoutAria')">
             <button type="button" class="listing-mobile-bar__view-btn" data-listing-view="list" :class="{ 'is-active': activeView === 'list' }" :aria-label="t('listing.listViewAria')" :aria-pressed="activeView === 'list' ? 'true' : 'false'" @click="setListingView('list')">
@@ -72,10 +83,11 @@
 
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
-import { RouterLink } from 'vue-router';
+import { RouterLink, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n({ useScope: 'global' });
+const route = useRoute();
 
 const props = defineProps({
     sortOptions: {
@@ -91,12 +103,19 @@ const props = defineProps({
         type: String,
         default: 'newest',
     },
+    mapHref: {
+        type: String,
+        default: '',
+    },
 });
 
 const emit = defineEmits(['sort-change']);
 
 const sortOptions = computed(() => props.sortOptions);
 const activeSort = computed(() => props.activeSort);
+const isMapPage = computed(() => route.name === 'map');
+const mapRoute = computed(() => (isMapPage.value ? { name: 'our-property', query: route.query } : { name: 'map' }));
+const mapLabel = computed(() => t('listing.map'));
 const activeView = ref('grid');
 
 let listingSearchOffcanvas = null;
