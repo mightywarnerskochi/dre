@@ -426,6 +426,16 @@ function closeDropdown(fieldId) {
     dropdown?.hide();
 }
 
+function closeSearchOffcanvas() {
+    if (typeof window === 'undefined') return;
+
+    const panel = document.getElementById('listingSearchOffcanvas');
+    if (!panel?.classList.contains('show')) return;
+
+    const offcanvas = window.bootstrap?.Offcanvas?.getOrCreateInstance(panel);
+    offcanvas?.hide();
+}
+
 function normalizeFilters() {
     if (filters.value.bedrooms === 'Studio') {
         filters.value.bedrooms = '';
@@ -524,6 +534,7 @@ function emitChange() {
 
 function onSearch() {
     emit('search', { ...filters.value });
+    closeSearchOffcanvas();
 }
 
 // Lifecycle and Watchers

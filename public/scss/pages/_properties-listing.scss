@@ -882,7 +882,7 @@ html[dir="rtl"] {
 
     &__body {
         padding: 16px 16px calc(24px + env(safe-area-inset-bottom, 0px));
-        overflow-y: auto;
+        overflow-y: visible;
 
         .properties-listing__search {
             width: 100%;
