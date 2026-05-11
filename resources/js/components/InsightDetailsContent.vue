@@ -53,9 +53,9 @@
                 </figure>
                 <article class="insight-detail__content list">
                     <div id="insight-detail-title" v-html="detail.current.content"></div>
-                    <div class="insight-detail__gallery" v-if="detail.current.image3 || detail.current.image4">
-                            <img :src="detail.current.image3" :alt="detail.current.image3Alt || 'Insight image'"  v-if="detail.current.image3" width="469" height="313" loading="lazy" @error="onImgError">
-                            <img :src="detail.current.image4" :alt="detail.current.image4Alt || 'Insight image'" v-if="detail.current.image4" width="469" height="313" loading="lazy" @error="onImgError">
+                    <div class="insight-detail__gallery" v-if="showImage3 || showImage4">
+                            <img :src="detail.current.image3" :alt="detail.current.image3Alt || 'Insight image'"  v-if="showImage3" width="469" height="313" loading="lazy" @error="hideGalleryImage('image3')">
+                            <img :src="detail.current.image4" :alt="detail.current.image4Alt || 'Insight image'" v-if="showImage4" width="469" height="313" loading="lazy" @error="hideGalleryImage('image4')">
                     </div>
                     
                     <div v-if="detail.current.secondDescription" v-html="detail.current.secondDescription" class="mt-4"></div>
@@ -135,7 +135,7 @@
 </template>
 
 <script setup>
-import { computed, inject, watch } from 'vue';
+import { computed, inject, ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
@@ -146,8 +146,12 @@ import { getPublicSiteBoot } from '@/utils/publicSite';
 const route = useRoute();
 const { locale, t } = useI18n({ useScope: 'global' });
 const dummyImage = asset('public/images/news/blog-placeholder-new.png');
+const hiddenGalleryImages = ref({});
 
 const detail = computed(() => getInsightDetailData(route.params.slug, locale.value));
+const currentSlug = computed(() => detail.value?.current?.slug || '');
+const showImage3 = computed(() => Boolean(detail.value?.current?.image3) && !hiddenGalleryImages.value.image3);
+const showImage4 = computed(() => Boolean(detail.value?.current?.image4) && !hiddenGalleryImages.value.image4);
 
 const injectedSite = inject('dreSite', null);
 const dreSiteRef = injectedSite ?? computed(() => getPublicSiteBoot());
@@ -252,6 +256,17 @@ function onImgError(event) {
         event.target.src = dummyImage;
     }
 }
+
+function hideGalleryImage(key) {
+    hiddenGalleryImages.value = {
+        ...hiddenGalleryImages.value,
+        [key]: true,
+    };
+}
+
+watch(currentSlug, () => {
+    hiddenGalleryImages.value = {};
+});
 
 watch(
     [detail, locale],

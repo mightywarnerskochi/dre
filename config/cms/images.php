@@ -44,13 +44,13 @@ return [
     ],
     'successful-journeys' => [
         'image_1' => [
-            'width' => 260,
-            'height' => 195,
+            'width' => 463,
+            'height' => 313,
             'max_size' => 1024,
         ],
         'image_2' => [
-            'width' => 260,
-            'height' => 195,
+            'width' => 463,
+            'height' => 313,
             'max_size' => 1024,
         ],
     ],
