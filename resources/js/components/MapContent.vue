@@ -27,7 +27,9 @@
         <div class="listing-search-strip">
             <div class="container-ctn">
                 <div class="js-listing-search-home">
+                    <div class="js-listing-search-panel">
                     <PropertyFilters v-model="activeFilters" @search="onSearch" />
+                    </div>
                 </div>
             </div>
         </div>

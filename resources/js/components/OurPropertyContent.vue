@@ -27,7 +27,9 @@
         <div class="listing-search-strip">
             <div class="container-ctn">
                 <div class="js-listing-search-home">
+                    <div class="js-listing-search-panel">
                     <PropertyFilters v-model="activeFilters" @search="onListingSearch" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -236,5 +238,26 @@ async function onListingSearch() {
     background: transparent;
     color: #1f3f74;
     font-weight: 600;
+}
+
+@media (max-width: 767.98px) {
+    .container-ctn.pt-5 {
+        padding-top: 28px !important;
+        padding-bottom: 96px;
+    }
+
+    .container-ctn.pt-5 > .d-flex {
+        display: block !important;
+        margin-bottom: 16px !important;
+    }
+
+    .listing-toolbar {
+        display: none;
+    }
+
+    .properties-listing__head h2 {
+        font-size: 18px;
+        line-height: 1.25;
+    }
 }
 </style>

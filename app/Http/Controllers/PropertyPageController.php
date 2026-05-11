@@ -289,6 +289,17 @@ class PropertyPageController extends Controller
                 ];
             })->values()->all();
 
+            if ($definition->key === 'location') {
+                $options = collect($options)
+                    ->filter(function (array $option) {
+                        $type = Str::lower((string) ($option['type'] ?? ''));
+
+                        return in_array($type, ['city', 'community'], true);
+                    })
+                    ->values()
+                    ->all();
+            }
+
             if ($definition->key === 'property_type') {
                 $filters['property_types'] = $options;
             } elseif ($definition->key === 'category') {
@@ -386,22 +397,12 @@ class PropertyPageController extends Controller
                 ->take(200)
                 ->get()
                 ->each(function (Property $property) use ($locale, $fallbackCountry, $addLocation) {
-                    $title = $property->getTranslation('title', $locale) ?: $property->title;
-                    $address = $property->getTranslation('address', $locale) ?: $property->address;
                     $community = $property->getTranslation('community', $locale) ?: $property->community;
                     $city = $property->getTranslation('city', $locale) ?: $property->city;
                     $country = $property->getTranslation('country', $locale) ?: $property->country ?: $fallbackCountry;
 
-                    $locationLine = collect([$community, $city, $country])
-                        ->map(fn ($part) => trim((string) $part))
-                        ->filter()
-                        ->unique()
-                        ->implode(', ');
-
-                    $addLocation($property->title, $title, 'Building', $locationLine);
                     $addLocation($property->community, $community, 'Community', collect([$city, $country])->filter()->implode(', '));
                     $addLocation($property->city, $city, 'City', $country);
-                    $addLocation($property->address, $address, 'Address', $locationLine);
                 });
 
             $filters['locations'] = $locations->values()->all();

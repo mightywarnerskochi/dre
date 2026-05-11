@@ -7,6 +7,7 @@
 
     $filterOptions = [
         'property_type' => 'Property type',
+        'category' => 'Category',
         'location' => 'Location',
         'bedrooms' => 'Beds',
         'bathrooms' => 'Baths',
@@ -21,6 +22,7 @@
 
     $defaultUiTypeByFilter = [
         'property_type' => 'dropdown',
+        'category' => 'dropdown',
         'location' => 'dropdown',
         'price' => 'dropdown',
         'bedrooms' => 'dropdown',
@@ -143,37 +145,10 @@
     </div>
 
     @if((string) $selectedFilter !== 'price')
-        <div class="col-md-12">
+        <div id="filterColumnsWrap" class="col-md-12">
             <label class="form-label fw-bold">Property Columns <span class="text-danger">*</span></label>
-            <select name="columns" class="form-select @error('columns') is-invalid @enderror" required>
+            <select id="filterColumns" name="columns" class="form-select @error('columns') is-invalid @enderror" required data-selected="{{ $selectedColumns }}">
                 <option value="">Select column(s)</option>
-                    <option value="property_type" {{ $selectedColumns === 'property_type' ? 'selected' : '' }}>
-                        property_type
-                    </option>
-                    <option value="full" {{ $selectedColumns === 'city' ? 'selected' : '' }}>
-                        city
-                    </option>
-                    <option value="city" {{ $selectedColumns === 'city' ? 'selected' : '' }}>
-                        city
-                    </option>
-                    <option value="community" {{ $selectedColumns === 'community' ? 'selected' : '' }}>
-                        community
-                    </option>
-                    <option value="city,community" {{ $selectedColumns === 'city,community' ? 'selected' : '' }}>
-                        city + community (combined)
-                    </option>
-               
-                    <option value="bedrooms" {{ $selectedColumns === 'bedrooms' ? 'selected' : '' }}>
-                        bedrooms
-                    </option>
-                
-                    <option value="bathrooms" {{ $selectedColumns === 'bathrooms' ? 'selected' : '' }}>
-                        bathrooms
-                    </option>
-              
-                    <option value="bedrooms,bathrooms" {{ $selectedColumns === 'bedrooms,bathrooms' ? 'selected' : '' }}>
-                        bedrooms + bathrooms (combined)
-                    </option>
             </select>
             @error('columns')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
             <div class="form-text mt-1">This controls which distinct values will be cached in `home_banner_filter_values`.</div>
@@ -196,3 +171,86 @@
     </div>
 </div>
 
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const filterSelect = document.querySelector('select[name="filter"]');
+        const columnsSelect = document.getElementById('filterColumns');
+        const columnsWrap = document.getElementById('filterColumnsWrap');
+
+        if (!filterSelect || !columnsSelect || !columnsWrap) {
+            return;
+        }
+
+        const optionsByFilter = {
+            property_type: [
+                ['property_type', 'property_type'],
+            ],
+            category: [
+                ['category', 'category'],
+            ],
+            location: [
+                ['city', 'city'],
+                ['community', 'community'],
+                ['address', 'address'],
+                ['title', 'title'],
+                ['city,community', 'city + community'],
+                ['city,community,address', 'city + community + address'],
+                ['city,community,address,title', 'city + community + address + title'],
+            ],
+            bedrooms: [
+                ['bedrooms', 'bedrooms'],
+            ],
+            bathrooms: [
+                ['bathrooms', 'bathrooms'],
+            ],
+            bed_and_baths: [
+                ['bedrooms,bathrooms', 'bedrooms + bathrooms'],
+            ],
+        };
+
+        function renderColumnOptions() {
+            const filter = filterSelect.value;
+            const previous = columnsSelect.value || columnsSelect.dataset.selected || '';
+            const rows = optionsByFilter[filter] || [];
+            const needsColumns = filter !== 'price';
+
+            columnsWrap.classList.toggle('d-none', !needsColumns);
+            columnsSelect.required = needsColumns;
+            columnsSelect.disabled = !needsColumns;
+
+            if (!needsColumns) {
+                columnsSelect.innerHTML = '';
+                columnsSelect.append(new Option('Select column(s)', ''));
+                columnsSelect.value = '';
+                columnsSelect.dataset.selected = '';
+                return;
+            }
+
+            columnsSelect.innerHTML = '';
+            columnsSelect.append(new Option('Select column(s)', ''));
+
+            rows.forEach(([value, label]) => {
+                columnsSelect.append(new Option(label, value, false, value === previous));
+            });
+
+            if (!rows.some(([value]) => value === columnsSelect.value)) {
+                columnsSelect.value = rows.length === 1 ? rows[0][0] : '';
+            }
+
+            columnsSelect.dataset.selected = columnsSelect.value;
+        }
+
+        filterSelect.addEventListener('change', function () {
+            columnsSelect.dataset.selected = '';
+            renderColumnOptions();
+        });
+
+        columnsSelect.addEventListener('change', function () {
+            columnsSelect.dataset.selected = columnsSelect.value;
+        });
+
+        renderColumnOptions();
+    });
+</script>
+@endpush

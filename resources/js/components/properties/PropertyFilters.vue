@@ -48,7 +48,7 @@
                     <path d="M6 4.5H7.5M6 6.75H7.5M6 9H7.5" stroke="#4B5C77" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M8.625 16.5V13.5C8.625 12.7927 8.625 12.4395 8.40525 12.2197C8.1855 12 7.83225 12 7.125 12H6.375C5.66775 12 5.3145 12 5.09475 12.2197C4.875 12.4395 4.875 12.7927 4.875 13.5V16.5" stroke="#4B5C77" stroke-width="1.125" stroke-linejoin="round"/>
                 </svg>
-                <button type="button" class="dropdown-trigger bg-transparent border-0 w-100 text-start" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                <button type="button" class="dropdown-trigger bg-transparent border-0 w-100 text-start" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" aria-expanded="false">
                     <span class="selected-text">{{ propertyTypeTriggerText }}</span>
                 </button>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -62,12 +62,12 @@
                             :class="{ 'property-options--collapsed': !propertyTypesExpanded }"
                         >
                             <button
-                                v-for="(opt, idx) in propertyTypeOptions"
-                                :key="'pt-' + opt.value"
-                                type="button"
-                                :class="{
-                                    'property-option--extra': idx >= 5 && !propertyTypesExpanded,
-                                    active: filters.property_type === opt.value,
+                            v-for="(opt, idx) in visiblePropertyTypeOptions"
+                            :key="'pt-' + opt.value"
+                            type="button"
+                            :class="{
+                                'property-option--extra': idx >= 5 && !propertyTypesExpanded,
+                                active: filters.property_type === opt.value,
                                 }"
                                 @click="selectPropertyType(opt)"
                             >
@@ -75,7 +75,7 @@
                             </button>
                         </div>
                     </div>
-                    <div v-if="propertyTypeOptions.length > 5" class="dropdown-footer">
+                    <div v-if="visiblePropertyTypeOptions.length > 5" class="dropdown-footer">
                         <button type="button" class="view-more" @click.stop="propertyTypesExpanded = !propertyTypesExpanded">
                             {{ propertyTypesExpanded ? t('listing.viewLess') : t('listing.viewMore') }}
                         </button>
@@ -90,7 +90,7 @@
                     <path d="M1.6875 14.625V10.6875C1.68926 10.0913 1.92688 9.52003 2.34846 9.09846C2.77003 8.67688 3.3413 8.43926 3.9375 8.4375H14.0625C14.6587 8.43926 15.23 8.67688 15.6515 9.09846C16.0731 9.52003 16.3107 10.0913 16.3125 10.6875V14.625M13.5 8.4375H3.375V4.78125C3.37611 4.40863 3.52463 4.05159 3.78811 3.78811C4.05159 3.52463 4.40863 3.37611 4.78125 3.375H13.2188C13.5914 3.37611 13.9484 3.52463 14.2119 3.78811C14.4754 4.05159 14.6239 4.40863 14.625 4.78125V8.4375H13.5Z" stroke="#4B5C77" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M1.6875 14.625V14.3438C1.68815 14.1202 1.77725 13.9059 1.93535 13.7478C2.09344 13.5898 2.30767 13.5006 2.53125 13.5H15.4688C15.6923 13.5006 15.9066 13.5898 16.0647 13.7478C16.2227 13.9059 16.3119 14.1202 16.3125 14.3438V14.625M3.9375 8.4375V7.875C3.93833 7.57689 4.05713 7.29122 4.26793 7.08043C4.47872 6.86963 4.76439 6.75083 5.0625 6.75H7.875C8.17311 6.75083 8.45878 6.86963 8.66957 7.08043C8.88037 7.29122 8.99917 7.57689 9 7.875M9 7.875V8.4375M9 7.875C9.00083 7.57689 9.11963 7.29122 9.33043 7.08043C9.54122 6.86963 9.82689 6.75083 10.125 6.75H12.9375C13.2356 6.75083 13.5213 6.86963 13.7321 7.08043C13.9429 7.29122 14.0617 7.57689 14.0625 7.875V8.4375" stroke="#4B5C77" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <button type="button" class="dropdown-trigger bg-transparent border-0 w-100 text-start" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                <button type="button" class="dropdown-trigger bg-transparent border-0 w-100 text-start" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" aria-expanded="false">
                     <span class="selected-text">{{ bedsBathsTriggerText }}</span>
                 </button>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -101,8 +101,8 @@
                         <div class="dropdown-section-title">{{ t('listing.bedrooms') }}</div>
                         <div class="option-buttons" data-type="bedrooms">
                             <label v-for="val in bedroomOptions" :key="'bed-' + val" class="custom-check-btn">
-                                <input type="radio" name="bedrooms" class="btn-check" :value="val" v-model="filters.bedrooms" @change="emitChange">
-                                {{ val === 'Studio' ? t('listing.studio') : val }}
+                                <input type="radio" name="bedrooms" class="btn-check" :value="val" v-model="filters.bedrooms" @change="selectBedroom(val)">
+                                {{ val }}
                             </label>
                         </div>
                     </div>
@@ -110,7 +110,7 @@
                         <div class="dropdown-section-title">{{ t('listing.bathrooms') }}</div>
                         <div class="option-buttons" data-type="bathrooms">
                             <label v-for="val in bathroomOptions" :key="'bath-' + val" class="custom-check-btn">
-                                <input type="radio" name="bathrooms" class="btn-check" :value="val" v-model="filters.bathrooms" @change="emitChange">
+                                <input type="radio" name="bathrooms" class="btn-check" :value="val" v-model="filters.bathrooms" @change="selectBathroom(val)">
                                 {{ val }}
                             </label>
                         </div>
@@ -130,7 +130,7 @@
                     <path d="M5.25 15C6.49264 15 7.5 13.9926 7.5 12.75C7.5 11.5074 6.49264 10.5 5.25 10.5C4.00736 10.5 3 11.5074 3 12.75C3 13.9926 4.00736 15 5.25 15Z" stroke="#4B5C77" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/>
                     <path d="M10.5 10.5H15V14.25C15 14.4489 14.921 14.6397 14.7803 14.7803C14.6397 14.921 14.4489 15 14.25 15H11.25C11.0511 15 10.8603 14.921 10.7197 14.7803C10.579 14.6397 10.5 14.4489 10.5 14.25V10.5ZM3 3H7.5V6.75C7.5 6.94891 7.42098 7.13968 7.28033 7.28033C7.13968 7.42098 6.94891 7.5 6.75 7.5H3.75C3.55109 7.5 3.36032 7.42098 3.21967 7.28033C3.07902 7.13968 3 6.94891 3 6.75V3Z" stroke="#4B5C77" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                <button type="button" class="dropdown-trigger bg-transparent border-0 w-100 text-start" data-bs-toggle="dropdown" aria-expanded="false">
+                <button type="button" class="dropdown-trigger bg-transparent border-0 w-100 text-start" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
                     <span class="selected-text">{{ categoryTriggerText }}</span>
                 </button>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -141,10 +141,10 @@
                         <div class="dropdown-section-title">{{ t('listing.categoryHeading') }}</div>
                         <div class="option-buttons">
                             <button
-                                v-for="opt in categoryOptions"
-                                :key="'cat-' + opt.value"
-                                type="button"
-                                :class="{ active: filters.categories === opt.value }"
+                            v-for="opt in visibleCategoryOptions"
+                            :key="'cat-' + opt.value"
+                            type="button"
+                            :class="{ active: filters.categories === opt.value }"
                                 @click="selectCategory(opt)"
                             >
                                 {{ opt.label }}
@@ -160,7 +160,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" fill="none">
                     <path d="M3.5459 12.1029C2.38715 10.9434 1.8074 10.3644 1.59215 9.61218C1.37615 8.85993 1.56065 8.06118 1.92965 6.46443L2.1419 5.54343C2.45165 4.19943 2.6069 3.52743 3.06665 3.06693C3.5264 2.60643 4.19915 2.45193 5.54315 2.14218L6.46415 1.92918C8.06165 1.56093 8.85965 1.37643 9.6119 1.59168C10.3641 1.80768 10.9431 2.38743 12.1019 3.54618L13.4744 4.91868C15.4926 6.93618 16.4999 7.94418 16.4999 9.19668C16.4999 10.4499 15.4919 11.4579 13.4751 13.4747C11.4576 15.4922 10.4496 16.5002 9.1964 16.5002C7.9439 16.5002 6.93515 15.4922 4.9184 13.4754L3.5459 12.1029Z" stroke="#4B5C77" stroke-width="1.125"/>
                 </svg>
-                <button type="button" class="dropdown-trigger bg-transparent border-0 w-100 text-start" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                <button type="button" class="dropdown-trigger bg-transparent border-0 w-100 text-start" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" aria-expanded="false">
                     <span class="selected-text">{{ priceTriggerText }}</span>
                 </button>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -241,6 +241,7 @@ watch(() => props.modelValue, (newVal) => {
     const hasChanged = JSON.stringify(newVal) !== JSON.stringify(filters.value);
     if (hasChanged) {
         filters.value = { ...newVal };
+        normalizeFilters();
         syncPriceSlider();
     }
 }, { deep: true });
@@ -252,7 +253,8 @@ const uid = Math.random().toString(36).substring(2, 9);
 const PRICE_MIN = 0;
 const PRICE_MAX = 1000000;
 const PRICE_STEP = 5000;
-const bedroomOptions = ['Studio', '1', '2', '3', '4', '5', '6', '7', '7+'];
+const MAX_LOCATION_SUGGESTIONS = 4;
+const bedroomOptions = ['1', '2', '3', '4', '5', '6', '7', '7+'];
 const bathroomOptions = ['1', '2', '3', '4', '5', '6', '7', '7+'];
 
 const propertyTypeOptions = ref([]);
@@ -265,8 +267,20 @@ let priceSliderRetry = null;
 
 // Computed trigger texts
 const propertyTypeTriggerText = computed(() => {
+    if (!filters.value.property_type) {
+        return t('listing.selectPropertyType');
+    }
+
     const o = propertyTypeOptions.value.find((x) => x.value === filters.value.property_type);
     return o ? o.label : t('listing.selectPropertyType');
+});
+
+const visiblePropertyTypeOptions = computed(() => {
+    return propertyTypeOptions.value.filter((option) => String(option.value ?? '').trim() !== '');
+});
+
+const visibleCategoryOptions = computed(() => {
+    return categoryOptions.value.filter((option) => String(option.value ?? '').trim() !== '');
 });
 
 const bedsBathsTriggerText = computed(() => {
@@ -274,7 +288,7 @@ const bedsBathsTriggerText = computed(() => {
     const baths = filters.value.bathrooms;
     if (!beds && !baths) return t('listing.selectBedsBaths');
     const parts = [];
-    if (beds) parts.push(`${beds === 'Studio' ? t('listing.studio') : beds} Bed`);
+    if (beds && beds !== 'Studio') parts.push(`${beds} Bed`);
     if (baths) parts.push(`${baths} Bath`);
     return parts.join(' | ');
 });
@@ -297,15 +311,34 @@ const priceTriggerText = computed(() => {
 });
 
 // Location Suggestions
+const cleanLocationOptions = computed(() => {
+    const seen = new Set();
+
+    return locationOptions.value.filter((opt) => {
+        const type = locationOptionType(opt).toLowerCase();
+        const name = locationOptionName(opt).trim();
+        const key = name.toLowerCase();
+
+        if (!['city', 'community'].includes(type) || !name || seen.has(key)) {
+            return false;
+        }
+
+        seen.add(key);
+        return true;
+    });
+});
+
 const locationSuggestions = computed(() => {
     const search = (filters.value.location || '').trim().toLowerCase();
-    if (!search) return locationOptions.value.slice(0, 10);
+    const options = cleanLocationOptions.value.length ? cleanLocationOptions.value : locationOptions.value;
 
-    return locationOptions.value.filter(opt => {
+    if (!search) return options.slice(0, MAX_LOCATION_SUGGESTIONS);
+
+    return options.filter(opt => {
         const name = locationOptionName(opt).toLowerCase();
         const subtitle = locationOptionSubtitle(opt).toLowerCase();
         return name.includes(search) || subtitle.includes(search);
-    }).slice(0, 10);
+    }).slice(0, MAX_LOCATION_SUGGESTIONS);
 });
 
 function locationOptionMeta(option) {
@@ -326,7 +359,12 @@ function locationOptionName(option) {
 
 function locationOptionSubtitle(option) {
     const meta = locationOptionMeta(option);
-    return String(meta.subtitle || meta.city || '');
+    return String(meta.subtitle || meta.city || option?.subtitle || option?.city || '');
+}
+
+function locationOptionType(option) {
+    const meta = locationOptionMeta(option);
+    return String(meta.type || option?.type || '');
 }
 
 function selectLocation(val) {
@@ -353,17 +391,45 @@ function highlightMatch(text, search) {
 function selectPropertyType(opt) {
     filters.value.property_type = filters.value.property_type === opt.value ? '' : opt.value;
     emitChange();
+    closeDropdown('propertyTypeField');
 }
 
 function selectCategory(opt) {
     filters.value.categories = filters.value.categories === opt.value ? '' : opt.value;
     emitChange();
+    closeDropdown('categoriesField');
+}
+
+function selectBedroom(value) {
+    filters.value.bedrooms = value;
+    emitChange();
+    closeDropdown('bedsBathsField');
+}
+
+function selectBathroom(value) {
+    filters.value.bathrooms = value;
+    emitChange();
+    closeDropdown('bedsBathsField');
 }
 
 function clearBedsBaths() {
     filters.value.bedrooms = '';
     filters.value.bathrooms = '';
     emitChange();
+}
+
+function closeDropdown(fieldId) {
+    if (typeof window === 'undefined') return;
+
+    const trigger = document.querySelector(`#${fieldId} [data-bs-toggle="dropdown"]`);
+    const dropdown = window.bootstrap?.Dropdown?.getOrCreateInstance(trigger);
+    dropdown?.hide();
+}
+
+function normalizeFilters() {
+    if (filters.value.bedrooms === 'Studio') {
+        filters.value.bedrooms = '';
+    }
 }
 
 // Price Slider Logic
@@ -452,6 +518,7 @@ async function loadOptions() {
 }
 
 function emitChange() {
+    normalizeFilters();
     emit('update:modelValue', { ...filters.value });
 }
 
@@ -461,6 +528,7 @@ function onSearch() {
 
 // Lifecycle and Watchers
 onMounted(async () => {
+    normalizeFilters();
     loadOptions();
     await nextTick();
     initPriceSlider();
@@ -630,23 +698,65 @@ onBeforeUnmount(() => {
 #categoriesField .custom-dropdown-menu,
 #priceField .custom-dropdown-menu,
 .beds-baths-dropdown {
-    width: min(100vw - 24px, 360px);
-    max-width: 360px;
-    min-width: 320px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
 }
 
-.beds-baths-dropdown .option-buttons {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 4px;
+#propertyTypeField .dropdown-menu,
+#bedsBathsField .dropdown-menu,
+#categoriesField .dropdown-menu,
+#priceField .dropdown-menu {
+    top: 100% !important;
+    left: 0 !important;
+    right: auto !important;
+    transform: none !important;
+    margin-top: 0 !important;
 }
 
-.beds-baths-dropdown .option-buttons label.custom-check-btn,
-.beds-baths-dropdown .option-buttons button {
-    min-width: 2.5rem;
-    padding: 8px 14px;
-    flex: 0 0 auto;
+#propertyTypeField .custom-dropdown-menu {
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+    margin-top: 0 !important;
+    padding: 18px 12px 16px;
+}
+
+#propertyTypeField .dropdown-section-title {
+    margin: 0 0 12px;
+    font-size: 18px;
+}
+
+#propertyTypeField .option-buttons {
+    gap: 8px;
+}
+
+#propertyTypeField .option-buttons button {
+    min-width: 0;
+    padding: 7px 16px;
+}
+
+#categoriesField .custom-dropdown-menu {
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+    top: 100% !important;
+    margin-top: 0 !important;
+    padding: 18px 12px 16px;
+}
+
+#categoriesField .dropdown-section-title {
+    margin: 0 0 12px;
+    font-size: 18px;
+}
+
+#categoriesField .option-buttons {
+    gap: 8px;
+}
+
+#categoriesField .option-buttons button {
+    min-width: 0;
+    padding: 7px 16px;
 }
 
 .dropdown-footer {
@@ -683,17 +793,66 @@ onBeforeUnmount(() => {
     text-decoration: none;
 }
 
+#bedsBathsField .beds-baths-dropdown {
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+    top: 100% !important;
+    margin-top: 0 !important;
+    padding: 18px 12px 16px;
+}
+
+#bedsBathsField .dropdown-section {
+    margin-bottom: 14px;
+}
+
+#bedsBathsField .dropdown-section-title {
+    margin: 0 0 10px;
+    font-size: 18px;
+}
+
+#bedsBathsField .option-buttons {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 8px;
+    overflow: visible;
+    padding-bottom: 0;
+}
+
+#bedsBathsField .option-buttons label.custom-check-btn,
+#bedsBathsField .option-buttons button {
+    min-width: 0;
+    width: 100%;
+    height: 35px;
+    padding: 0 10px;
+    flex: none;
+}
+
+#bedsBathsField .dropdown-footer {
+    margin-top: 12px;
+    padding-top: 14px;
+}
+
+#bedsBathsField .dropdown-footer .clear-filters {
+    background: #f3f4f6;
+    color: #2a559c;
+    padding: 7px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
 /* Location Suggestions (Matching Home Design) */
 .search-results-dropdown {
     position: absolute;
     top: 100%;
     left: 0;
-    width: min(450px, calc(100vw - 24px));
-    min-width: 0;
+    width: 100%;
+    min-width: 100%;
+    max-width: 100%;
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 14px 40px rgba(15, 23, 42, 0.15);
-    margin-top: 16px;
+    margin-top: 0;
     padding: 16px 8px;
     z-index: 1000;
 }
@@ -707,7 +866,7 @@ onBeforeUnmount(() => {
 }
 
 .search-results-list {
-    max-height: 400px;
+    max-height: 248px;
     overflow-y: auto;
 }
 
@@ -782,8 +941,16 @@ onBeforeUnmount(() => {
     box-shadow: 0 16px 48px rgba(15, 23, 42, 0.14) !important;
     border: 1px solid #e8eaed;
     background: #fff;
-    margin-top: 6px !important;
-    min-width: 320px;
+    margin-top: 0 !important;
+    min-width: 100%;
+}
+
+#priceField .price-range-dropdown--listing {
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+    top: 100% !important;
+    margin-top: 0 !important;
 }
 
 .price-range-slider {
@@ -879,7 +1046,8 @@ onBeforeUnmount(() => {
     }
 
     .search-results-dropdown {
-        width: calc(100vw - 24px);
+        width: 100%;
+        max-width: 100%;
         left: 0;
     }
 
@@ -888,8 +1056,8 @@ onBeforeUnmount(() => {
     #priceField .custom-dropdown-menu,
     .beds-baths-dropdown {
         min-width: 0;
-        width: min(360px, calc(100vw - 24px));
-        max-width: calc(100vw - 24px);
+        width: 100%;
+        max-width: 100%;
     }
 }
 </style>
