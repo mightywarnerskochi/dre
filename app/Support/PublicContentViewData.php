@@ -1227,12 +1227,11 @@ class PublicContentViewData
                 $contentHtmlEn = (string) ($translations['en']['content'] ?? '');
                 $contentHtmlAr = (string) ($translations['ar']['content'] ?? '');
 
-                $image = $blog->feature_image ? media_url((string) $blog->feature_image) : null;
+                $image = self::existingBlogMediaUrl($blog->feature_image);
                 $image = filled($image) ? $image : $placeholder;
-                $detailImage = $blog->detail_image ? media_url((string) $blog->detail_image) : null;
-                $detailImage = filled($detailImage) ? $detailImage : $placeholder;
-                $image3 = $blog->image_3 ? media_url((string) $blog->image_3) : null;
-                $image4 = $blog->image_4 ? media_url((string) $blog->image_4) : null;
+                $detailImage = self::existingBlogMediaUrl($blog->detail_image);
+                $image3 = self::existingBlogMediaUrl($blog->image_3);
+                $image4 = self::existingBlogMediaUrl($blog->image_4);
                 $primaryTitle = $titleEn !== '' ? $titleEn : ($titleAr !== '' ? $titleAr : 'Insight');
                 $featureImageAlt = self::fallbackAltText($blog->feature_image_alt ?? null, $primaryTitle.' image');
                 $detailImageAlt = self::fallbackAltText($blog->detail_image_alt ?? null, $primaryTitle.' image');
@@ -1520,6 +1519,25 @@ class PublicContentViewData
             'bed_and_baths' => 'dropdown',
             'price' => 'dropdown',
         ][$key] ?? 'dropdown';
+    }
+
+    private static function existingBlogMediaUrl(?string $path): ?string
+    {
+        if (! filled($path)) {
+            return null;
+        }
+
+        $path = (string) $path;
+
+        if (! preg_match('#^https?://#i', $path)
+            && MediaStorage::pathExistsIsCheap()
+            && ! MediaStorage::exists($path)) {
+            return null;
+        }
+
+        $url = media_url($path);
+
+        return filled($url) ? $url : null;
     }
 
     private static function fallbackSearchFilters(): array
