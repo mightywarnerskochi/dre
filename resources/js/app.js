@@ -2,7 +2,7 @@ import './bootstrap';
 import { createApp } from 'vue';
 import { startGlobalAltObserver } from '@/utils/seo';
 
-const BOOT_CACHE_KEY = 'dre_spa_boot_v3';
+const BOOT_CACHE_KEY = 'dre_spa_boot_v4';
 const BOOT_CACHE_TTL_MS = 5 * 60 * 1000;
 
 function assignBootObject(key, value) {
@@ -86,20 +86,12 @@ async function hydrateBootPayload() {
 
         assignSitePublic(payload.sitePublic);
 
-        if (
-            cached &&
-            cached.contentPublic &&
-            typeof cached.contentPublic === 'object' &&
-            cached.i18nMessages &&
-            typeof cached.i18nMessages === 'object'
-        ) {
-            assignBootObject('__DRE_CONTENT__', cached.contentPublic);
-            assignBootObject('__DRE_I18N__', cached.i18nMessages);
-        } else {
-            assignBootObject('__DRE_CONTENT__', payload.contentPublic || {});
-            assignBootObject('__DRE_I18N__', payload.i18nMessages || {});
-            writeBootCache(payload.contentPublic || {}, payload.i18nMessages || {});
-        }
+        // Always apply the latest API payload when the request succeeds. Previously we reused
+        // sessionStorage cache whenever it was valid, which hid CMS changes (new neighborhoods,
+        // filters, etc.) for up to BOOT_CACHE_TTL_MS after edits.
+        assignBootObject('__DRE_CONTENT__', payload.contentPublic || {});
+        assignBootObject('__DRE_I18N__', payload.i18nMessages || {});
+        writeBootCache(payload.contentPublic || {}, payload.i18nMessages || {});
     } catch (_error) {
         if (!window.__DRE_SITE__ || typeof window.__DRE_SITE__ !== 'object' || Array.isArray(window.__DRE_SITE__)) {
             assignSitePublic({});
