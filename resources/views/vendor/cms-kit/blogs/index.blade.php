@@ -41,7 +41,7 @@
                             <div class="row g-4">
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Section Title <span class="text-danger">*</span></label>
-                                    <input type="text" name="translations[{{ $lang->code }}][title]" class="form-control @error("translations.{$lang->code}.title") is-invalid @enderror" value="{{ old("translations.{$lang->code}.title", $section->translations[$lang->code]['title'] ?? '') }}" required>
+                                    <input type="text" name="translations[{{ $lang->code }}][title]" class="form-control @error("translations.{$lang->code}.title") is-invalid @enderror" value="{{ old("translations.{$lang->code}.title", data_get($section?->translations, "{$lang->code}.title", '')) }}" required>
                                     @error("translations.{$lang->code}.title")
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -49,7 +49,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label fw-bold">Listing Page Title</label>
-                                    <input type="text" name="translations[{{ $lang->code }}][listing_title]" class="form-control @error("translations.{$lang->code}.listing_title") is-invalid @enderror" value="{{ old("translations.{$lang->code}.listing_title", $section->translations[$lang->code]['listing_title'] ?? '') }}">
+                                    <input type="text" name="translations[{{ $lang->code }}][listing_title]" class="form-control @error("translations.{$lang->code}.listing_title") is-invalid @enderror" value="{{ old("translations.{$lang->code}.listing_title", data_get($section?->translations, "{$lang->code}.listing_title", '')) }}">
                                     @error("translations.{$lang->code}.listing_title")
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -57,7 +57,7 @@
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label fw-bold">Section Description</label>
-                                    <textarea name="translations[{{ $lang->code }}][description]" class="form-control @error("translations.{$lang->code}.description") is-invalid @enderror" rows="3">{{ old("translations.{$lang->code}.description", $section->translations[$lang->code]['description'] ?? '') }}</textarea>
+                                    <textarea name="translations[{{ $lang->code }}][description]" class="form-control @error("translations.{$lang->code}.description") is-invalid @enderror" rows="3">{{ old("translations.{$lang->code}.description", data_get($section?->translations, "{$lang->code}.description", '')) }}</textarea>
                                     @error("translations.{$lang->code}.description")
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
@@ -67,7 +67,7 @@
                                 @include('cms-kit::partials.extra-fields-translatable', [
                                     'configKey' => 'blogs.section',
                                     'lang' => $lang,
-                                    'existingTranslations' => $section->translations ?? [],
+                                    'existingTranslations' => $section?->translations ?? [],
                                 ])
                             </div>
                         </div>
@@ -90,7 +90,7 @@
                                     name="display_home"
                                     id="displayHomeToggle"
                                     value="1"
-                                    {{ old('display_home', data_get($section->extra_fields, 'display_home', true)) ? 'checked' : '' }}
+                            {{ old('display_home', data_get($section?->extra_fields, 'display_home', true)) ? 'checked' : '' }}
                                 >
                                 <label class="form-check-label fw-bold" for="displayHomeToggle">Display on Home</label>
                             </div>
@@ -100,7 +100,7 @@
 
                     @include('cms-kit::partials.extra-fields-global', [
                         'configKey' => 'blogs.section',
-                        'existingValues' => $section->extra_fields ?? [],
+                        'existingValues' => $section?->extra_fields ?? [],
                     ])
 
                     <div class="col-12 border-top pt-4">

@@ -57,14 +57,14 @@ class PropertyFactory extends Factory
     public function definition(): array
     {
         $title = $this->faker->words(3, true);
-        $propId = 'PRP-'.$this->faker->unique()->numberBetween(1000, 9999);
+        $propId = $this->uniquePropertyId();
         $imageCount = $this->faker->numberBetween(1, 5);
         $imageIndexes = range(1, $imageCount);
 
         return [
             'prop_id' => $propId,
             'title' => ucfirst($title),
-            'slug' => Str::slug($title),
+            'slug' => $this->uniqueSlug($title),
             'property_type' => $this->faker->randomElement(['apartment', 'villa', 'townhouse', 'penthouse', 'office']),
             'listing_type' => $this->faker->randomElement(['rent', 'sale']),
             'category' => $this->faker->randomElement(['residential', 'commercial', 'luxury', 'off-plan']),
@@ -90,5 +90,23 @@ class PropertyFactory extends Factory
             'images_directory' => 'properties/'.Str::slug($propId),
             'images' => implode(',', $imageIndexes),
         ];
+    }
+
+    protected function uniquePropertyId(): string
+    {
+        do {
+            $propId = 'PRP-'.$this->faker->numberBetween(1000, 9999);
+        } while (Property::query()->where('prop_id', $propId)->exists());
+
+        return $propId;
+    }
+
+    protected function uniqueSlug(string $title): string
+    {
+        do {
+            $slug = Str::slug($title).'-'.Str::lower(Str::random(8));
+        } while (Property::query()->where('slug', $slug)->exists());
+
+        return $slug;
     }
 }
