@@ -205,8 +205,8 @@ const heroImageSrc = computed(() => {
     return typeof url === 'string' && url.trim() !== '' ? url.trim() : asset('public/images/inner-banner.jpg');
 });
 
-const pageHeading = computed(() => contactSection.value.pageTitle || t('contact.heroTitle'));
-const breadcrumbCurrent = computed(() => contactSection.value.breadcrumbLabel || t('contact.breadcrumbCurrent'));
+const pageHeading = computed(() => t('contact.heroTitle'));
+const breadcrumbCurrent = computed(() => t('contact.breadcrumbCurrent'));
 
 const officesColumnTitle = computed(() => locationsSection.value.sectionTitle || t('contact.officeLocations'));
 

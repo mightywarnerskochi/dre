@@ -83,7 +83,7 @@
     "attributes": "Property Attributes",
     "location": "Location",
     "similarListing": "Similar Listing",
-    "specId": "Property ID",
+    "specId": "Reference ID",
     "specPrice": "Price",
     "specSize": "Property Size",
     "specBath": "Bathroom",

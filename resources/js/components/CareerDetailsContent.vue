@@ -304,7 +304,7 @@
 
                         <label class="career-apply-form__consent">
                             <input id="career-privacy" v-model="privacyAccepted" type="checkbox" name="privacy" value="1">
-                            <span>{{ t('careers.form.consentPrefix') }}<RouterLink :to="{ name: 'terms' }">{{ t('careers.form.privacyLink') }}</RouterLink>{{ t('careers.form.consentSuffix') }}</span>
+                            <span>{{ t('careers.form.consentPrefix') }}<RouterLink :to="{ name: 'privacy-policy' }">{{ t('careers.form.privacyLink') }}</RouterLink>{{ t('careers.form.consentSuffix') }}</span>
                         </label>
                         <div v-if="fieldErrors.privacy" class="invalid-feedback d-block mb-2">{{ fieldErrors.privacy }}</div>
                         <input type="hidden" name="recaptcha_token" :value="recaptchaToken">
