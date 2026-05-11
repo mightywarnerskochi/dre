@@ -157,3 +157,22 @@ onBeforeUnmount(() => {
     restoreSearchToPage();
 });
 </script>
+
+<style scoped>
+@media (max-width: 767.98px) {
+    .listing-sort-offcanvas.offcanvas-bottom {
+        height: auto;
+        max-height: min(88vh, 420px);
+    }
+
+    .listing-sort-offcanvas__body {
+        max-height: calc(min(88vh, 420px) - 64px);
+        overflow-y: auto;
+        padding-bottom: calc(28px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .listing-sort-offcanvas__options {
+        padding-bottom: 12px;
+    }
+}
+</style>
