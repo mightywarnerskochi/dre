@@ -491,6 +491,7 @@ class PropertyPageController extends Controller
 
         $data = [
             'id' => $property->id,
+            'prop_id' => $property->prop_id,
             'title' => $title,
             'slug' => $property->slug,
             'url' => $detailPath,

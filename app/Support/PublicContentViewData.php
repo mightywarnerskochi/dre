@@ -157,11 +157,6 @@ class PublicContentViewData
             return $raw !== '' ? $raw : $fallbackValue;
         };
 
-        $pageTitleEn = trim((string) data_get($translations, 'en.page_title'));
-        $pageTitleAr = trim((string) data_get($translations, 'ar.page_title'));
-        $breadcrumbEn = trim((string) data_get($translations, 'en.breadcrumb_label'));
-        $breadcrumbAr = trim((string) data_get($translations, 'ar.breadcrumb_label'));
-
         $heroBackground = null;
         if ($section && filled($section->banner)) {
             $heroBackground = media_url((string) $section->banner);
@@ -183,14 +178,8 @@ class PublicContentViewData
                 'en' => $value('en', 'content', $fallback['content']['en']),
                 'ar' => $value('ar', 'content', $fallback['content']['ar']),
             ],
-            'pageTitle' => [
-                'en' => $pageTitleEn,
-                'ar' => $pageTitleAr,
-            ],
-            'breadcrumbLabel' => [
-                'en' => $breadcrumbEn,
-                'ar' => $breadcrumbAr,
-            ],
+            'pageTitle' => ['en' => '', 'ar' => ''],
+            'breadcrumbLabel' => ['en' => '', 'ar' => ''],
             'heroBackgroundImage' => $heroBackground,
         ];
     }

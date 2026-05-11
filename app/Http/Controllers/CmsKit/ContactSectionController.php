@@ -14,7 +14,7 @@ class ContactSectionController extends Controller
         $rules = [];
 
         foreach (Language::active()->get() as $lang) {
-            foreach (['title', 'sub_title', 'content', 'page_title', 'breadcrumb_label'] as $field) {
+            foreach (['title', 'sub_title', 'content'] as $field) {
                 $rules["translations.{$lang->code}.{$field}"] = 'nullable|string';
             }
         }

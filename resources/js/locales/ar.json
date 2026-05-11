@@ -83,7 +83,7 @@
         "attributes": "سمات العقار",
         "location": "الموقع",
         "similarListing": "عقارات مماثلة",
-        "specId": "معرف العقار",
+        "specId": "الرقم المرجعي",
         "specPrice": "السعر",
         "specSize": "مساحة العقار",
         "specBath": "الحمام",

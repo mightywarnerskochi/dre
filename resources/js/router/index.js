@@ -250,8 +250,29 @@ router.beforeEach((to) => {
     });
 });
 
+function cleanupBootstrapOverlays() {
+    if (typeof document === 'undefined') {
+        return;
+    }
+
+    document.querySelectorAll('.modal.show').forEach((modalEl) => {
+        window.bootstrap?.Modal?.getInstance(modalEl)?.hide();
+        modalEl.classList.remove('show');
+        modalEl.setAttribute('aria-hidden', 'true');
+        modalEl.removeAttribute('aria-modal');
+        modalEl.removeAttribute('role');
+        modalEl.style.display = 'none';
+    });
+
+    document.querySelectorAll('.modal-backdrop').forEach((backdrop) => backdrop.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+}
+
 router.afterEach((to) => {
     const cls = typeof to.meta.bodyClass === 'string' ? to.meta.bodyClass : '';
+    cleanupBootstrapOverlays();
     document.body.className = cls;
 
     requestAnimationFrame(() => {

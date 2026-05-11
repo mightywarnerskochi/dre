@@ -198,8 +198,7 @@
                     <div class="property-detail-access">
                         <div v-for="place in accessPlaces" :key="place.id" class="property-detail-access__item">
                             <span class="property-detail-access__icon" aria-hidden="true">
-                                <img v-if="place.icon" :src="place.icon" alt="Nearby place icon" width="22" height="22" loading="lazy" @error="dreOnPropertyImgError">
-                                <img v-else :src="asset('public/images/properties-details/icons/solar_city-linear.png')" alt="Nearby place icon" width="22" height="22" loading="lazy">
+                                <img :src="place.icon || propertyDetailFallbackIcon" alt="Nearby place icon" width="22" height="22" loading="lazy" @error="onPropertyDetailIconError">
                             </span>
                             <span>{{ place.name }}<template v-if="place.distance"> — {{ place.distance }}</template></span>
                         </div>
@@ -230,21 +229,12 @@
                             <div v-for="am in amenityCards" :key="am.id" class="property-detail-icon-grid__item">
                                 <span class="property-detail-icon-grid__icon" aria-hidden="true">
                                     <img
-                                        v-if="am.icon"
-                                        :src="am.icon"
+                                        :src="am.icon || propertyDetailFallbackIcon"
                                         alt="Amenity icon"
                                         width="26"
                                         height="26"
                                         loading="lazy"
-                                        @error="dreOnPropertyImgError"
-                                    >
-                                    <img
-                                        v-else
-                                        :src="asset('public/images/properties-details/icons/solar_swimming-outline.png')"
-                                        alt="Amenity icon"
-                                        width="26"
-                                        height="26"
-                                        loading="lazy"
+                                        @error="onPropertyDetailIconError"
                                     >
                                 </span>
                                 <span>{{ am.label }}</span>
@@ -257,21 +247,12 @@
                             <div v-for="attr in propertyAttributeCards" :key="attr.id" class="property-detail-icon-grid__item">
                                 <span class="property-detail-icon-grid__icon" aria-hidden="true">
                                     <img
-                                        v-if="attr.icon"
-                                        :src="attr.icon"
+                                        :src="attr.icon || propertyDetailFallbackIcon"
                                         alt="Property attribute icon"
                                         width="26"
                                         height="26"
                                         loading="lazy"
-                                        @error="dreOnPropertyImgError"
-                                    >
-                                    <img
-                                        v-else
-                                        :src="asset('public/images/properties-details/icons/hugeicons_location-star-01.png')"
-                                        alt="Property attribute icon"
-                                        width="26"
-                                        height="26"
-                                        loading="lazy"
+                                        @error="onPropertyDetailIconError"
                                     >
                                 </span>
                                 <span>{{ attr.label }}</span>
@@ -441,7 +422,7 @@
                                                 <div class="property-card__price">{{ formatPrice(p.price) }} {{ priceSuffixForItem(p) }}</div>
                                             </div>
                                             <div class="property-card__tags">
-                                                <span class="property-tag property-tag--fill">{{ typeLabel(p.property_type) }}</span>
+                                                <span class="property-tag property-tag--fill">{{ similarPropertyTypeLabel(p) }}</span>
                                                 <span class="property-tag property-tag--outline">{{ listingLabel(p.listing_type) }}</span>
                                             </div>
                                         </div>
@@ -482,7 +463,7 @@
                                                     data-bs-target="#siteEnquiryForm"
                                                     :data-property-title="p.title || ''"
                                                     :data-property-location="p.location || ''"
-                                                    :data-property-type="typeLabel(p.property_type)"
+                                                    :data-property-type="similarPropertyTypeLabel(p)"
                                                     :data-property-size="similarSizeLabel(p)"
                                                 >{{ t('propertyDetail.enquiry') }}</a>
                                                 <a v-if="siteCallHref" class="property-btn property-btn--outline" :href="siteCallHref">{{ t('propertyDetail.callNow') }}</a>
@@ -530,6 +511,7 @@ import { useI18n } from 'vue-i18n';
 
 const route = useRoute();
 const { locale, t } = useI18n({ useScope: 'global' });
+const propertyDetailFallbackIcon = asset('public/images/properties-details/icons/fluent_building-32-regular.png');
 
 const injectedSite = inject('dreSite', null);
 const dreSite = injectedSite ?? computed(() => getPublicSiteBoot());
@@ -640,6 +622,14 @@ function formatPrice(num) {
     return formatNumber(num);
 }
 
+function onPropertyDetailIconError(event) {
+    if (!event?.target || event.target.src === propertyDetailFallbackIcon) {
+        return;
+    }
+
+    event.target.src = propertyDetailFallbackIcon;
+}
+
 function formatSqft(sqft) {
     return formatNumber(sqft);
 }
@@ -701,7 +691,7 @@ function formatSecurityDepositDisplay(p) {
     return isRent ? t('propertyDetail.minDeposit', { amount: `${curWord} ${n}` }) : `${curWord} ${n}`;
 }
 
-/** Fixed seven-card grid (design): Property ID, Price, Size, Bathroom, Year built, Direct from owner, Security deposit. */
+/** Fixed seven-card grid (design): Reference ID, Price, Size, Bathroom, Year built, Direct from owner, Security deposit. */
 const specCells = computed(() => {
     const p = property.value;
     if (!p) return [];
@@ -726,7 +716,7 @@ const specCells = computed(() => {
     const depositVal = formatSecurityDepositDisplay(p);
 
     return [
-        { id: 'spec-id', label: t('propertyDetail.specId'), value: String(p.id), icon: icons.id },
+        { id: 'spec-id', label: t('propertyDetail.specId'), value: String(p.prop_id || p.id), icon: icons.id },
         { id: 'spec-price', label: t('propertyDetail.specPrice'), value: priceVal, icon: icons.price },
         { id: 'spec-size', label: t('propertyDetail.specSize'), value: sizeVal, icon: icons.size },
         { id: 'spec-bath', label: t('propertyDetail.specBath'), value: bathVal, icon: icons.bath },
@@ -999,6 +989,12 @@ function typeLabel(type) {
     const raw = String(type || '').replace(/[_-]+/g, ' ').trim();
 
     return raw ? raw.replace(/\b\w/g, (c) => c.toUpperCase()) : t('home.rentals.card.propertyType');
+}
+
+function similarPropertyTypeLabel(item) {
+    const localized = String(item?.propertyTypeLabel || '').trim();
+
+    return localized !== '' ? localized : typeLabel(item?.property_type);
 }
 
 function listingLabel(listingType) {
