@@ -48,8 +48,8 @@
             </div>
 
             <div class="insight-detail__layout d-flex flex-wrap justify-content-between">
-                <figure class="insight-detail__hero">
-                    <img :src="detail.current.detailImage || dummyImage" :alt="detail.current.detailImageAlt || 'Insight image'" width="1547" height="1032" loading="lazy" @error="onImgError">
+                <figure v-if="detail.current.detailImage" class="insight-detail__hero">
+                    <img :src="detail.current.detailImage" :alt="detail.current.detailImageAlt || 'Insight image'" width="1547" height="1032" loading="lazy" @error="onImgError">
                 </figure>
                 <article class="insight-detail__content list">
                     <div id="insight-detail-title" v-html="detail.current.content"></div>
@@ -121,7 +121,7 @@
                         <ul>
                             <li v-for="post in detail.related" :key="post.id">
                                 <RouterLink :to="{ name: 'insights-details', params: { slug: post.slug } }">
-                                    <img :src="post.image || dummyImage" :alt="post.imageAlt || 'Insight image'" width="90" height="64" loading="lazy" @error="onImgError">
+                                    <img v-if="post.image" :src="post.image" :alt="post.imageAlt || 'Insight image'" width="90" height="64" loading="lazy" @error="onImgError">
                                     <span>{{ post.title }}</span>
                                 </RouterLink>
                             </li>
