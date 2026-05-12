@@ -143,7 +143,7 @@ class CareerController extends Controller
         return $rules;
     }
 
-    protected function getCareerSectionValidationRules(): array
+    protected function getCareerSectionValidationRules(bool $canManageFilters = true): array
     {
         $sectionConfig = config('cms-kit.database.careers.section', []);
         $section = SectionLabel::firstOrCreate(['section_key' => 'careers']);
@@ -153,7 +153,7 @@ class CareerController extends Controller
 
         $requiredFields = $sectionConfig['required'] ?? [];
 
-        if ($sectionConfig['filter_enabled'] ?? true) {
+        if ($canManageFilters && ($sectionConfig['filter_enabled'] ?? true)) {
             $rules['filter_enabled'] = ['required', 'boolean'];
         }
 
@@ -168,7 +168,7 @@ class CareerController extends Controller
             $rules['banner_alt'] = ['nullable', 'string', 'max:255'];
         }
 
-        if ($sectionConfig['filters'] ?? true) {
+        if ($canManageFilters && ($sectionConfig['filters'] ?? true)) {
             $rules['section_filters.*.column'] = ['nullable', 'string', Rule::in($this->getFilterableColumns())];
         }
 
@@ -537,8 +537,9 @@ class CareerController extends Controller
         $section = SectionLabel::firstOrCreate(['section_key' => 'careers']);
         $languages = $this->activeLanguages();
         $filterableColumns = $this->getFilterableColumns();
+        $canManageFilters = auth('cms')->user()?->can('careers.filters.edit') ?? false;
 
-        return view('cms-kit::careers.common', compact('section', 'languages', 'filterableColumns'));
+        return view('cms-kit::careers.common', compact('section', 'languages', 'filterableColumns', 'canManageFilters'));
     }
 
     public function vacancies(Request $request)
@@ -765,16 +766,22 @@ class CareerController extends Controller
     public function updateSection(Request $request)
     {
         $sectionConfig = config('cms-kit.database.careers.section', []);
-        $request->validate($this->getCareerSectionValidationRules(), $this->validationMessages());
+        $canManageFilters = auth('cms')->user()?->can('careers.filters.edit') ?? false;
+        $request->validate($this->getCareerSectionValidationRules($canManageFilters), $this->validationMessages());
 
         $section = SectionLabel::firstOrCreate(['section_key' => 'careers']);
+        $existingExtraFields = is_array($section->extra_fields) ? $section->extra_fields : [];
         $data = [
             'translations' => $this->mergeCareerSectionTranslatableExtraFields(
                 $this->normalizeSectionTranslations($request->input('translations', []))
             ),
             'extra_fields' => [
-                'filter_enabled' => ($sectionConfig['filter_enabled'] ?? true) ? $request->boolean('filter_enabled') : false,
-                'filters' => ($sectionConfig['filters'] ?? true) ? $this->normalizeSectionFilters($request->input('section_filters', [])) : [],
+                'filter_enabled' => ($canManageFilters && ($sectionConfig['filter_enabled'] ?? true))
+                    ? $request->boolean('filter_enabled')
+                    : (bool) data_get($existingExtraFields, 'filter_enabled', false),
+                'filters' => ($canManageFilters && ($sectionConfig['filters'] ?? true))
+                    ? $this->normalizeSectionFilters($request->input('section_filters', []))
+                    : (array) data_get($existingExtraFields, 'filters', []),
             ],
             'banner_alt' => ($sectionConfig['banner_alt'] ?? true) ? trim((string) $request->input('banner_alt', '')) : '',
         ];
