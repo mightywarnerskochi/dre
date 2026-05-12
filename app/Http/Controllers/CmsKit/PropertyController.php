@@ -48,13 +48,15 @@ class PropertyController extends Controller
 
     protected function propertyTypes(): array
     {
-        return config('cms-kit.database.properties.property_types', [
+        $configuredTypes = config('cms-kit.database.properties.property_types', [
             'apartment' => 'Apartment',
             'villa' => 'Villa',
             'townhouse' => 'Townhouse',
             'penthouse' => 'Penthouse',
             'office' => 'Office',
         ]);
+
+        return $configuredTypes + $this->savedClassificationOptions('property_type', 'property_type', $configuredTypes);
     }
 
     protected function listingTypes(): array
@@ -67,12 +69,59 @@ class PropertyController extends Controller
 
     protected function categories(): array
     {
-        return config('cms-kit.database.properties.categories', [
+        $configuredCategories = config('cms-kit.database.properties.categories', [
             'residential' => ['en' => 'Residential', 'ar' => 'Residential'],
             'commercial' => ['en' => 'Commercial', 'ar' => 'Commercial'],
             'luxury' => ['en' => 'Luxury', 'ar' => 'Luxury'],
             'off-plan' => ['en' => 'Off-plan', 'ar' => 'Off-plan'],
         ]);
+
+        return $configuredCategories + $this->savedClassificationOptions('category', 'category', $configuredCategories);
+    }
+
+    protected function savedClassificationOptions(string $column, string $metadataKey, array $configured): array
+    {
+        $fallbackLocale = config('app.fallback_locale', 'en');
+        $languageCodes = $this->activeLanguages()
+            ->pluck('code')
+            ->push($fallbackLocale)
+            ->filter()
+            ->unique()
+            ->values();
+        $seen = collect(array_keys($configured))
+            ->mapWithKeys(fn ($value) => [trim((string) $value) => true])
+            ->all();
+        $options = [];
+
+        Property::query()
+            ->select([$column, 'metadata'])
+            ->whereNotNull($column)
+            ->where($column, '<>', '')
+            ->orderBy($column)
+            ->get()
+            ->each(function (Property $property) use ($column, $metadataKey, $languageCodes, $fallbackLocale, &$seen, &$options) {
+                $value = trim((string) $property->{$column});
+
+                if ($value === '' || Str::lower($value) === 'custom' || isset($seen[$value])) {
+                    return;
+                }
+
+                $metadata = is_array($property->metadata) ? $property->metadata : [];
+                $savedLabels = data_get($metadata, "classification_labels.{$metadataKey}.{$value}", []);
+                $savedLabels = is_array($savedLabels) ? $savedLabels : [];
+                $defaultLabel = Str::headline(str_replace(['-', '_'], ' ', $value));
+                $labels = $languageCodes->mapWithKeys(function ($code) use ($savedLabels, $defaultLabel) {
+                    $label = trim((string) ($savedLabels[$code] ?? ''));
+
+                    return [$code => $label !== '' ? $label : $defaultLabel];
+                })->all();
+                $labels[$fallbackLocale] = trim((string) ($savedLabels[$fallbackLocale] ?? $labels[$fallbackLocale] ?? $defaultLabel)) ?: $defaultLabel;
+
+                $options[$value] = $labels;
+                $seen[$value] = true;
+            });
+
+        return $options;
     }
 
     protected function sourceTypes(): array
@@ -137,7 +186,7 @@ class PropertyController extends Controller
         $propertyType = trim((string) $request->input('property_type'));
 
         if ($propertyType === 'custom') {
-            return trim((string) $request->input('custom_property_type'));
+            return $this->customClassificationValue($request->input('custom_property_type'));
         }
 
         return $propertyType;
@@ -148,12 +197,21 @@ class PropertyController extends Controller
         $category = trim((string) $request->input('category'));
 
         if ($category === 'custom') {
-            $customCategory = trim((string) $request->input('custom_category'));
+            $customCategory = $this->customClassificationValue($request->input('custom_category'));
 
             return $customCategory !== '' ? $customCategory : null;
         }
 
         return $category !== '' ? $category : null;
+    }
+
+    protected function customClassificationValue(mixed $value): string
+    {
+        if (is_array($value)) {
+            return trim((string) ($value[config('app.fallback_locale', 'en')] ?? $value['en'] ?? reset($value) ?: ''));
+        }
+
+        return trim((string) $value);
     }
 
     protected function sanitizePropId(?string $propId, int $propertyId): string
@@ -184,12 +242,24 @@ class PropertyController extends Controller
                 : ['required', 'string', 'max:255', Rule::unique('properties', 'prop_id')],
             'slug' => ['nullable', 'string', 'max:255', Rule::unique('properties', 'slug')->ignore($propertyId)],
             'property_type' => ['required', 'string', 'max:255'],
-            'custom_property_type' => ['nullable', 'string', 'max:255', 'required_if:property_type,custom'],
+            'custom_property_type' => ['nullable', 'array'],
             'listing_type' => ['required', Rule::in(array_keys($this->listingTypes()))],
             'category' => ['required', 'string', 'max:255'],
-            'custom_category' => ['nullable', 'string', 'max:255', 'required_if:category,custom'],
+            'custom_category' => ['nullable', 'array'],
             'source_type' => ['required', Rule::in(array_keys($this->sourceTypes()))],
         ];
+
+        $languageCodes = collect($languages)
+            ->pluck('code')
+            ->filter(fn ($code) => is_string($code) && trim($code) !== '')
+            ->map(fn ($code) => trim((string) $code))
+            ->values()
+            ->all();
+
+        foreach ($languageCodes as $code) {
+            $rules["custom_property_type.{$code}"] = ['nullable', 'string', 'max:255', 'required_if:property_type,custom'];
+            $rules["custom_category.{$code}"] = ['nullable', 'string', 'max:255', 'required_if:category,custom'];
+        }
 
         // Shared Setup Rules
         $rules += [
@@ -829,13 +899,58 @@ class PropertyController extends Controller
             $out['og_image'] = $existingOgImage !== '' ? $existingOgImage : null;
         }
 
+        $classificationLabels = $this->classificationLabelsMetadata($request, $existingMetadata);
+        if ($classificationLabels !== []) {
+            $out['classification_labels'] = $classificationLabels;
+        }
+
         return array_filter($out, static function ($value, $key) {
             if ($key === 'og_image') {
                 return $value !== null && trim((string) $value) !== '';
             }
 
+            if (is_array($value)) {
+                return $value !== [];
+            }
+
             return $value !== null && trim((string) $value) !== '';
         }, ARRAY_FILTER_USE_BOTH);
+    }
+
+    protected function classificationLabelsMetadata(Request $request, array $existingMetadata = []): array
+    {
+        $labels = data_get($existingMetadata, 'classification_labels');
+        $labels = is_array($labels) ? $labels : [];
+
+        $propertyType = $this->resolvedPropertyType($request);
+        $category = (string) ($this->resolvedCategory($request) ?? '');
+
+        if ($request->input('property_type') === 'custom' && $propertyType !== '') {
+            $labels['property_type'][$propertyType] = $this->normalizedCustomLabels((array) $request->input('custom_property_type', []), $propertyType);
+        }
+
+        if ($request->input('category') === 'custom' && $category !== '') {
+            $labels['category'][$category] = $this->normalizedCustomLabels((array) $request->input('custom_category', []), $category);
+        }
+
+        return array_filter($labels, fn ($group) => is_array($group) && $group !== []);
+    }
+
+    protected function normalizedCustomLabels(array $labels, string $fallback): array
+    {
+        $fallback = trim($fallback);
+        $out = [];
+
+        foreach ($this->activeLanguages() as $language) {
+            $code = (string) $language->code;
+            $label = trim((string) ($labels[$code] ?? ''));
+            $out[$code] = $label !== '' ? $label : $fallback;
+        }
+
+        $fallbackLocale = config('app.fallback_locale', 'en');
+        $out[$fallbackLocale] = trim((string) ($labels[$fallbackLocale] ?? $out[$fallbackLocale] ?? $fallback)) ?: $fallback;
+
+        return $out;
     }
 
     protected function trimNullableString(mixed $value): ?string

@@ -31,6 +31,24 @@ function runtimeLocaleMessages() {
     }, {});
 }
 
+function mergeMessages(base, override) {
+    const merged = { ...base };
+
+    Object.entries(override).forEach(([key, value]) => {
+        const baseValue = merged[key];
+        const canMerge = value
+            && typeof value === 'object'
+            && !Array.isArray(value)
+            && baseValue
+            && typeof baseValue === 'object'
+            && !Array.isArray(baseValue);
+
+        merged[key] = canMerge ? mergeMessages(baseValue, value) : value;
+    });
+
+    return merged;
+}
+
 function resolveMessages() {
     const runtimeMessages = runtimeLocaleMessages();
     const bundledMessages = bundledLocaleMessages();
@@ -42,7 +60,7 @@ function resolveMessages() {
                 ? bundledMessages[code]
                 : {};
             const runtime = payload && typeof payload === 'object' ? payload : {};
-            merged[code] = { ...base, ...runtime };
+            merged[code] = mergeMessages(base, runtime);
         });
     }
 

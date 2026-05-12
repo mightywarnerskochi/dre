@@ -236,7 +236,7 @@ Route::post('/book-viewing-enquiry', [BookViewingEnquiryController::class, 'stor
 Route::get('/{any?}', function () {
     return response()
         ->view('app', [
-            'styleVersion' => '15',
+            'styleVersion' => '16',
             'sitePublic' => PublicSiteViewData::forSpa(),
             'contentPublic' => PublicSpaBootData::initialViewContent(),
         ])

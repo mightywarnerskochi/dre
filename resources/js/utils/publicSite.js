@@ -11,6 +11,7 @@
  *   logoAlt: string|null,
  *   social: Array<{ network: string, href: string }>,
  *   legalPages: Record<string, { title: Record<string, string>, content: Record<string, string> }>,
+ *   languagesEnabled: boolean,
  *   languages: Array<{ name: string, code: string, flagImage: string|null, flagAlt: string|null, isDefault: boolean }>
  * }}
  */
@@ -54,6 +55,7 @@ export function getPublicSiteBoot() {
             logoAlt: null,
             social: [],
             legalPages: {},
+            languagesEnabled: false,
             languages: [],
         };
     }
@@ -69,6 +71,7 @@ export function getPublicSiteBoot() {
             logoAlt: null,
             social: [],
             legalPages: {},
+            languagesEnabled: false,
             languages: [],
         };
     }
@@ -88,6 +91,7 @@ export function getPublicSiteBoot() {
         logoAlt: typeof raw.logoAlt === 'string' && raw.logoAlt.trim() !== '' ? raw.logoAlt.trim() : null,
         social,
         legalPages,
+        languagesEnabled: raw.languagesEnabled !== false,
         languages,
         appLinks: {
             qrCodeUrl: typeof appLinks.qrCodeUrl === 'string' && appLinks.qrCodeUrl.trim() !== '' ? appLinks.qrCodeUrl.trim() : null,

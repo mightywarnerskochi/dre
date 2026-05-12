@@ -14,8 +14,23 @@
         'category' => old('category', $item->category ?? ''),
         'source_type' => old('source_type', $item->source_type ?? 'manual'),
     ];
-    $customPropertyTypeValue = old('custom_property_type', '');
-    $customCategoryValue = old('custom_category', '');
+    $customPropertyTypeLabels = [];
+    $customCategoryLabels = [];
+    $rtlLanguageCodes = [];
+    foreach ($languages as $language) {
+        $languageCode = (string) $language->code;
+        $isRtlLanguage = strtolower($languageCode) === 'ar' || str_contains(strtolower((string) $language->name), 'arab');
+
+        $customPropertyTypeLabels[$languageCode] = old(
+            "custom_property_type.{$languageCode}",
+            data_get($itemMetadata, 'classification_labels.property_type.' . ($item->property_type ?? '') . '.' . $languageCode, '')
+        );
+        $customCategoryLabels[$languageCode] = old(
+            "custom_category.{$languageCode}",
+            data_get($itemMetadata, 'classification_labels.category.' . ($item->category ?? '') . '.' . $languageCode, '')
+        );
+        $rtlLanguageCodes[$languageCode] = $isRtlLanguage;
+    }
     $propertyTypeOptionsByLanguage = [];
     $listingTypeOptionsByLanguage = [];
     $categoryOptionsByLanguage = [];
@@ -27,7 +42,11 @@
         && !array_key_exists($classificationValues['property_type'], $propertyTypes)
         && $classificationValues['property_type'] !== 'custom'
     ) {
-        $customPropertyTypeValue = $customPropertyTypeValue !== '' ? $customPropertyTypeValue : $classificationValues['property_type'];
+        foreach (array_keys($customPropertyTypeLabels) as $languageCode) {
+            $customPropertyTypeLabels[$languageCode] = $customPropertyTypeLabels[$languageCode] !== ''
+                ? $customPropertyTypeLabels[$languageCode]
+                : $classificationValues['property_type'];
+        }
         $classificationValues['property_type'] = 'custom';
     }
 
@@ -36,7 +55,11 @@
         && !array_key_exists($classificationValues['category'], $categories)
         && $classificationValues['category'] !== 'custom'
     ) {
-        $customCategoryValue = $customCategoryValue !== '' ? $customCategoryValue : $classificationValues['category'];
+        foreach (array_keys($customCategoryLabels) as $languageCode) {
+            $customCategoryLabels[$languageCode] = $customCategoryLabels[$languageCode] !== ''
+                ? $customCategoryLabels[$languageCode]
+                : $classificationValues['category'];
+        }
         $classificationValues['category'] = 'custom';
     }
 
@@ -52,7 +75,7 @@
             return [$value => ['label' => $localized !== '' ? $localized : $english, 'english' => $english]];
         })->all();
         $propertyTypeOptionsByLanguage[$lang->code]['custom'] = [
-            'label' => $lang->code === 'ar' ? 'أخرى / مخصص' : 'Other / Custom',
+            'label' => (($rtlLanguageCodes[$lang->code] ?? false) ? 'أخرى / مخصص' : 'Other / Custom'),
             'english' => 'Other / Custom',
         ];
 
@@ -78,7 +101,7 @@
             return [$value => ['label' => $localized !== '' ? $localized : $english, 'english' => $english]];
         })->all();
         $categoryOptionsByLanguage[$lang->code]['custom'] = [
-            'label' => $lang->code === 'ar' ? 'أخرى / مخصص' : 'Other / Custom',
+            'label' => (($rtlLanguageCodes[$lang->code] ?? false) ? 'أخرى / مخصص' : 'Other / Custom'),
             'english' => 'Other / Custom',
         ];
 
@@ -273,12 +296,14 @@
                                                 </div>
                                                 @endforeach
                                                 <div class="col-md-4 property-custom-type-wrap {{ $classificationValues['property_type'] === 'custom' ? '' : 'd-none' }}">
-                                                    <label class="form-label fw-bold">Custom Property Type <span class="text-danger">*</span></label>
-                                                    <input type="text" name="custom_property_type" class="form-control" value="{{ $customPropertyTypeValue }}" placeholder="Enter custom type">
+                                                    <label class="form-label fw-bold">Custom Property Type ({{ $lang->name }}) <span class="text-danger">*</span></label>
+                                                    <input type="text" name="custom_property_type[{{ $lang->code }}]" class="form-control @error('custom_property_type.'.$lang->code) is-invalid @enderror" value="{{ $customPropertyTypeLabels[$lang->code] ?? '' }}" placeholder="{{ ($rtlLanguageCodes[$lang->code] ?? false) ? 'Enter Arabic type' : 'Enter English type' }}" @if($rtlLanguageCodes[$lang->code] ?? false) dir="rtl" @endif>
+                                                    @error('custom_property_type.'.$lang->code)<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                                                 </div>
                                                 <div class="col-md-4 property-custom-category-wrap {{ $classificationValues['category'] === 'custom' ? '' : 'd-none' }}">
-                                                    <label class="form-label fw-bold">Custom Category <span class="text-danger">*</span></label>
-                                                    <input type="text" name="custom_category" class="form-control" value="{{ $customCategoryValue }}" placeholder="Enter custom category">
+                                                    <label class="form-label fw-bold">Custom Category ({{ $lang->name }}) <span class="text-danger">*</span></label>
+                                                    <input type="text" name="custom_category[{{ $lang->code }}]" class="form-control @error('custom_category.'.$lang->code) is-invalid @enderror" value="{{ $customCategoryLabels[$lang->code] ?? '' }}" placeholder="{{ ($rtlLanguageCodes[$lang->code] ?? false) ? 'Enter Arabic category' : 'Enter English category' }}" @if($rtlLanguageCodes[$lang->code] ?? false) dir="rtl" @endif>
+                                                    @error('custom_category.'.$lang->code)<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                                                 </div>
                                                 <div class="col-12">
                                                     <label class="form-label fw-bold">Title <span class="text-danger">*</span></label>
@@ -739,6 +764,14 @@
         document.querySelectorAll('.property-custom-category-wrap').forEach(el => el.classList.toggle('d-none', !show));
     }
 
+    function syncCustomClassificationInputs(source) {
+        if (!source?.dataset.customClassification) return;
+
+        document.querySelectorAll(`[data-custom-classification="${source.dataset.customClassification}"]`).forEach(input => {
+            if (input !== source) input.value = source.value;
+        });
+    }
+
     function syncPropertyClassification(field, value, source) {
         const masterInput = document.getElementById(propertyClassificationMasterIds[field]);
         if (masterInput) masterInput.value = value;
@@ -765,6 +798,16 @@
                 el.classList.remove('open');
             });
         });
+    });
+
+    document.querySelectorAll('[data-custom-classification]').forEach(input => {
+        input.addEventListener('input', function() {
+            syncCustomClassificationInputs(this);
+        });
+
+        if (input.value.trim() !== '') {
+            syncCustomClassificationInputs(input);
+        }
     });
 
     document.addEventListener('click', (e) => {
@@ -1066,6 +1109,28 @@
     }, true);
 
     window.addEventListener('load', () => {
+        const serverErrorKeys = @json($errors->keys());
+
+        const classificationLangError = serverErrorKeys.find((key) =>
+            /^custom_property_type\.[a-z0-9_]+$/i.test(key) || /^custom_category\.[a-z0-9_]+$/i.test(key)
+        );
+
+        if (classificationLangError) {
+            const [group, lang] = classificationLangError.split('.');
+            const inputName = `${group}[${lang}]`;
+            const targetInput = document.querySelector(`input[name="${inputName}"]`);
+
+            if (targetInput) {
+                activateAncestorTabs(targetInput);
+                markErrorTabs();
+                setTimeout(() => {
+                    targetInput.focus();
+                    targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 120);
+                return;
+            }
+        }
+
         if (document.querySelector('.is-invalid')) {
             markErrorTabs();
             activateAncestorTabs(document.querySelector('.is-invalid'));

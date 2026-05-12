@@ -1476,16 +1476,21 @@ html[dir="rtl"]{
       flex-direction: row-reverse;
     }
   }
-  /* Hero search strip: keep horizontal order location → filters → search (industry standard).
-     Page is RTL but the form uses dir="ltr" in markup; isolate so nested rules don't flip the row. */
-  .banner-search .search-form {
-    direction: ltr;
+  /* Hero search strip: mirror the horizontal order for Arabic.
+     Arabic mirrors the field order while keeping labels aligned RTL. */
+  .banner:not(.banner--page) .banner-search .search-form {
+    direction: rtl;
     unicode-bidi: isolate;
     span {
       text-align: right;
     }
     .search-field--location {
-      flex-direction: row-reverse;
+      flex-direction: row;
+    }
+  }
+  @media (min-width: 992px) {
+    .banner:not(.banner--page) .banner-search .search-btn--hero {
+      border-radius: 100px 0 0 100px;
     }
   }
   .banner-search .search-results-dropdown {

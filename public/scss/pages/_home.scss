@@ -1616,8 +1616,31 @@
             top: 25px;
             right: 25px;
             border: none;
-            transition: opacity 0.3s ease;
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 50%;
+            background: #5f7fb6;
+            opacity: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease, transform 0.2s ease;
             z-index: 10;
+
+            svg {
+                width: 16px;
+                height: 16px;
+            }
+
+            path {
+                stroke: $white;
+            }
+
+            &:hover {
+                background: $primaryColor;
+                transform: scale(1.04);
+            }
         }
     }
 
@@ -1663,6 +1686,9 @@
                 padding: 10px 0;
                 padding-right: 28px;
                 font-size: 16px;
+                font-family: inherit;
+                font-weight: 400;
+                line-height: 1.35;
                 color: #333;
                 background: transparent;
                 border-radius: 0;
@@ -1683,7 +1709,6 @@
                 appearance: none;
                 text-align: start;
                 min-height: 2.75rem;
-                line-height: 1.35;
                 display: flex;
                 align-items: center;
                 justify-content: space-between;
@@ -1742,6 +1767,9 @@
                 .enquiry-form__type-trigger-text {
                     flex: 1;
                     min-width: 0;
+                    font-size: inherit;
+                    font-weight: inherit;
+                    line-height: inherit;
                     text-overflow: ellipsis;
                     overflow: hidden;
                     white-space: nowrap;

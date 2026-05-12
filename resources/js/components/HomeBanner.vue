@@ -94,7 +94,7 @@
                                 </svg>
                                 <div class="dropdown-menu property-dropdown border-0 custom-dropdown-menu">
                                     <div class="dropdown-section">
-                                        <div class="dropdown-section-title">{{ propertyTypeFilterLabel }}</div>
+                                        <div class="dropdown-section-title">{{ propertyTypeFilterDisplayLabel }}</div>
                                         <div class="option-buttons" data-type="property" :class="{ 'property-options--collapsed': !propertyTypesExpanded }">
                                             <button v-for="(opt, idx) in propertyTypeOptions" :key="opt.value" type="button" 
                                                     :class="{ 
@@ -102,7 +102,7 @@
                                                         active: formState.property_type === opt.value 
                                                     }"
                                                     @click="formState.property_type = opt.value">
-                                                {{ opt.label[locale] || opt.label }}
+                                                {{ propertyTypeOptionLabel(opt) }}
                                             </button>
                                         </div>
                                     </div>
@@ -282,14 +282,86 @@ const filters = computed(() => content?.search?.filters || []);
 
 // Setup dynamic options for property type from CMS
 const propertyTypeFilter = computed(() => filters.value.find(f => f.key === 'property_type'));
-const propertyTypeOptions = computed(() => propertyTypeFilter.value?.options || [
+const rawPropertyTypeOptions = computed(() => propertyTypeFilter.value?.options || [
     { value: '', label: { en: 'Property type', ar: 'نوع العقار' } },
     { value: 'apartment', label: { en: 'Apartment', ar: 'شقة' } },
     { value: 'villa', label: { en: 'Villa', ar: 'فيلا' } },
     { value: 'townhouse', label: { en: 'Townhouse', ar: 'تاون هاوس' } }
 ]);
 
-const propertyTypeFilterLabel = computed(() => propertyTypeFilter.value?.label?.[locale.value] || propertyTypeFilter.value?.label || (locale.value === 'ar' ? 'نوع العقار' : 'Property type'));
+function localizedLabel(raw, fallback = '') {
+    if (raw && typeof raw === 'object') {
+        const localized = raw[locale.value] || raw.en || Object.values(raw).find(Boolean) || fallback;
+        return localized && typeof localized === 'object'
+            ? String(localized.label || fallback)
+            : String(localized || fallback);
+    }
+
+    return String(raw || fallback);
+}
+
+const propertyTypeFallbackLabels = {
+    '': { en: 'All Type', ar: '\u0643\u0644 \u0627\u0644\u0623\u0646\u0648\u0627\u0639' },
+    apartment: { en: 'Apartment', ar: '\u0634\u0642\u0629' },
+    villa: { en: 'Villa', ar: '\u0641\u064a\u0644\u0627' },
+    townhouse: { en: 'Townhouse', ar: '\u0645\u0646\u0632\u0644 \u062a\u0627\u0648\u0646' },
+    penthouse: { en: 'Penthouse', ar: '\u0628\u064a\u062a \u0639\u0644\u0649 \u0627\u0644\u0637\u0627\u0628\u0642 \u0627\u0644\u0639\u0644\u0648\u064a' },
+    compound: { en: 'Compound', ar: '\u0645\u062c\u0645\u0639' },
+    duplex: { en: 'Duplex', ar: '\u062f\u0648\u0628\u0644\u0643\u0633' },
+    'full floor': { en: 'Full Floor', ar: '\u0637\u0627\u0628\u0642 \u0643\u0627\u0645\u0644' },
+    'half floor': { en: 'Half Floor', ar: '\u0646\u0635\u0641 \u0637\u0627\u0628\u0642' },
+    'whole building': { en: 'Whole Building', ar: '\u0645\u0628\u0646\u0649 \u0643\u0627\u0645\u0644' },
+    'bulk rent unit': { en: 'Bulk Rent Unit', ar: '\u0648\u062d\u062f\u0629 \u0625\u064a\u062c\u0627\u0631 \u0628\u0627\u0644\u062c\u0645\u0644\u0629' },
+    bungalow: { en: 'Bungalow', ar: '\u0628\u0646\u063a\u0644' },
+    'hotel & hotel apartment': { en: 'Hotel & Hotel Apartment', ar: '\u0641\u0646\u062f\u0642 \u0648\u0634\u0642\u0642 \u0641\u0646\u062f\u0642\u064a\u0629' },
+    office: { en: 'Office', ar: '\u0645\u0643\u062a\u0628' },
+    warehouse: { en: 'Warehouse', ar: '\u0645\u0633\u062a\u0648\u062f\u0639' },
+};
+
+function propertyTypeOptionLabel(option) {
+    const raw = option?.label;
+    if (raw && typeof raw === 'object') {
+        return localizedLabel(raw, option?.value || '');
+    }
+
+    const key = String(option?.value ?? '').toLowerCase();
+    const fallback = propertyTypeFallbackLabels[key]?.[locale.value];
+    return fallback || localizedLabel(raw, option?.value || '');
+}
+
+function sortPropertyTypeOptions(options) {
+    return [...options].sort((a, b) => {
+        const aEmpty = String(a?.value ?? '').trim() === '';
+        const bEmpty = String(b?.value ?? '').trim() === '';
+
+        if (aEmpty !== bEmpty) {
+            return aEmpty ? -1 : 1;
+        }
+
+        return propertyTypeOptionLabel(a).localeCompare(propertyTypeOptionLabel(b), locale.value || undefined, {
+            sensitivity: 'base',
+            numeric: true,
+        });
+    });
+}
+
+const propertyTypeOptions = computed(() => sortPropertyTypeOptions(
+    rawPropertyTypeOptions.value.filter((option) => String(option?.value ?? '').trim() !== '')
+));
+
+const propertyTypeFilterDisplayLabel = computed(() => {
+    const raw = propertyTypeFilter.value?.label;
+    if (raw && typeof raw === 'object') {
+        return localizedLabel(raw, t('listing.propertyTypeHeading'));
+    }
+
+    if (locale.value === 'ar') {
+        return t('listing.propertyTypeHeading');
+    }
+
+    return localizedLabel(raw, t('listing.propertyTypeHeading'));
+});
+
 const locationFilter = computed(() => filters.value.find(f => f.key === 'location'));
 const apiLocationOptions = ref([]);
 const locationOptions = computed(() => {
@@ -385,7 +457,7 @@ async function loadDynamicLocationOptions() {
 }
 
 // Static options for Beds and Baths
-const bedOptions = ['Studio', '1', '2', '3', '4', '5', '6', '7', '7+'];
+const bedOptions = ['1', '2', '3', '4', '5', '6', '7', '7+'];
 const bathOptions = ['1', '2', '3', '4', '5', '6', '7', '7+'];
 
 const formState = ref({
@@ -398,9 +470,9 @@ const formState = ref({
 const selectedPropertyTypeLabel = computed(() => {
     if (formState.value.property_type) {
         const opt = propertyTypeOptions.value.find(o => o.value === formState.value.property_type);
-        if (opt) return opt.label[locale.value] || opt.label;
+        if (opt) return propertyTypeOptionLabel(opt);
     }
-    return locale.value === 'ar' ? 'حدد نوع العقار' : 'Select Property Type';
+    return t('listing.selectPropertyType');
 });
 
 const selectedBedsBathsLabel = computed(() => {

@@ -1332,18 +1332,23 @@ html[dir=rtl] .insight-detail__pager a {
   flex-direction: row-reverse;
 }
 html[dir=rtl] {
-  /* Hero search strip: keep horizontal order location → filters → search (industry standard).
-     Page is RTL but the form uses dir="ltr" in markup; isolate so nested rules don't flip the row. */
+  /* Hero search strip: mirror the horizontal order for Arabic.
+     Arabic mirrors the field order while keeping labels aligned RTL. */
 }
-html[dir=rtl] .banner-search .search-form {
-  direction: ltr;
+html[dir=rtl] .banner:not(.banner--page) .banner-search .search-form {
+  direction: rtl;
   unicode-bidi: isolate;
 }
-html[dir=rtl] .banner-search .search-form span {
+html[dir=rtl] .banner:not(.banner--page) .banner-search .search-form span {
   text-align: right;
 }
-html[dir=rtl] .banner-search .search-form .search-field--location {
-  flex-direction: row-reverse;
+html[dir=rtl] .banner:not(.banner--page) .banner-search .search-form .search-field--location {
+  flex-direction: row;
+}
+@media (min-width: 992px) {
+  html[dir=rtl] .banner:not(.banner--page) .banner-search .search-btn--hero {
+    border-radius: 100px 0 0 100px;
+  }
 }
 html[dir=rtl] .banner-search .search-results-dropdown {
   text-align: right;
@@ -6132,8 +6137,28 @@ html[dir=rtl] .modal-content .btn-close {
   top: 25px;
   right: 25px;
   border: none;
-  transition: opacity 0.3s ease;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  background: #5f7fb6;
+  opacity: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.2s ease;
   z-index: 10;
+}
+.siteEnquiryForm .modal-content .btn-close svg {
+  width: 16px;
+  height: 16px;
+}
+.siteEnquiryForm .modal-content .btn-close path {
+  stroke: #fff;
+}
+.siteEnquiryForm .modal-content .btn-close:hover {
+  background: #2A559C;
+  transform: scale(1.04);
 }
 .siteEnquiryForm .enquiry-form .h2,
 .siteEnquiryForm .enquiry-form h3.h2 {
@@ -6166,6 +6191,9 @@ html[dir=rtl] .modal-content .btn-close {
   padding: 10px 0;
   padding-right: 28px;
   font-size: 16px;
+  font-family: inherit;
+  font-weight: 400;
+  line-height: 1.35;
   color: #333;
   background: transparent;
   border-radius: 0;
@@ -6193,7 +6221,6 @@ html[dir=rtl] .modal-content .btn-close {
        appearance: none;
   text-align: start;
   min-height: 2.75rem;
-  line-height: 1.35;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -6248,6 +6275,9 @@ html[dir=rtl] .modal-content .btn-close {
 .siteEnquiryForm .enquiry-form .form-group.enquiry-form__property-type .enquiry-form__type-trigger-text {
   flex: 1;
   min-width: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  line-height: inherit;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
@@ -10052,9 +10082,16 @@ html[dir=rtl] .breadcrumb-minimal {
     padding: 0 10px 8px;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    cursor: grab;
+    -webkit-user-select: none;
+       -moz-user-select: none;
+            user-select: none;
   }
   .journey-timeline::-webkit-scrollbar {
     display: none;
+  }
+  .journey-timeline.is-dragging {
+    cursor: grabbing;
   }
 }
 .journey-timeline__list {

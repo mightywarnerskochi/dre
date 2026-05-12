@@ -151,12 +151,12 @@ const activeFilters = ref({
 
 const selectedSort = ref(route.query.sort || 'newest');
 
-const sortOptions = [
-    { value: 'newest', label: 'Newest first' },
-    { value: 'price_asc', label: 'Price: low to high' },
-    { value: 'price_desc', label: 'Price: high to low' },
-    { value: 'area_desc', label: 'Largest area' },
-];
+const sortOptions = computed(() => [
+    { value: 'newest', label: t('listing.sortNewest') },
+    { value: 'price_asc', label: t('listing.sortPriceAsc') },
+    { value: 'price_desc', label: t('listing.sortPriceDesc') },
+    { value: 'area_desc', label: t('listing.sortAreaDesc') },
+]);
 
 const dreVueListingFilters = computed(() => ({
     ...activeFilters.value,
@@ -183,7 +183,7 @@ provide('dreVueListingFilters', dreVueListingFilters);
 provide('currentView', currentView);
 
 const activeSortLabel = computed(() => {
-    return sortOptions.find((option) => option.value === selectedSort.value)?.label || 'Sort';
+    return sortOptions.value.find((option) => option.value === selectedSort.value)?.label || t('listing.sort');
 });
 
 async function selectSort(value) {

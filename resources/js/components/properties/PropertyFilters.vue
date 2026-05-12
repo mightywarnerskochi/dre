@@ -275,12 +275,23 @@ const propertyTypeTriggerText = computed(() => {
     return o ? o.label : t('listing.selectPropertyType');
 });
 
+function propertyTypeOptionLabel(option) {
+    return String(option?.label || option?.value || '');
+}
+
+function sortPropertyTypeOptions(options) {
+    return [...options].sort((a, b) => propertyTypeOptionLabel(a).localeCompare(propertyTypeOptionLabel(b), locale.value || undefined, {
+        sensitivity: 'base',
+        numeric: true,
+    }));
+}
+
 const visiblePropertyTypeOptions = computed(() => {
-    return propertyTypeOptions.value.filter((option) => String(option.value ?? '').trim() !== '');
+    return sortPropertyTypeOptions(propertyTypeOptions.value.filter((option) => String(option.value ?? '').trim() !== ''));
 });
 
 const visibleCategoryOptions = computed(() => {
-    return categoryOptions.value.filter((option) => String(option.value ?? '').trim() !== '');
+    return sortPropertyTypeOptions(categoryOptions.value.filter((option) => String(option.value ?? '').trim() !== ''));
 });
 
 const bedsBathsTriggerText = computed(() => {
