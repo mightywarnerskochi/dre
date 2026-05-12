@@ -16,7 +16,7 @@
                 </RouterLink>
 
                 <div class="header-right d-flex align-items-center">
-                    <div class="dropdown lang-switcher">
+                    <div v-if="showLanguageSwitcher" class="dropdown lang-switcher">
                         <button
                             class="lang-switcher__toggle"
                             type="button"
@@ -84,13 +84,14 @@ const isInnerPage = computed(() => route.name !== 'home');
 
 const activeLanguages = computed(() => {
     const langs = dreSite.value?.languages || [];
-    return langs.length > 0 ? langs : [
-        { code: 'en', name: 'English', flagImage: asset('public/images/english.jpg'), flagAlt: 'English Flag' },
-        { code: 'ar', name: 'العربية', flagImage: asset('public/images/arabic.jpg'), flagAlt: 'Arabic Flag' }
-    ];
+    return Array.isArray(langs)
+        ? langs.filter((lang) => String(lang?.code || '').trim() !== '')
+        : [];
 });
 
-const currentLang = computed(() => activeLanguages.value.find(l => l.code === locale.value) || activeLanguages.value[0]);
+const showLanguageSwitcher = computed(() => Boolean(dreSite.value?.languagesEnabled) && activeLanguages.value.length > 1);
+const defaultLanguage = computed(() => activeLanguages.value.find((lang) => lang.isDefault) || activeLanguages.value[0] || { code: 'en' });
+const currentLang = computed(() => activeLanguages.value.find(l => l.code === locale.value) || defaultLanguage.value);
 const displayCode = computed(() => t('lang.code'));
 const flagSrc = computed(() => currentLang.value?.flagImage || asset(locale.value === 'ar' ? 'public/images/arabic.jpg' : 'public/images/english.jpg'));
 
@@ -115,6 +116,21 @@ onMounted(() => {
     updateScrolled();
     window.addEventListener('scroll', updateScrolled, { passive: true });
 });
+
+watch(
+    [activeLanguages, () => dreSite.value?.languagesEnabled],
+    () => {
+        const availableCodes = activeLanguages.value.map((lang) => lang.code);
+        const nextLocale = Boolean(dreSite.value?.languagesEnabled) && availableCodes.includes(locale.value)
+            ? locale.value
+            : (defaultLanguage.value?.code || 'en');
+
+        if (locale.value !== nextLocale) {
+            setLang(nextLocale);
+        }
+    },
+    { immediate: true },
+);
 
 watch(
     () => route.fullPath,
@@ -143,3 +159,5 @@ function setLang(code) {
     }
 }
 </script>
+
+

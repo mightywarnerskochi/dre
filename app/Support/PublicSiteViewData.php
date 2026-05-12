@@ -86,8 +86,9 @@ class PublicSiteViewData
             ->values()
             ->all();
 
+        $languagesEnabled = (bool) config('cms-kit.common.modules.languages', true);
         $languages = [];
-        if (Schema::hasTable('languages')) {
+        if ($languagesEnabled && Schema::hasTable('languages')) {
             $languages = Language::query()
                 ->active()
                 ->get()
@@ -113,6 +114,7 @@ class PublicSiteViewData
             'social' => $social,
             'legalPages' => self::legalPages($info),
             'tracking' => self::tracking($info),
+            'languagesEnabled' => $languagesEnabled,
             'languages' => $languages,
             'appLinks' => [
                 'qrCodeUrl' => self::mediaPathUrl(data_get($extraFields, 'qr_code')),

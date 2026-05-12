@@ -210,9 +210,15 @@ $journey-line-top-mb: $j-year-mobile * $journey-year-lh + $journey-year-gap + 6p
     // Scrolling: mouse wheel (JS) + touch/trackpad; bar hidden
     scrollbar-width: none;
     -ms-overflow-style: none;
+    cursor: grab;
+    user-select: none;
 
     &::-webkit-scrollbar {
       display: none;
+    }
+
+    &.is-dragging {
+      cursor: grabbing;
     }
   }
 

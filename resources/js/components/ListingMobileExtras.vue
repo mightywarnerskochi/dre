@@ -9,7 +9,7 @@
 
     <div class="offcanvas offcanvas-bottom listing-sort-offcanvas" tabindex="-1" id="listingSortOffcanvas" aria-labelledby="listingSortOffcanvasLabel">
         <div class="offcanvas-header listing-sort-offcanvas__header">
-            <h2 class="offcanvas-title h5 mb-0" id="listingSortOffcanvasLabel">Sort by</h2>
+            <h2 class="offcanvas-title h5 mb-0" id="listingSortOffcanvasLabel">{{ t('listing.sortBy') }}</h2>
             <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" :aria-label="t('nav.close')"></button>
         </div>
         <div class="offcanvas-body listing-sort-offcanvas__body">
@@ -76,7 +76,7 @@
                 <path d="M4 6H20M8 12H16M10 18H14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                 <path d="M6 4V8M18 10V14M12 16V20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
             </svg>
-            <span>Sort</span>
+            <span>{{ t('listing.sort') }}</span>
         </button>
     </nav>
 </template>
@@ -93,7 +93,7 @@ const props = defineProps({
     sortOptions: {
         type: Array,
         default: () => [
-            { value: 'newest', label: 'Newest first' },
+            { value: 'newest', label: 'Newest' },
             { value: 'price_asc', label: 'Price: low to high' },
             { value: 'price_desc', label: 'Price: high to low' },
             { value: 'area_desc', label: 'Largest area' },

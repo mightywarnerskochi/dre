@@ -1,11 +1,19 @@
 @php
-    $styleVersion = $styleVersion ?? '15';
+    $styleVersion = $styleVersion ?? '17';
     $dreSitePublic = $sitePublic ?? ['phone1' => null, 'phone2' => null, 'email' => null, 'social' => []];
     $dreContentPublic = $contentPublic ?? [];
     $dreTracking = is_array($dreSitePublic['tracking'] ?? null) ? $dreSitePublic['tracking'] : [];
     $dreGtmContainerIds = is_array($dreTracking['gtmContainerIds'] ?? null) ? $dreTracking['gtmContainerIds'] : [];
     $dreCustomHeadScript = is_string($dreTracking['customHeadScript'] ?? null) ? trim($dreTracking['customHeadScript']) : '';
     $dreCustomBodyScript = is_string($dreTracking['customBodyScript'] ?? null) ? trim($dreTracking['customBodyScript']) : '';
+    $dreLanguagesEnabled = (bool) data_get($dreSitePublic, 'languagesEnabled', true);
+    $dreAvailableLanguageCodes = collect(data_get($dreSitePublic, 'languages', []))
+        ->pluck('code')
+        ->filter()
+        ->values()
+        ->all();
+    $dreDefaultLanguageCode = collect(data_get($dreSitePublic, 'languages', []))
+        ->firstWhere('isDefault', true)['code'] ?? ($dreAvailableLanguageCodes[0] ?? 'en');
 
     $dreSeoPages = data_get($dreContentPublic, 'seo.pages', []);
     $dreSeoPages = is_array($dreSeoPages) ? $dreSeoPages : [];
@@ -146,6 +154,12 @@
         (function () {
             try {
                 var savedLang = localStorage.getItem("dre_lang") || "en";
+                var enabled = @json($dreLanguagesEnabled);
+                var available = @json($dreAvailableLanguageCodes);
+                var defaultLang = @json($dreDefaultLanguageCode);
+                if (!enabled || !Array.isArray(available) || !available.includes(savedLang)) {
+                    savedLang = defaultLang || "en";
+                }
                 var root = document.documentElement;
                 root.setAttribute("lang", savedLang);
                 root.setAttribute("dir", savedLang === "ar" ? "rtl" : "ltr");

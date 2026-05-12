@@ -309,6 +309,53 @@ class PropertyPageController extends Controller
             }
         }
 
+        $appendUsedOptions = function (array $options, string $column, array $config): array {
+            $seen = collect($options)
+                ->mapWithKeys(fn ($option) => [Str::lower(trim((string) ($option['value'] ?? ''))) => true])
+                ->all();
+
+            $usedValues = Property::query()
+                ->select([$column, 'metadata'])
+                ->where('status', true)
+                ->whereNotNull($column)
+                ->where($column, '!=', '')
+                ->orderBy($column)
+                ->get();
+
+            foreach ($usedValues as $property) {
+                $value = trim((string) $property->{$column});
+                $key = Str::lower($value);
+
+                if ($value === '' || isset($seen[$key])) {
+                    continue;
+                }
+
+                $options[] = [
+                    'value' => $value,
+                    'label' => $this->propertyClassificationLabel($property, $column, $config) ?: $value,
+                ];
+                $seen[$key] = true;
+            }
+
+            return $options;
+        };
+
+        if (isset($filters['property_types'])) {
+            $filters['property_types'] = $appendUsedOptions(
+                $filters['property_types'],
+                'property_type',
+                config('cms-kit.database.properties.property_types', [])
+            );
+        }
+
+        if (isset($filters['categories'])) {
+            $filters['categories'] = $appendUsedOptions(
+                $filters['categories'],
+                'category',
+                config('cms-kit.database.properties.categories', [])
+            );
+        }
+
         // Fallback for property_types if not configured
         if (! isset($filters['property_types'])) {
             $typeConfig = config('cms-kit.database.properties.property_types', []);
@@ -510,11 +557,11 @@ class PropertyPageController extends Controller
             'sqft' => (int) $property->sqft,
             'period' => $property->listing_type === 'rent' ? ' / yr' : '',
             'property_type' => $property->property_type,
-            'propertyTypeLabel' => $this->optionLabel(config('cms-kit.database.properties.property_types', []), (string) $property->property_type),
+            'propertyTypeLabel' => $this->propertyClassificationLabel($property, 'property_type', config('cms-kit.database.properties.property_types', [])),
             'listing_type' => $property->listing_type,
             'listingTypeLabel' => $this->optionLabel(config('cms-kit.database.properties.listing_types', []), (string) $property->listing_type),
             'category' => $property->category,
-            'categoryLabel' => $this->optionLabel(config('cms-kit.database.properties.categories', []), (string) $property->category),
+            'categoryLabel' => $this->propertyClassificationLabel($property, 'category', config('cms-kit.database.properties.categories', [])),
             'images' => $images->all(),
             'image_count' => $images->count(),
             'featured_image' => $images->first(),
@@ -797,6 +844,28 @@ class PropertyPageController extends Controller
         }
 
         return Str::headline(str_replace(['-', '_'], ' ', $key));
+    }
+
+    protected function propertyClassificationLabel(Property $property, string $field, array $options): string
+    {
+        $key = trim((string) $property->{$field});
+        if ($key === '') {
+            return '';
+        }
+
+        $metadata = is_array($property->metadata) ? $property->metadata : [];
+        $locale = app()->getLocale();
+        $fallback = config('app.fallback_locale', 'en');
+        $savedLabels = data_get($metadata, "classification_labels.{$field}.{$key}", []);
+
+        if (is_array($savedLabels)) {
+            $label = trim((string) ($savedLabels[$locale] ?? $savedLabels[$fallback] ?? reset($savedLabels) ?: ''));
+            if ($label !== '') {
+                return $label;
+            }
+        }
+
+        return $this->optionLabel($options, $key);
     }
 
     protected function getSiteInfo()

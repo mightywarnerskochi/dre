@@ -72,7 +72,7 @@
                                     </div>
                                 </div>
                                 <div class="property-card__tags">
-                                    <span class="property-tag property-tag--fill">{{ typeLabel(prop.property_type) }}</span>
+                                    <span class="property-tag property-tag--fill">{{ typeLabel(prop) }}</span>
                                     <span class="property-tag property-tag--outline">{{ listingLabel(prop.listing_type) }}</span>
                                 </div>
                             </div>
@@ -160,6 +160,23 @@ const siteCallHref = computed(() => siteTelHref(dreSite.value));
 const siteWhatsappLink = computed(() => siteWhatsappHref(dreSite.value));
 const route = useRoute();
 const router = useRouter();
+
+const propertyTypeLabels = {
+    apartment: { en: 'Apartment', ar: 'شقة' },
+    villa: { en: 'Villa', ar: 'فيلا' },
+    townhouse: { en: 'Townhouse', ar: 'منزل تاون' },
+    penthouse: { en: 'Penthouse', ar: 'بيت على الطابق العلوي' },
+    compound: { en: 'Compound', ar: 'مجمع' },
+    duplex: { en: 'Duplex', ar: 'دوبلكس' },
+    'full floor': { en: 'Full Floor', ar: 'طابق كامل' },
+    'half floor': { en: 'Half Floor', ar: 'نصف طابق' },
+    'whole building': { en: 'Whole Building', ar: 'مبنى كامل' },
+    'bulk rent unit': { en: 'Bulk Rent Unit', ar: 'وحدة إيجار بالجملة' },
+    bungalow: { en: 'Bungalow', ar: 'بنغل' },
+    'hotel & hotel apartment': { en: 'Hotel & Hotel Apartment', ar: 'فندق وشقق فندقية' },
+    office: { en: 'Office', ar: 'مكتب' },
+    warehouse: { en: 'Warehouse', ar: 'مستودع' },
+};
 
 /** Vue-managed type/category (parent); FormData alone can miss :value hiddens or wrong .search-form--listing. */
 const dreVueListingFilters = inject('dreVueListingFilters', null);
@@ -258,8 +275,19 @@ function formatSqft(value) {
     return number.toLocaleString(locale.value === 'ar' ? 'ar-AE' : 'en-US');
 }
 
-function typeLabel(raw) {
-    const s = String(raw || '').replace(/[-_]+/g, ' ').trim();
+function normalizedTypeKey(value) {
+    return String(value || '').replace(/[-_]+/g, ' ').trim().toLowerCase();
+}
+
+function typeLabel(prop) {
+    const key = normalizedTypeKey(prop?.property_type || prop?.propertyTypeLabel);
+    const fallback = propertyTypeLabels[key]?.[locale.value];
+    if (fallback) return fallback;
+
+    const localized = String(prop?.propertyTypeLabel || '').trim();
+    if (localized !== '') return localized;
+
+    const s = String(prop?.property_type || '').replace(/[-_]+/g, ' ').trim();
     if (!s) return t('home.rentals.card.propertyType');
     return s.replace(/\b\w/g, (c) => c.toUpperCase());
 }

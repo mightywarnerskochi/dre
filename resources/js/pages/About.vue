@@ -76,10 +76,10 @@
         </div>
     </section>
 
-    <section v-if="aboutData.journey.items.length" class="our-journey" aria-labelledby="journey-heading">
+    <section v-if="aboutData.journey.items.length" ref="journeySectionRef" class="our-journey" aria-labelledby="journey-heading">
         <div class="container-fluid p-0">
             <h2 id="journey-heading" class="our-journey__title text-center">{{ aboutData.journey.title }}</h2>
-            <div class="journey-timeline" role="region" aria-label="Company timeline">
+            <div ref="journeyTimelineRef" class="journey-timeline" role="region" aria-label="Company timeline">
                 <ol class="journey-timeline__list">
                     <li v-for="(item, idx) in aboutData.journey.items" :key="item.year + '-' + idx" class="journey-timeline__item">
                         <time class="journey-timeline__year" :datetime="item.year">{{ item.year }}</time>
@@ -100,7 +100,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
@@ -108,4 +108,144 @@ import { getAboutPageData } from '@/utils/publicContent';
 
 const { locale } = useI18n({ useScope: 'global' });
 const aboutData = computed(() => getAboutPageData(locale.value));
+const journeySectionRef = ref(null);
+const journeyTimelineRef = ref(null);
+
+let timelineRafId = 0;
+let timelineTargetLeft = null;
+let removeJourneyWheel = null;
+let removeJourneyDrag = null;
+
+function maxJourneyScroll(timeline) {
+    return Math.max(0, Math.round(timeline.scrollWidth - timeline.clientWidth));
+}
+
+function sectionInView(section) {
+    const rect = section.getBoundingClientRect();
+    return rect.top < window.innerHeight && rect.bottom > 0;
+}
+
+function readyForHorizontalOnDown(section) {
+    const rect = section.getBoundingClientRect();
+    return rect.top < window.innerHeight * 0.6 || rect.top < 0;
+}
+
+function stepJourneyTimeline() {
+    timelineRafId = 0;
+    const timeline = journeyTimelineRef.value;
+    if (!timeline || timelineTargetLeft == null) return;
+
+    const goal = Math.max(0, Math.min(maxJourneyScroll(timeline), timelineTargetLeft));
+    const diff = goal - timeline.scrollLeft;
+
+    if (Math.abs(diff) < 0.6) {
+        timeline.scrollLeft = goal;
+        timelineTargetLeft = null;
+        return;
+    }
+
+    timeline.scrollLeft += diff;
+    timelineRafId = requestAnimationFrame(stepJourneyTimeline);
+}
+
+function initJourneyWheelScroll() {
+    const section = journeySectionRef.value;
+    const timeline = journeyTimelineRef.value;
+    if (!section || !timeline) return;
+
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    const prefersSmooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    function onWheel(event) {
+        if (!mediaQuery.matches) return;
+        if (event.target?.closest?.('input, textarea, select, [contenteditable="true"]')) return;
+        if (!sectionInView(section)) return;
+
+        const maxScroll = maxJourneyScroll(timeline);
+        if (maxScroll <= 0) return;
+
+        const currentLeft = timeline.scrollLeft;
+        const move = (event.deltaY + event.deltaX) * 4;
+        if (move === 0) return;
+
+        if (move > 0) {
+            if (!readyForHorizontalOnDown(section)) return;
+            if (currentLeft >= maxScroll - 0.5) return;
+        } else if (currentLeft <= 0.5) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const base = timelineTargetLeft != null ? timelineTargetLeft : currentLeft;
+        const next = Math.max(0, Math.min(maxScroll, base + move));
+
+        if (!prefersSmooth) {
+            timeline.scrollLeft = next;
+            timelineTargetLeft = null;
+            return;
+        }
+
+        timelineTargetLeft = next;
+        if (!timelineRafId) timelineRafId = requestAnimationFrame(stepJourneyTimeline);
+    }
+
+    document.addEventListener('wheel', onWheel, { passive: false, capture: true });
+    removeJourneyWheel = () => document.removeEventListener('wheel', onWheel, { capture: true });
+}
+
+function initJourneyDragScroll() {
+    const timeline = journeyTimelineRef.value;
+    if (!timeline) return;
+
+    let pointerId = null;
+    let startX = 0;
+    let startScrollLeft = 0;
+
+    function onPointerDown(event) {
+        if (window.matchMedia('(max-width: 767px)').matches) return;
+        pointerId = event.pointerId;
+        startX = event.clientX;
+        startScrollLeft = timeline.scrollLeft;
+        timeline.classList.add('is-dragging');
+        timeline.setPointerCapture?.(event.pointerId);
+    }
+
+    function onPointerMove(event) {
+        if (pointerId !== event.pointerId) return;
+        event.preventDefault();
+        timeline.scrollLeft = startScrollLeft - (event.clientX - startX);
+    }
+
+    function onPointerEnd(event) {
+        if (pointerId !== event.pointerId) return;
+        pointerId = null;
+        timeline.classList.remove('is-dragging');
+        timeline.releasePointerCapture?.(event.pointerId);
+    }
+
+    timeline.addEventListener('pointerdown', onPointerDown);
+    timeline.addEventListener('pointermove', onPointerMove);
+    timeline.addEventListener('pointerup', onPointerEnd);
+    timeline.addEventListener('pointercancel', onPointerEnd);
+
+    removeJourneyDrag = () => {
+        timeline.removeEventListener('pointerdown', onPointerDown);
+        timeline.removeEventListener('pointermove', onPointerMove);
+        timeline.removeEventListener('pointerup', onPointerEnd);
+        timeline.removeEventListener('pointercancel', onPointerEnd);
+    };
+}
+
+onMounted(async () => {
+    await nextTick();
+    initJourneyWheelScroll();
+    initJourneyDragScroll();
+});
+
+onBeforeUnmount(() => {
+    removeJourneyWheel?.();
+    removeJourneyDrag?.();
+    if (timelineRafId) cancelAnimationFrame(timelineRafId);
+});
 </script>
