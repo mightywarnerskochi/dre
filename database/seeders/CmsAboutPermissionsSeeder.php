@@ -38,6 +38,7 @@ class CmsAboutPermissionsSeeder extends Seeder
             'careers.delete',
             'careers.edit',
             'careers.export',
+            'careers.filters.edit',
             'careers.show',
             'careers.view',
             'enquiries.create',

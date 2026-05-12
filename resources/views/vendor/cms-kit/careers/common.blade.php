@@ -9,6 +9,7 @@
     $showLanguageUi = config('cms-kit.common.modules.languages', true);
     $careerSectionConfig = config('cms-kit.database.careers.section', []);
     $sectionTranslations = $section->translations ?? [];
+    $canManageFilters = $canManageFilters ?? (auth('cms')->user()?->can('careers.filters.edit') ?? false);
     $existingFilters = old('section_filters', collect(data_get($section->extra_fields, 'filters', []))
         ->map(fn ($filter) => [
             'column' => ($filter['column'] ?? $filter['key'] ?? '') === 'base' ? 'title' : ($filter['column'] ?? $filter['key'] ?? ''),
@@ -122,7 +123,7 @@
                 'existingValues' => $section->extra_fields ?? [],
             ])
 
-            @if($careerSectionConfig['filters'] ?? true)
+            @if(($careerSectionConfig['filters'] ?? true) && $canManageFilters)
             <div class="mb-4">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <div>
