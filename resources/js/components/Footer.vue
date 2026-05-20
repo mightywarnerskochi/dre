@@ -3,7 +3,7 @@
 
     <footer class="site-footer">
         <div class="site-footer__main">
-            <div class="container-footer">
+            <div class="container-ctn">
                 <div class="site-footer__grid">
                     <div class="site-footer__col">
                         <p class="site-footer__heading">{{ t('footer.quickLinks') }}</p>
@@ -79,7 +79,7 @@
         </div>
 
         <div class="site-footer__bottom">
-            <div class="container-footer">
+            <div class="container-ctn">
                 <div class="site-footer__bottom-inner">
                     <p class="site-footer__copy">
                         {{ t('footer.copyright', { year: copyrightYear }) }}

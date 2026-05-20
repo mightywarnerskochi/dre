@@ -3,7 +3,8 @@
     p {
       line-height: 160%;
       width: 100%;
-      @include min(768){
+
+      @include min(768) {
         width: 77.705%;
 
       }
@@ -33,8 +34,8 @@
 .about-values {
   position: relative;
   // margin-top: 250px;
-  padding-bottom: clamp(35px, 4.1vw, 78px);
-  padding-top: clamp(60px, 6.5vw, 124px);
+  padding-bottom: clamp(50px, 5.20832vw, 100px);
+  padding-top: clamp(70px, 7.5vw, 144px);
 
   &::after {
     @extend .position;
@@ -48,9 +49,11 @@
 
   &__grid {
     counter-reset: about-value;
-    @include max(767){
+
+    @include max(767) {
       gap: 20px;
     }
+
     .about-value-card__index {
       width: fit-content;
       position: relative;
@@ -87,7 +90,8 @@
       transition: 0.5s ease all;
       border-radius: 50px 0;
       overflow: hidden;
-      img{
+
+      img {
         width: 100%;
         height: 100%;
       }
@@ -108,6 +112,7 @@
       border-radius: clamp(30px, 3.89vw, 50px) 0;
       background: #FFF;
       width: 100%;
+
       @include min(768) {
         width: 31.561%;
       }
@@ -168,12 +173,7 @@ $journey-line-top-mb: $j-year-mobile * $journey-year-lh + $journey-year-gap + 6p
 
 .our-journey {
   background: $journey-bg;
-  padding: clamp(50px, 7vw,60px) 0;
 
-  @include max(767) {
-    padding-left: clamp(16px, 4vw, 24px);
-    padding-right: clamp(16px, 4vw, 24px);
-  }
 
   .container-ctn {
     max-width: 98%;
@@ -282,7 +282,7 @@ $journey-line-top-mb: $j-year-mobile * $journey-year-lh + $journey-year-gap + 6p
       width: fit-content;
       min-width: 256px;
       max-width: 320px;
-      padding:  0 clamp(20px, 2.5vw, 30px);
+      padding: 0 clamp(20px, 2.5vw, 30px);
     }
 
     @include max(767) {
@@ -324,7 +324,7 @@ $journey-line-top-mb: $j-year-mobile * $journey-year-lh + $journey-year-gap + 6p
     margin: 0 0 $journey-year-gap;
 
     @include min(992) {
-      font-size: clamp(24px, 2.49vw, 48px);    
+      font-size: clamp(24px, 2.49vw, 48px);
       line-height: 58px;
     }
   }
@@ -364,7 +364,7 @@ $journey-line-top-mb: $j-year-mobile * $journey-year-lh + $journey-year-gap + 6p
       color: #2F3F58;
       font-weight: 500;
 
-      line-height:  150%;
+      line-height: 150%;
 
     }
   }

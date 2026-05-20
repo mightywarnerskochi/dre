@@ -1,5 +1,5 @@
 <template>
-    <section v-if="articles.length" class="news commonPadding" style="background: #F7F9FB;">
+    <section v-if="articles.length" class="news commonPadding-120" style="background: #F7F9FB;">
         <div class="container-center">
             <div class="head text-center">
                 <span>{{ title }}</span>
