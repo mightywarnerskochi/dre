@@ -26,14 +26,17 @@
     align-items: center;
     justify-content: space-between;
 
-    margin:0 auto clamp(50px, 6.41vw, 123px);
-    .career-openings__filter{
+    margin: 0 auto clamp(50px, 6.41vw, 123px);
+
+    .career-openings__filter {
       width: 100%;
-      @include min(576){
+
+      @include min(576) {
         width: 26.469%;
 
       }
-      @include min(992){
+
+      @include min(992) {
         width: 26.469%;
 
       }
@@ -86,7 +89,10 @@
   border: 1px solid #dde4ef;
   border-radius: 10px;
   padding: clamp(15px, 1.98vw, 38px);
-  span,p,li{
+
+  span,
+  p,
+  li {
     font-size: clamp(10px, 0.83vw, 16px);
   }
 
@@ -105,7 +111,7 @@
       align-items: center;
       gap: clamp(9px, 0.83vw, 18px);
     }
-  
+
 
     span {
       align-items: center;
@@ -113,12 +119,13 @@
       color: $bodyText;
       border-radius: 80px;
 
- background: rgba(217, 217, 217, 0.35);
+      background: rgba(217, 217, 217, 0.35);
 
       padding: 7px 10px;
       display: flex;
       gap: 10px;
-      svg{
+
+      svg {
         width: clamp(8px, 0.83vw, 10px);
         height: clamp(8px, 0.83vw, 10px);
       }
@@ -128,7 +135,7 @@
     p {
       margin: 0;
       color: $bodyText;
-  
+
     }
   }
 
@@ -170,7 +177,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: space-between;
-   padding:  clamp(8px, 0.886vw, 17px) clamp(12px, 1.98vw, 30px);
+    padding: clamp(8px, 0.886vw, 17px) clamp(12px, 1.98vw, 30px);
     height: clamp(30px, 4.167vw, 42px);
     border-radius: 80px;
     background: #ECECEC;
@@ -353,28 +360,108 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0px clamp(12px, 1.98vw, 30px);
-    height: clamp(38px, 4.167vw, 42px);
+    gap: 8px;
+    padding: 0px clamp(16px, 2vw, 36px);
+    height: clamp(40px, 4.5vw, 46px);
     border-radius: 999px;
-    background: #ececec;
-    border: 1px solid #dde4ef;
-    color: #000;
+    background: linear-gradient(270deg, #2A559C, #6366F1, #0563ff, #2A559C);
+    background-size: 600% 600%;
+    border: none;
+    color: #fff;
     text-decoration: none;
     font-size: clamp(13px, 1.3vw, 16px);
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+    animation: applyGradientShift 8s ease infinite, applyPulseGlow 3s infinite ease-in-out;
+
+    // Subtle premium overlay gloss shine
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -60%;
+      width: 30%;
+      height: 100%;
+      background: linear-gradient(to right,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.4) 50%,
+          rgba(255, 255, 255, 0) 100%);
+      transform: skewX(-25deg);
+      transition: none;
+    }
+
+    svg {
+      transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+      width: 22px;
+      height: 22px;
+    }
 
     &:hover {
-      border-color: $primaryColor;
-      color: $primaryColor;
-      background: #fff;
+      color: #fff !important;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.6);
+
+      svg {
+        transform: translate(3px, -2px);
+      }
+
+      &::after {
+        left: 160%;
+        transition: left 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+      }
+    }
+
+    &:active {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+  }
+
+  @keyframes applyGradientShift {
+    0% {
+      background-position: 0% 50%;
+    }
+
+    50% {
+      background-position: 100% 50%;
+    }
+
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  @keyframes applyPulseGlow {
+    0% {
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    }
+
+    50% {
+      box-shadow: 0 4px 22px #0563ff, 0 0 0 4px rgba(99, 102, 241, 0.15);
+    }
+
+    100% {
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
     }
   }
 
   &__body {
-    h3 + p, h3 + ul, h3 + ol, h3 + div,ul + h3, ol + h3, div + h3{
+
+    h3+p,
+    h3+ul,
+    h3+ol,
+    h3+div,
+    ul+h3,
+    ol+h3,
+    div+h3 {
       margin-top: clamp(18px, 1.87498vw, 36px);
     }
+
     h3 {
 
       color: #000;
@@ -387,7 +474,7 @@
       margin: 0 0 22px;
       color: $bodyText;
       line-height: 160%;
-   
+
     }
   }
 
@@ -419,7 +506,7 @@
         background-size: clamp(16px, 1.87498vw, 18px);
       }
 
-    
+
     }
   }
 
@@ -447,17 +534,21 @@
   }
 
   .modal-header {
-    border: none;padding: 0;
+    border: none;
+    padding: 0;
 
     .modal-title {
       margin-bottom: clamp(30px, 3.72vw, 72px);
       color: #0a1119;
       font-size: clamp(19px, 2.5vw, 40px);
-      line-height:  160%;
+      line-height: 160%;
       font-weight: 500;
     }
 
     .btn-close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       width: clamp(35px, 2.61vw, 50px);
       height: clamp(35px, 2.61vw, 50px);
       border-radius: 50%;
@@ -468,7 +559,8 @@
       padding: 0;
       top: 2%;
       right: 5%;
-      @include min(575){
+
+      @include min(575) {
         top: 4%;
         right: 8%;
       }
@@ -505,13 +597,16 @@
       padding: 0px clamp(15px, 1.98vw, 25px);
       height: clamp(40px, 4.167vw, 70px);
       box-shadow: none;
+
       &::placeholder {
         color: $bodyText;
       }
     }
-    textarea{
+
+    textarea {
       padding-top: clamp(15px, 1.98vw, 25px);
     }
+
     select {
       background-color: #fff;
       appearance: none;
@@ -639,12 +734,13 @@
     gap: 8px;
 
     .btn {
-      border-radius:5px;
+      border-radius: 5px;
       font-size: clamp(16px, 1.3vw, 18px);
       font-weight: 500;
       line-height: 100%;
       padding: clamp(12px, 1.3vw, 20px) clamp(20px, 2.3vw, 40px);
-      &:hover{
+
+      &:hover {
         background: $primaryColor;
         color: #fff;
         filter: saturate(1.5);
@@ -665,21 +761,28 @@
   }
 }
 
-html[dir="rtl"]{
-  .career-detail__list li{
+html[dir="rtl"] {
+  .career-detail__list li {
     padding-left: 0;
     padding-right: clamp(30px, 2.19vw, 42px);
-    &::before{
+
+    &::before {
       left: unset;
       right: 0;
     }
   }
-  .list li{
+
+  .list li {
     padding-left: 0;
     padding-right: clamp(30px, 2.19vw, 42px);
-    &::before{
+
+    &::before {
       left: unset;
       right: 0;
     }
   }
+}
+
+.join-the-team {
+  margin-top: clamp(60px, 6.7709vw, 130px);
 }

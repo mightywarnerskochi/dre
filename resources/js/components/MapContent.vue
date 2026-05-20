@@ -40,7 +40,11 @@
                     <span class="visually-hidden">Loading...</span>
                 </div>
             </div>
+            <div class="container-ctn">
+            <div class="map-search-outer">
             <div id="map-search-main" ref="mapEl" class="map-search-main-view"></div>
+            </div>
+            </div>
             
             <ListingMobileExtras />
         </div>
@@ -368,9 +372,27 @@ watch(locale, fetchMarkers);
 
 <style>
 .map-search-main-view {
-    height: 700px;
-    width: 100%;
+    height: clamp(350px, 31.25vw, 600px);
     z-index: 1;
+    border-radius: 20px;
+
+    width: 100%;
+
+
+}
+.map-search-outer{
+    margin:clamp(30px, 3.6459vw, 70px) 0;
+        z-index: 1;
+        background: #fff;
+    border: 1px solid #2A559C;
+    border-radius: 20px;
+    padding: clamp(15px, 1.563vw, 30px);
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+
 }
 .custom-map-marker {
     background: white;

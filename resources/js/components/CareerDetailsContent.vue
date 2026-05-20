@@ -72,7 +72,7 @@
                 <button type="button" class="career-detail__apply" data-bs-toggle="modal" data-bs-target="#careerApplyModal">
                     {{ t('careers.applyNow') }}
                     <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-                        <path d="M9.28234 17.1303L15.8309 7.98271M15.8309 7.98271L9.71616 8.79363M15.8309 7.98271L17.0342 14.0325" stroke="black" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9.28234 17.1303L15.8309 7.98271M15.8309 7.98271L9.71616 8.79363M15.8309 7.98271L17.0342 14.0325" stroke="currentColor" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </button>
             </div>
@@ -94,14 +94,16 @@
                 </template>
 
                 <template v-if="detail.vacancy.joinTeamHtml">
-                    <h3>{{ t('careers.sectionJoin') }}</h3>
+                    <div class="join-the-team">
+                         <h3>{{ t('careers.sectionJoin') }}</h3>
                     <div class="career-detail__body-rich mb-4" v-html="detail.vacancy.joinTeamHtml"></div>
+                    </div>
                 </template>
 
                 <button type="button" class="career-detail__apply career-detail__apply--bottom" data-bs-toggle="modal" data-bs-target="#careerApplyModal">
                     {{ t('careers.applyNow') }}
                     <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-                        <path d="M9.28234 17.1303L15.8309 7.98271M15.8309 7.98271L9.71616 8.79363M15.8309 7.98271L17.0342 14.0325" stroke="black" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M9.28234 17.1303L15.8309 7.98271M15.8309 7.98271L9.71616 8.79363M15.8309 7.98271L17.0342 14.0325" stroke="currentColor" stroke-width="1.125" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                 </button>
             </div>
@@ -425,8 +427,12 @@ function syncPhoneDialCodePrefix() {
     if (!dial) return;
     const raw = String(input.value ?? '').trim();
     const digits = raw.replace(/\D/g, '');
-    if (!raw || raw === '+' || !raw.startsWith('+')) {
-        iti.setNumber(`+${dial}`);
+    if (!digits) {
+        input.value = '';
+        return;
+    }
+    if (raw === '+' || !raw.startsWith('+')) {
+        iti.setNumber(`+${dial}${digits}`);
         return;
     }
     const repeatedDialOnly =
@@ -434,7 +440,7 @@ function syncPhoneDialCodePrefix() {
         && digits.length % dial.length === 0
         && new RegExp(`^(?:${dial})+$`).test(digits);
     if (repeatedDialOnly) {
-        iti.setNumber(`+${dial}`);
+        input.value = '';
     }
 }
 

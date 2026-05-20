@@ -1,5 +1,5 @@
 <template>
-    <section v-if="neighborhoodsData.displayHome !== false" ref="neighborhoodSectionEl" class="neighborhoods commonPadding">
+    <section v-if="neighborhoodsData.displayHome !== false" ref="neighborhoodSectionEl" class="neighborhoods commonPadding-120">
         <div class="container-ctn">
             <div class="head text-center">
                 <h2>{{ neighborhoodsData.title || 'Explore Neighborhoods' }}</h2>

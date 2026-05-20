@@ -69,14 +69,29 @@
                         <p>{{ item.body }}</p>
                     </div>
                 </div>
-                <picture v-if="aboutData.whyChooseUs.section.sectionImage || aboutData.whyChooseUs.section.collage[0]">
-                    <img :src="aboutData.whyChooseUs.section.sectionImage || aboutData.whyChooseUs.section.collage[0]" :alt="aboutData.whyChooseUs.section.sectionImageAlt || aboutData.whyChooseUs.section.title" width="671" height="628" loading="lazy">
-                </picture>
+                <div class="why-choose-collage">
+                    <div class="why-choose-collage__col why-choose-collage__col--left">
+                        <div class="why-choose-collage__item why-choose-collage__item--top">
+                            <img :src="aboutData.whyChooseUs.section.collage[0] || aboutData.whyChooseUs.section.sectionImage || asset('public/images/about/welcome-1.jpg')" :alt="aboutData.whyChooseUs.section.sectionImageAlt || aboutData.whyChooseUs.section.title" loading="lazy">
+                        </div>
+                        <div class="why-choose-collage__item why-choose-collage__item--bottom">
+                            <img :src="aboutData.whyChooseUs.section.collage[1] || asset('public/images/about/welcome-2.jpg')" :alt="aboutData.whyChooseUs.section.sectionImageAlt || aboutData.whyChooseUs.section.title" loading="lazy">
+                        </div>
+                    </div>
+                    <div class="why-choose-collage__col why-choose-collage__col--right">
+                        <div class="why-choose-collage__item why-choose-collage__item--top">
+                            <img :src="aboutData.whyChooseUs.section.collage[2] || asset('public/images/about/welcome-3.jpg')" :alt="aboutData.whyChooseUs.section.sectionImageAlt || aboutData.whyChooseUs.section.title" loading="lazy">
+                        </div>
+                        <div class="why-choose-collage__item why-choose-collage__item--bottom">
+                            <img :src="aboutData.whyChooseUs.section.collage[3] || asset('public/images/about/welcome-4.jpg')" :alt="aboutData.whyChooseUs.section.sectionImageAlt || aboutData.whyChooseUs.section.title" loading="lazy">
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
-    <section v-if="aboutData.journey.items.length" ref="journeySectionRef" class="our-journey" aria-labelledby="journey-heading">
+    <section v-if="aboutData.journey.items.length" ref="journeySectionRef" class="our-journey commonPadding-120" aria-labelledby="journey-heading">
         <div class="container-fluid p-0">
             <h2 id="journey-heading" class="our-journey__title text-center">{{ t('about.journey.title') }}</h2>
             <div ref="journeyTimelineRef" class="journey-timeline" role="region" aria-label="Company timeline">
