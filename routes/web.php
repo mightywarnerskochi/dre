@@ -1,27 +1,33 @@
 <?php
 
+use App\Http\Controllers\BookViewingEnquiryController;
+use App\Http\Controllers\CareerApplicationController;
 use App\Http\Controllers\CmsKit\AboutController;
 use App\Http\Controllers\CmsKit\AgentController;
-use App\Http\Controllers\CmsKit\ContactSectionController;
 use App\Http\Controllers\CmsKit\CareerCandidateController;
-use App\Http\Controllers\CmsKit\HomeBannerFiltersController;
-use App\Http\Controllers\CmsKit\MissionVisionController;
+use App\Http\Controllers\CmsKit\ContactSectionController;
 use App\Http\Controllers\CmsKit\EnquiryController as CmsEnquiryController;
+use App\Http\Controllers\CmsKit\HomeBannerFiltersController;
 use App\Http\Controllers\CmsKit\LanguageController as CmsLanguageController;
-use App\Http\Controllers\CareerApplicationController;
+use App\Http\Controllers\CmsKit\MissionVisionController;
 use App\Http\Controllers\CmsKit\NearbyPlaceController;
 use App\Http\Controllers\CmsKit\NeighborhoodController;
 use App\Http\Controllers\CmsKit\PropertyController;
 use App\Http\Controllers\CmsKit\SuccessfulJourneyController;
 use App\Http\Controllers\CmsKit\WhyChooseUsController;
-use App\Http\Controllers\BookViewingEnquiryController;
 use App\Http\Controllers\ContactEnquiryController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\PropertyPageController;
 use App\Http\Controllers\PropertyEnquiryController;
-use App\Support\PublicSpaBootData;
+use App\Http\Controllers\Sync\FullSyncController;
 use App\Support\PublicSiteViewData;
+use App\Support\PublicSpaBootData;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/prop', [FullSyncController::class, 'getData'])->name('properties.getData');
+Route::get('/prop/users', [FullSyncController::class, 'users'])->name('properties.users');
+Route::get('/prop/locations', [FullSyncController::class, 'locations'])->name('properties.locations');
+Route::get('/prop/sync/regular', [FullSyncController::class, 'regularSync'])->name('properties.sync.regular');
+Route::get('/prop/sync/full', [FullSyncController::class, 'fullSync'])->name('properties.sync.full');
 
 Route::middleware(['web'])->group(function () {
     Route::prefix(config('cms-kit.common.auth.prefix', 'admin'))->middleware(['cms.auth'])->group(function () {

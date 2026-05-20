@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\CmsKit;
 
 use App\Http\Controllers\Controller;
+use App\Models\CmsKit\Language;
 use App\Models\CmsKit\MissionVision;
 use App\Support\MediaStorage;
-use App\Models\CmsKit\Language;
 use CMS\SiteManager\Support\ManagesOrderIndex;
 use CMS\SiteManager\Support\ValidatesImageDimensions;
 use Illuminate\Http\Request;
@@ -24,7 +24,7 @@ class MissionVisionController extends Controller
     {
         $rules = [
             'order_index' => ['nullable', 'integer', 'min:1'],
-            'image' => [in_array('image', config('cms-kit.database.mission-vision.items.required', []), true) && !$isUpdate ? 'required' : 'nullable', 'image', 'max:' . (config('cms-kit.images.mission-vision.image.max_size') ?? 1024)],
+            'image' => [in_array('image', config('cms-kit.database.mission-vision.items.required', []), true) && ! $isUpdate ? 'required' : 'nullable', 'image', 'max:'.(config('cms-kit.images.mission-vision.image.max_size') ?? 1024)],
             'image_alt' => ['nullable', 'string', 'max:255'],
         ];
 
@@ -44,22 +44,22 @@ class MissionVisionController extends Controller
 
             return DataTables::of($data)
                 ->addIndexColumn()
-                ->addColumn('select_all', fn ($row) => '<input type="checkbox" class="row-checkbox form-check-input" value="' . $row->id . '">')
-                ->addColumn('image', fn ($row) => $row->image ? '<img src="' . e(media_url($row->image)) . '" class="img-thumbnail" style="height: 40px;">' : '-')
+                ->addColumn('select_all', fn ($row) => '<input type="checkbox" class="row-checkbox form-check-input" value="'.$row->id.'">')
+                ->addColumn('image', fn ($row) => $row->image ? '<img src="'.e(media_url($row->image)).'" class="img-thumbnail" style="height: 40px;">' : '-')
                 ->addColumn('title', fn ($row) => e($row->getTranslation('title')))
                 ->addColumn('status', function ($row) {
                     $checked = $row->status ? 'checked' : '';
 
-                    return '<div class="form-check form-switch"><input class="form-check-input toggle-status" type="checkbox" data-id="' . $row->id . '" ' . $checked . '></div>';
+                    return '<div class="form-check form-switch"><input class="form-check-input toggle-status" type="checkbox" data-id="'.$row->id.'" '.$checked.'></div>';
                 })
-                ->addColumn('order', fn ($row) => '<input type="number" min="1" class="form-control form-control-sm reorder-input" data-id="' . $row->id . '" value="' . $row->order_index . '" style="width: 80px;">')
+                ->addColumn('order', fn ($row) => '<input type="number" min="1" class="form-control form-control-sm reorder-input" data-id="'.$row->id.'" value="'.$row->order_index.'" style="width: 80px;">')
                 ->addColumn('action', function ($row) use ($cmsUser) {
                     $buttons = '<div class="btn-group">';
                     if ($cmsUser?->can('mission-vision.edit')) {
-                        $buttons .= '<a href="' . route('cms.mission-vision.edit', $row->id) . '" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>';
+                        $buttons .= '<a href="'.route('cms.mission-vision.edit', $row->id).'" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i></a>';
                     }
                     if ($cmsUser?->can('mission-vision.delete')) {
-                        $buttons .= '<button type="button" class="btn btn-sm btn-outline-danger delete-item" data-id="' . $row->id . '"><i class="fas fa-trash"></i></button>';
+                        $buttons .= '<button type="button" class="btn btn-sm btn-outline-danger delete-item" data-id="'.$row->id.'"><i class="fas fa-trash"></i></button>';
                     }
                     $buttons .= '</div>';
 
@@ -182,7 +182,7 @@ class MissionVisionController extends Controller
     public function toggleStatus($id)
     {
         $item = MissionVision::findOrFail($id);
-        $item->update(['status' => !$item->status]);
+        $item->update(['status' => ! $item->status]);
 
         return response()->json(['success' => true]);
     }
@@ -218,7 +218,7 @@ class MissionVisionController extends Controller
         $ids = array_filter((array) $request->input('ids', []));
         $action = $request->input('action');
 
-        if (!$ids || !$action) {
+        if (! $ids || ! $action) {
             return response()->json(['success' => false], 422);
         }
 
