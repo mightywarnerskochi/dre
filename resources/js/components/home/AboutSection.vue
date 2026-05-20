@@ -9,7 +9,7 @@ const { t } = useI18n({ useScope: 'global' });
 </script>
 
 <template>
-    <section class="about-home commonPadding">
+    <section class="about-home commonPadding-120">
         <div class="container-center ">
             <div class="d-flex flex-wrap justify-content-between">
                 <div class="about-home-img position-relative">

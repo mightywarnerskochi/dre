@@ -1,5 +1,5 @@
 <template>
-    <section v-if="socialLinks.length" class="follow-us">
+    <section v-if="socialLinks.length" class="follow-us commonPadding">
         <div class="container-ctn">
             <h2 class="follow-us__title">{{ t('followUs.title') }}</h2>
             <ul class="follow-us__list" :aria-label="t('followUs.socialAria')">

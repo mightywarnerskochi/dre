@@ -93,7 +93,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <section v-if="isVisible" class="rental-properties commonPadding" id="rental-properties">
+    <section v-if="isVisible" class="rental-properties commonPadding-120" id="rental-properties">
         <div class="container-ctn">
             <div class="row">
                 <div class="col-12">
