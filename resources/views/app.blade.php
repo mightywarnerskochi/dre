@@ -1,5 +1,5 @@
 @php
-    $styleVersion = $styleVersion ?? '17';
+    $styleVersion = $styleVersion ?? '18';
     $dreSitePublic = $sitePublic ?? ['phone1' => null, 'phone2' => null, 'email' => null, 'social' => []];
     $dreContentPublic = $contentPublic ?? [];
     $dreTracking = is_array($dreSitePublic['tracking'] ?? null) ? $dreSitePublic['tracking'] : [];
