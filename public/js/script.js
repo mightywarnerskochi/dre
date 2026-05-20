@@ -1484,6 +1484,23 @@ function initializePhoneInput(selector, options) {
   }
   var previousDialCode = "";
 
+  function ensureEmptyPhoneStyle() {
+    if (document.getElementById("dre-phone-empty-style")) return;
+    var style = document.createElement("style");
+    style.id = "dre-phone-empty-style";
+    style.textContent =
+      ".iti:not(.dre-phone-has-value) .iti__selected-dial-code{display:none}" +
+      ".iti:not(.dre-phone-has-value) input.phone_number::placeholder{opacity:1}";
+    document.head.appendChild(style);
+  }
+
+  function updatePhoneHasValueState() {
+    var wrapper = input.closest(".iti");
+    if (!wrapper) return;
+    var hasDigits = String(input.value || "").replace(/\D/g, "").length > 0;
+    wrapper.classList.toggle("dre-phone-has-value", hasDigits);
+  }
+
   function isRepeatedDialOnly(digits, dial) {
     if (!digits || !dial) return false;
     if (digits.length < dial.length * 2) return false;
@@ -1524,10 +1541,28 @@ function initializePhoneInput(selector, options) {
     if (!dial) return;
     var current = String(input.value || "").trim();
     var digits = current.replace(/\D/g, "");
+    if (!digits) {
+      input.value = "";
+      previousDialCode = dial;
+      try {
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      } catch (e) {}
+      updatePhoneHasValueState();
+      return;
+    }
     var nationalDigits = extractNationalDigits(digits, dial);
     var hasNationalDigits = nationalDigits.length > 0;
+    if (!hasNationalDigits) {
+      input.value = "";
+      previousDialCode = dial;
+      try {
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      } catch (e) {}
+      updatePhoneHasValueState();
+      return;
+    }
     var nextValue =
-      forceReplace || current === "" || current === "+" || /^\+\d{1,4}$/.test(current)
+      forceReplace || current === "+" || /^\+\d{1,4}$/.test(current) || current.charAt(0) !== "+"
         ? "+" + dial + (hasNationalDigits ? nationalDigits : "")
         : current;
     input.value = nextValue;
@@ -1535,19 +1570,22 @@ function initializePhoneInput(selector, options) {
     try {
       input.dispatchEvent(new Event("input", { bubbles: true }));
     } catch (e) {}
+    updatePhoneHasValueState();
   }
 
+  ensureEmptyPhoneStyle();
   var phoneInput = window.intlTelInput(input, {
     initialCountry: options.initialCountry || "ae",
     preferredCountries: ["ae", "sa", "kw", "bh", "qa", "om"],
     excludeCountries: ["ru", "cu", "sy", "ir", "sd", "ss", "kp", "ye", "KR", "UA"],
-    nationalMode: false,
-    autoHideDialCode: false,
+    nationalMode: true,
+    autoHideDialCode: true,
     formatOnDisplay: false,
     utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
   });
   previousDialCode = String((phoneInput.getSelectedCountryData() || {}).dialCode || "").replace(/\D/g, "");
   syncDialCodeInInput(false);
+  updatePhoneHasValueState();
   if (input.__dreCountryChangeHandler) {
     input.removeEventListener("countrychange", input.__dreCountryChangeHandler);
   }
@@ -1561,6 +1599,7 @@ function initializePhoneInput(selector, options) {
       contactPhone(selector, phoneInput);
     });
   }
+  $(selector + " .phone_number").off("input.drePhone").on("input.drePhone", updatePhoneHasValueState);
 }
 
 /** Called when #siteEnquiryForm is visible (e.g. from Vue ModalEnquiry `shown.bs.modal`). */
@@ -1575,25 +1614,51 @@ window.dreInitContactFormPhone = function () {
 
 /** Book a Viewing page (Vue SPA). */
 window.dreInitBookViewingPhone = function () {
-  initializePhoneInput(".book-viewing-form", { skipContactPhoneBlur: true });
+  initializePhoneInput(".book-viewing-form");
 };
 
 function contactPhone(selector, phoneInput) {
   let phoneNumber = phoneInput.getNumber(); // Get full international number
+  const input = document.querySelector(selector + ' .phone_number');
+  const raw = String(input && input.value ? input.value : '').trim();
+  const countryCode = String(phoneInput.getSelectedCountryData().dialCode || '').replace(/\D/g, '');
+  const rawDigits = raw.replace(/\D/g, '');
+
+  function setPhoneValue(value) {
+    $(selector + ' .phone_number').val(value);
+    if (input) {
+      try {
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      } catch (e) {}
+    }
+  }
+
+  if (!rawDigits || (countryCode && rawDigits === countryCode)) {
+    setPhoneValue('');
+    return;
+  }
+
+  if (!phoneNumber) {
+    const localNumber = countryCode && rawDigits.startsWith(countryCode) ? rawDigits.slice(countryCode.length) : rawDigits;
+    phoneNumber = countryCode ? `+${countryCode}${localNumber}` : localNumber;
+  }
 
   if (phoneNumber.startsWith('+')) {
-    let countryCode = phoneInput.getSelectedCountryData().dialCode; // Get country code only
-    let localNumber = phoneNumber.replace('+' + countryCode, ''); // Remove country code from full number
+    let localNumber = phoneNumber.replace('+' + countryCode, '').replace(/\D/g, ''); // Remove country code from full number
+    if (!localNumber) {
+      setPhoneValue('');
+      return;
+    }
     phoneNumber = `+${countryCode}-${localNumber}`; // Add separator
   }
 
-  $(selector + ' .phone_number').val(phoneNumber);
+  setPhoneValue(phoneNumber);
 }
 
-initializePhoneInput("#careerApplyModal", { skipContactPhoneBlur: true });
+initializePhoneInput("#careerApplyModal");
 initializePhoneInput("#siteEnquiryForm");
 initializePhoneInput(".contact-form");
-initializePhoneInput(".book-viewing-form", { skipContactPhoneBlur: true });
+initializePhoneInput(".book-viewing-form");
 
 
 (function attachSpaRouteReinitializer() {
@@ -1843,7 +1908,7 @@ initializePhoneInput(".book-viewing-form", { skipContactPhoneBlur: true });
   }
 
   function dreInitCareerApplyOnly() {
-    initializePhoneInput("#careerApplyModal", { skipContactPhoneBlur: true });
+    initializePhoneInput("#careerApplyModal");
   }
 
   function initHomePageUiForSpa() {

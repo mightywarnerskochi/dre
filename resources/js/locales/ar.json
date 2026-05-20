@@ -379,6 +379,26 @@
         "validationRecaptcha": "تعذر التحقق من reCAPTCHA. يرجى تحديث الصفحة والمحاولة مرة أخرى.",
         "submitError": "تعذر الإرسال الآن. يرجى المحاولة مرة أخرى."
     },
+    "about": {
+        "hero": {
+            "title": "من نحن",
+            "breadcrumb": "من نحن"
+        },
+        "intro": {
+            "eyebrow": "من نحن",
+            "title": "مرحبا بكم في ديستنغويشد العقارية"
+        },
+        "missionVision": {
+            "title": "مهمتنا ورؤيتنا وقيمنا"
+        },
+        "whyChooseUs": {
+            "eyebrow": "أبرز المزايا",
+            "title": "لماذا تختارنا"
+        },
+        "journey": {
+            "title": "رحلتنا الناجحة"
+        }
+    },
     "home": {
         "rentals": {
             "title": "العقارات للإيجار",

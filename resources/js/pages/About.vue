@@ -7,7 +7,7 @@
         </div>
         <div class="banner--page__content">
             <div class="container-ctn">
-                <h1 class="banner--page__title">{{ aboutData.hero.title }}</h1>
+                <h1 class="banner--page__title">{{ staticText('about.hero.title', aboutData.hero.title, 'About Us', 'من نحن') }}</h1>
                 <ol class="breadcrumb-minimal" aria-label="Breadcrumb">
                     <li>
                         <RouterLink :to="{ name: 'home' }" aria-label="Home">
@@ -17,7 +17,7 @@
                         </RouterLink>
                     </li>
                     <li class="breadcrumb-minimal__sep" aria-hidden="true">/</li>
-                    <li class="breadcrumb-minimal__current" aria-current="page">{{ aboutData.hero.breadcrumb }}</li>
+                    <li class="breadcrumb-minimal__current" aria-current="page">{{ staticText('about.hero.breadcrumb', aboutData.hero.breadcrumb, 'About Us', 'من نحن') }}</li>
                 </ol>
             </div>
         </div>
@@ -26,13 +26,13 @@
     <section class="about-intro commonPadding-pt commonPadding-120-pb" aria-labelledby="about-intro-heading">
         <div class="container-ctn">
             <div class="head text-center mb-0">
-                <span class="about-intro__eyebrow">{{ aboutData.intro.title }}</span>
-                <h2 id="about-intro-heading" class="about-intro__title">{{ aboutData.intro.eyebrow }}</h2>
+                <span class="about-intro__eyebrow">{{ staticText('about.intro.title', aboutData.intro.title, 'Welcome to Distinguished Real Estate', 'مرحبا بكم في ديستنغويشد العقارية') }}</span>
+                <h2 id="about-intro-heading" class="about-intro__title">{{ staticText('about.intro.eyebrow', aboutData.intro.eyebrow, 'About Us', 'من نحن') }}</h2>
                 <div v-html="aboutData.intro.bodyHtml"></div>
             </div>
             <div class="about-gallery__track d-flex flex-wrap justify-content-between">
                 <figure v-for="(img, index) in aboutData.intro.gallery" :key="img.src + index" class="about-gallery__cell" :class="`about-gallery__cell--h${index + 1}`">
-                    <img :src="img.src" :alt="img.alt || ''" width="400" height="520" loading="lazy">
+                    <img :src="img.src" :alt="galleryAlt(img, index)" width="400" height="520" loading="lazy">
                 </figure>
             </div>
         </div>
@@ -40,7 +40,7 @@
 
     <section class="about-values" aria-labelledby="about-values-heading">
         <div class="container-ctn">
-            <h2 id="about-values-heading" class="visually-hidden">{{ aboutData.missionVision.title }}</h2>
+            <h2 id="about-values-heading" class="visually-hidden">{{ t('about.missionVision.title') }}</h2>
             <div class="about-values__grid d-flex flex-wrap justify-content-between">
                 <article v-for="(card, idx) in aboutData.missionVision.items" :key="card.index + card.title" class="about-value-card position-relative">
                     <picture v-if="card.image"><img :src="card.image" :alt="card.title"></picture>
@@ -57,8 +57,8 @@
     <section v-if="aboutData.whyChooseUs.active" class="why-choose-us">
         <div class="container-ctn">
             <div class="head text-center">
-                <span>{{ aboutData.whyChooseUs.section.title }}</span>
-                <h2 class="about-team__title">{{ aboutData.whyChooseUs.section.eyebrow }}</h2>
+                <span>{{ staticText('about.whyChooseUs.title', aboutData.whyChooseUs.section.title, 'Why Choose Us', 'لماذا تختارنا') }}</span>
+                <h2 class="about-team__title">{{ staticText('about.whyChooseUs.eyebrow', aboutData.whyChooseUs.section.eyebrow, 'Highlights', 'أبرز المزايا') }}</h2>
                 <p>{{ aboutData.whyChooseUs.section.intro }}</p>
             </div>
             <div class="d-flex flex-wrap justify-content-between align-items-center">
@@ -93,7 +93,7 @@
 
     <section v-if="aboutData.journey.items.length" ref="journeySectionRef" class="our-journey commonPadding-120" aria-labelledby="journey-heading">
         <div class="container-fluid p-0">
-            <h2 id="journey-heading" class="our-journey__title text-center">{{ aboutData.journey.title }}</h2>
+            <h2 id="journey-heading" class="our-journey__title text-center">{{ t('about.journey.title') }}</h2>
             <div ref="journeyTimelineRef" class="journey-timeline" role="region" aria-label="Company timeline">
                 <ol class="journey-timeline__list">
                     <li v-for="(item, idx) in aboutData.journey.items" :key="item.year + '-' + idx" class="journey-timeline__item">
@@ -121,7 +121,7 @@ import { useI18n } from 'vue-i18n';
 import { asset } from '@/utils/asset';
 import { getAboutPageData } from '@/utils/publicContent';
 
-const { locale } = useI18n({ useScope: 'global' });
+const { locale, t } = useI18n({ useScope: 'global' });
 const aboutData = computed(() => getAboutPageData(locale.value));
 const journeySectionRef = ref(null);
 const journeyTimelineRef = ref(null);
@@ -130,6 +130,20 @@ let timelineRafId = 0;
 let timelineTargetLeft = null;
 let removeJourneyWheel = null;
 let removeJourneyDrag = null;
+
+function staticText(key, value, fallbackEn, fallbackAr = fallbackEn) {
+    const normalized = String(value || '').trim();
+    const fallback = locale.value === 'ar' ? fallbackAr : fallbackEn;
+
+    return normalized === '' || normalized === fallback ? t(key) : normalized;
+}
+
+function galleryAlt(img, index) {
+    const fallback = `About image ${index + 1}`;
+    const current = String(img?.alt || '').trim();
+
+    return current !== '' ? current : fallback;
+}
 
 function maxJourneyScroll(timeline) {
     return Math.max(0, Math.round(timeline.scrollWidth - timeline.clientWidth));

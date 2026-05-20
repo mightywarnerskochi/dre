@@ -427,8 +427,12 @@ function syncPhoneDialCodePrefix() {
     if (!dial) return;
     const raw = String(input.value ?? '').trim();
     const digits = raw.replace(/\D/g, '');
-    if (!raw || raw === '+' || !raw.startsWith('+')) {
-        iti.setNumber(`+${dial}`);
+    if (!digits) {
+        input.value = '';
+        return;
+    }
+    if (raw === '+' || !raw.startsWith('+')) {
+        iti.setNumber(`+${dial}${digits}`);
         return;
     }
     const repeatedDialOnly =
@@ -436,7 +440,7 @@ function syncPhoneDialCodePrefix() {
         && digits.length % dial.length === 0
         && new RegExp(`^(?:${dial})+$`).test(digits);
     if (repeatedDialOnly) {
-        iti.setNumber(`+${dial}`);
+        input.value = '';
     }
 }
 
