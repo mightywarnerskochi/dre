@@ -64,7 +64,7 @@
 
     @if($showLanguageUi)
         <div class="col-12">
-            <ul class="nav nav-pills mb-3 bg-light p-2 rounded-3" id="homeBannerFilterLabelTabs" role="tablist">
+            <ul class="nav nav-pills mb-3 bg-light p-2 rounded-3 language-switcher-tabs" id="homeBannerFilterLabelTabs" role="tablist">
                 @foreach($languages as $lang)
                     <li class="nav-item" role="presentation">
                         <button
@@ -80,7 +80,7 @@
                 @endforeach
             </ul>
 
-            <div class="tab-content">
+            <div class="tab-content language-switcher-content">
                 @foreach($languages as $lang)
                     <div
                         class="tab-pane fade {{ $loop->first ? 'show active' : '' }}"

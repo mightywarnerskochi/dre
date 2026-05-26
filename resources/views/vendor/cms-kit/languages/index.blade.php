@@ -25,8 +25,11 @@
                 </div>
                 <h5 class="fw-bold mb-0">Add New Language</h5>
             </div>
-            <div class="alert alert-light border-start border-primary border-4 py-2 mb-4">
-                <small class="text-muted mb-0 d-block">English stays as the permanent default language and cannot be deleted.</small>
+            <div class="alert alert-light border-start border-primary border-4 py-2 px-3 mb-4 small text-muted lh-sm">
+                <p class="mb-2 mb-lg-1">English stays as the permanent default language and cannot be deleted.</p>
+                <p class="mb-0">
+                    Static texts: use the <i class="fas fa-file-lines"></i> icon in Actions — it opens <strong>Manage static text</strong> for that language (URL ends with <code class="small">/languages/&lt;numeric-id&gt;/translations</code>). Configure <code class="small">vue_editor_url</code> with placeholders <code class="small">{id}</code> or <code class="small">{code}</code> to open your Vue app instead. Keys come from development; you edit values (English reference column on non-English locales).
+                </p>
             </div>
             <form action="{{ route('cms.languages.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
@@ -104,28 +107,22 @@
 
 <script>
     $(function() {
-        const translationUrlTemplate = "{{ route('cms.languages.translations.edit', ':id') }}";
-
         $('.premium-table').DataTable({
             processing: true,
             serverSide: true,
             autoWidth: false,
             ajax: "{{ route('cms.languages.index') }}",
             columns: [
-                {data: 'name', name: 'name', className: 'ps-4', width: '24%'},
+                {data: 'name', name: 'name', className: 'ps-4', width: '22%'},
                 {data: 'flag_thumb', name: 'flag_image', orderable: false, searchable: false, className: 'text-center', width: '10%'},
                 {data: 'code', name: 'code', render: function(data) {
                     return '<code class="text-primary fw-bold">' + data + '</code>';
-                }, width: '14%'},
+                }, width: '12%'},
                 {data: 'default_badge', name: 'is_default', className: 'text-center', width: '18%'},
                 {data: 'status_badge', name: 'status', className: 'text-center', width: '18%'},
-                {data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-end pe-4', width: '16%', render: function(data, type, row) {
-                    const translationUrl = translationUrlTemplate.replace(':id', row.id);
-                    const translationBtn = '<a href="' + translationUrl + '" class="btn btn-sm btn-light border me-1" title="Manage static text"><i class="fas fa-language text-info"></i></a>';
-                    return '<div class="d-inline-flex align-items-center justify-content-end flex-nowrap gap-1 language-action-group">' + translationBtn + (data || '') + '</div>';
-                }}
+                {data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-end pe-4 text-nowrap', width: '20%'}
             ],
-            order: [[0, 'asc']],
+            order: [],
             language: {
                 search: "_INPUT_",
                 searchPlaceholder: "Search..."
@@ -160,18 +157,6 @@
         });
     });
 </script>
-
-<style>
-    table.dataTable td:last-child,
-    table.dataTable th:last-child {
-        white-space: nowrap;
-    }
-
-    .language-action-group .btn,
-    .language-action-group form {
-        margin: 0 !important;
-    }
-</style>
 
 <div class="modal fade" id="dynamicEditModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">

@@ -1,7 +1,7 @@
 @php $showLanguageUi = config('cms-kit.common.modules.languages', true); @endphp
 
 @if($showLanguageUi)
-<ul class="nav nav-pills mb-4 bg-light p-2 rounded-3" id="missionVisionTabs" role="tablist">
+<ul class="nav nav-pills mb-4 bg-light p-2 rounded-3 language-switcher-tabs" id="missionVisionTabs" role="tablist">
     @foreach($languages as $lang)
     <li class="nav-item" role="presentation">
         <button class="nav-link {{ $loop->first ? 'active' : '' }} px-4 py-2 fw-medium" data-bs-toggle="tab" data-bs-target="#mission-{{ $lang->code }}" type="button" role="tab">
@@ -12,7 +12,7 @@
 </ul>
 @endif
 
-<div class="tab-content mb-4">
+<div class="tab-content mb-4 language-switcher-content">
     @foreach($languages as $lang)
     <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="mission-{{ $lang->code }}" role="tabpanel">
         <div class="row g-4">
@@ -86,4 +86,3 @@ document.addEventListener('invalid', function(e) {
 }, true);
 </script>
 @endpush
-
