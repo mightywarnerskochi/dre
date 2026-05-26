@@ -18,6 +18,7 @@ use App\Http\Controllers\CmsKit\WhyChooseUsController;
 use App\Http\Controllers\ContactEnquiryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PropertyEnquiryController;
+use App\Http\Controllers\SitemapCrawlController;
 use App\Http\Controllers\Sync\FullSyncController;
 use App\Support\PublicSiteViewData;
 use App\Support\PublicSpaBootData;
@@ -238,6 +239,9 @@ Route::post('/property-enquiry', [PropertyEnquiryController::class, 'store'])
 Route::post('/book-viewing-enquiry', [BookViewingEnquiryController::class, 'store'])
     ->middleware('throttle:20,1')
     ->name('book-viewing.enquiry.store');
+
+Route::get('/_sitemap-crawl', SitemapCrawlController::class)
+    ->name('sitemap.crawl');
 
 Route::get('/{any?}', function () {
     return response()
