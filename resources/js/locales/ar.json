@@ -9,7 +9,7 @@
             "title": "مرحبا بكم في ديستنغويشد العقارية"
         },
         "journey": {
-            "title": "رحلتنا الناجحة"
+            "title": "رحلتنا نحو التميز"
         },
         "missionVision": {
             "title": "مهمتنا ورؤيتنا وقيمنا"
@@ -72,8 +72,8 @@
             "attachHint": "بحد أقصى 10 ميغابايت (pdf, doc, ps, jpeg, docx)",
             "attachPrompt": "إرفاق ملف",
             "cancel": "إلغاء",
-            "consentPrefix": "لقد قرأت ",
-            "consentSuffix": " وأوافق على معالجة بياناتي لغرض معالجة طلبي.",
+            "consentPrefix": "لقد قرأت",
+            "consentSuffix": "وأوافق على معالجة بياناتي لغرض معالجة طلبي.",
             "counter": "{n} / 1000 حرف",
             "counterWords": "{n} / 1000 كلمة",
             "country": "الدولة",
@@ -187,7 +187,7 @@
         "coBooking": "احجز معاينة",
         "coRent": "عقار للإيجار",
         "coSale": "عقار للبيع",
-        "copyright": "حقوق النشر © {year} Distinguished Real Estate — بدعم من ",
+        "copyright": "حقوق النشر © {year} Distinguished Real Estate — بدعم من",
         "enquireNow": "استفسار الآن",
         "legalCookies": "سياسة ملفات تعريف الارتباط",
         "legalDisclaimer": "إخلاء المسؤولية",
@@ -334,7 +334,7 @@
         "mapAria": "خريطة العقارات",
         "nListings": "{n} قوائم",
         "oneListing": "تفاصيل العقار",
-        "perYear": " / سنوياً",
+        "perYear": "/ سنوياً",
         "pinYear": "/سنة",
         "rangePrice": "{min}–{max}",
         "restaurant": "مطاعم",
