@@ -25,7 +25,7 @@ return [
             'slug_field' => 'slug', // optional, defaults to 'slug'
         ],
         Property::class => [
-            'url_prefix' => '/properties/',
+            'url_prefix' => '/property-details/',
             'slug_field' => 'slug', // optional, defaults to 'slug'
         ],
     ],

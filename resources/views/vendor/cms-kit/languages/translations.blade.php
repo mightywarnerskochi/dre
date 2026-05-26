@@ -21,9 +21,6 @@
                 @endif
             </p>
         </div>
-        <a href="{{ route('cms.languages.index') }}" class="btn btn-outline-secondary btn-sm">
-            <i class="fas fa-arrow-left me-1"></i> Back to Languages
-        </a>
     </div>
 </div>
 
@@ -42,11 +39,6 @@
                         class="form-control form-control-sm"
                         placeholder="Type key name (e.g. listing.heroTitle)"
                     >
-                </div>
-                <div class="col-md-6 text-md-end">
-                    <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="fas fa-save me-1"></i> Save Translations
-                    </button>
                 </div>
             </div>
 
@@ -97,10 +89,59 @@
                     </table>
                 </div>
             @endif
+
+            <div class="translation-floating-actions">
+                <a href="{{ route('cms.languages.index') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Back to Languages
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> Save Translations
+                </button>
+            </div>
         </form>
     </div>
 </div>
 @endsection
+
+@push('styles')
+<style>
+    .translation-floating-actions {
+        position: fixed;
+        left: calc(var(--sidebar-width) + 2rem);
+        right: 2rem;
+        bottom: 1rem;
+        z-index: 1030;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid var(--theme-border-color);
+        border-radius: 1rem;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.12);
+        backdrop-filter: blur(14px);
+    }
+
+    #translationsTable {
+        margin-bottom: 6rem;
+    }
+
+    @media (max-width: 767.98px) {
+        .translation-floating-actions {
+            left: 1rem;
+            right: 1rem;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .translation-floating-actions {
+            flex-direction: column-reverse;
+            align-items: stretch;
+        }
+    }
+</style>
+@endpush
 
 @push('scripts')
 <script>

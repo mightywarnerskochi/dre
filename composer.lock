@@ -2494,12 +2494,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/mightywarnerskochi/cms-kit.git",
-                "reference": "d65c8b56691ca2e7ffd09a9120ed9be0e5ab80f2"
+                "reference": "edcf88759f926128a76c7c30339eaea678658f90"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mightywarnerskochi/cms-kit/zipball/d65c8b56691ca2e7ffd09a9120ed9be0e5ab80f2",
-                "reference": "d65c8b56691ca2e7ffd09a9120ed9be0e5ab80f2",
+                "url": "https://api.github.com/repos/mightywarnerskochi/cms-kit/zipball/edcf88759f926128a76c7c30339eaea678658f90",
+                "reference": "edcf88759f926128a76c7c30339eaea678658f90",
                 "shasum": ""
             },
             "require": {
@@ -2529,7 +2529,7 @@
                 "source": "https://github.com/mightywarnerskochi/cms-kit/tree/main",
                 "issues": "https://github.com/mightywarnerskochi/cms-kit/issues"
             },
-            "time": "2026-05-13T08:31:39+00:00"
+            "time": "2026-05-26T04:37:51+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -9742,5 +9742,5 @@
         "php": "^8.2"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }

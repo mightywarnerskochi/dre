@@ -21,7 +21,7 @@
             </div>
 
             @if($showLanguageUi)
-            <ul class="nav nav-pills mb-4 bg-light p-2 rounded-3" id="sectionTabs" role="tablist">
+            <ul class="nav nav-pills mb-4 bg-light p-2 rounded-4 language-switcher-tabs" id="sectionTabs" role="tablist">
                 @foreach($languages as $lang)
                 <li class="nav-item" role="presentation">
                     <button class="nav-link {{ $loop->first ? 'active' : '' }} px-4 py-2 fw-medium" id="section-tab-{{ $lang->code }}" data-bs-toggle="tab" data-bs-target="#section-{{ $lang->code }}" type="button" role="tab">
@@ -32,7 +32,7 @@
             </ul>
             @endif
 
-            <div class="tab-content" id="sectionTabsContent">
+            <div class="tab-content language-switcher-content" id="sectionTabsContent">
                 @foreach($languages as $lang)
                 <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="section-{{ $lang->code }}" role="tabpanel">
                     <div class="row g-3">
@@ -93,6 +93,14 @@
                         <label class="form-check-label" for="sectionStatus">Status</label>
                     </div>
                 </div>
+                @if(config('cms-kit.database.testimonials.section.display_home'))
+                <div class="col-md-3">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" name="display_home" id="displayHome" value="1" {{ old('display_home', data_get($section->extra_fields, 'display_home', false)) ? 'checked' : '' }}>
+                        <label class="form-check-label" for="displayHome">Display Home</label>
+                    </div>
+                </div>
+                @endif
             </div>
 
             <div class="mt-3">
@@ -302,4 +310,3 @@
     });
 </script>
 @endpush
-

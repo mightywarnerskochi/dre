@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\CmsKit;
 
 use App\Models\CmsKit\Language;
+use CMS\SiteManager\Services\StaticTranslationService;
 use CMS\SiteManager\Support\ValidatesImageDimensions;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -14,12 +15,9 @@ class LanguageController extends Controller
 {
     use ValidatesImageDimensions;
 
-    private LocaleJsonManager $localeManager;
-
-    public function __construct(LocaleJsonManager $localeManager)
-    {
-        $this->localeManager = $localeManager;
-    }
+    public function __construct(
+        protected StaticTranslationService $staticTranslations
+    ) {}
 
     protected function isEnglishLanguage(Language $language): bool
     {
@@ -52,7 +50,7 @@ class LanguageController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax() || $request->wantsJson()) {
-            $languages = Language::all();
+            $languages = Language::query()->orderBy('id', 'asc');
             return \Yajra\DataTables\Facades\DataTables::of($languages)
                 ->addColumn('flag_thumb', function ($row) {
                     if ($row->flag_image) {
@@ -78,12 +76,18 @@ class LanguageController extends Controller
                 })
                 ->addColumn('actions', function ($row) {
                     $flagUrl = $row->flag_image ? (media_url($row->flag_image) ?? '') : '';
+                    $langCode = strtolower((string) $row->code);
+                    $vueTpl = config('cms-kit.static_translations.vue_editor_url');
+                    $staticTextsUrl = is_string($vueTpl) && trim($vueTpl) !== ''
+                        ? str_replace(['{code}', '{CODE}', '{id}'], [$langCode, strtoupper($langCode), (string) $row->id], trim($vueTpl))
+                        : route('cms.languages.translations', $row->id);
+                    $staticBtn = '<a href="' . e($staticTextsUrl) . '" class="btn btn-sm btn-outline-primary border me-1" title="Static site texts (' . e($langCode) . ')"><i class="fas fa-file-lines"></i></a>';
                     $editBtn = '<button class="btn btn-sm btn-light border me-1 edit-language" data-id="' . $row->id . '" data-name="' . e($row->name) . '" data-code="' . e($row->code) . '" data-flag-url="' . e($flagUrl) . '" data-flag-alt="' . e($row->flag_alt ?? '') . '"><i class="fas fa-edit text-primary"></i></button>';
                     $deleteBtn = '';
                     if (!$row->is_default && !$this->isEnglishLanguage($row)) {
                         $deleteBtn = '<form action="' . route('cms.languages.destroy', $row->id) . '" method="POST" style="display:inline;" onsubmit="return confirm(\'Delete this language?\')">' . csrf_field() . method_field('DELETE') . '<button type="submit" class="btn btn-sm btn-light border text-danger"><i class="fas fa-trash"></i></button></form>';
                     }
-                    return '<span class="d-inline-flex align-items-center flex-nowrap language-action-buttons">' . $editBtn . $deleteBtn . '</span>';
+                    return '<div class="text-end">' . $staticBtn . $editBtn . $deleteBtn . '</div>';
                 })
                 ->rawColumns(['flag_thumb', 'status_badge', 'default_badge', 'actions'])
                 ->make(true);
@@ -114,91 +118,16 @@ class LanguageController extends Controller
             $data['flag_image'] = MediaStorage::store($request->file('flag_image'), 'languages/flags');
         }
 
-        Language::create($data);
+        $language = Language::create($data);
+        $this->staticTranslations->copyMasterToNewLanguage(strtolower((string) $language->code));
+
         return redirect()->back()->with('success', 'Language added.');
-    }
-
-    public function translationsEdit($id)
-    {
-        $language = Language::query()->findOrFail($id);
-        $languageCode = $this->localeManager->normalizeCode((string) $language->code);
-        $masterCode = $this->localeManager->masterCode();
-
-        $masterData = $this->localeManager->readMasterLocale();
-        if ($masterData === [] && $languageCode === $masterCode) {
-            $this->localeManager->writeLocale($masterCode, []);
-            $masterData = [];
-        }
-
-        if ($languageCode !== $masterCode) {
-            $localeData = $this->localeManager->ensureLocaleForLanguage($languageCode);
-        } else {
-            $localeData = $masterData;
-        }
-
-        $masterLeafValues = $this->flattenLocaleLeafValues($masterData);
-        $localeLeafValues = $this->flattenLocaleLeafValues($localeData);
-
-        $rows = [];
-        foreach ($masterLeafValues as $key => $defaultValue) {
-            $currentValue = array_key_exists($key, $localeLeafValues) ? $localeLeafValues[$key] : $defaultValue;
-            $isEnglishOnly = $languageCode !== $masterCode && $this->isEnglishOnlyAltKey($key);
-            $rows[] = [
-                'key' => $key,
-                'value' => is_scalar($currentValue) || $currentValue === null ? (string) ($currentValue ?? '') : json_encode($currentValue),
-                'default' => is_scalar($defaultValue) || $defaultValue === null ? (string) ($defaultValue ?? '') : json_encode($defaultValue),
-                'is_english_only' => $isEnglishOnly,
-            ];
-        }
-
-        return view('cms-kit::languages.translations', [
-            'language' => $language,
-            'rows' => $rows,
-            'isDefaultLanguage' => $languageCode === $masterCode,
-            'masterCode' => $masterCode,
-        ]);
-    }
-
-    public function translationsUpdate(Request $request, $id)
-    {
-        $language = Language::query()->findOrFail($id);
-        $languageCode = $this->localeManager->normalizeCode((string) $language->code);
-        $masterCode = $this->localeManager->masterCode();
-
-        $validated = $request->validate([
-            'translations' => ['required', 'array'],
-        ]);
-
-        $submitted = $validated['translations'] ?? [];
-        $masterData = $this->localeManager->readMasterLocale();
-
-        $masterLeafValues = $this->flattenLocaleLeafValues($masterData);
-        $resolvedLeafValues = [];
-
-        foreach ($masterLeafValues as $key => $defaultValue) {
-            $submittedValue = array_key_exists($key, $submitted) ? $submitted[$key] : $defaultValue;
-            if ($languageCode !== $masterCode && $this->isEnglishOnlyAltKey($key)) {
-                $submittedValue = $defaultValue;
-            }
-            $resolvedLeafValues[$key] = $this->castToMasterType($submittedValue, $defaultValue);
-        }
-
-        $updatedPayload = $this->buildLocalePayloadFromLeafValues($masterData, $resolvedLeafValues);
-        $this->localeManager->writeLocale($languageCode, $updatedPayload);
-
-        if ($languageCode === $masterCode) {
-            $codes = Language::query()->pluck('code')->all();
-            $this->localeManager->synchronizeLanguageCodes($codes);
-        }
-
-        return redirect()
-            ->route('cms.languages.translations.edit', ['id' => $language->id])
-            ->with('success', 'Language translations updated.');
     }
 
     public function update(Request $request, $id)
     {
         $language = Language::findOrFail($id);
+        $previousCode = strtolower((string) $language->code);
         $isEnglish = $this->isEnglishLanguage($language);
 
         $flagConfig = config('cms-kit.images.languages.flag', []);
@@ -234,6 +163,12 @@ class LanguageController extends Controller
                 'is_default' => true,
                 'status' => true,
             ]);
+        }
+
+        $language->refresh();
+        $newCode = strtolower((string) $language->code);
+        if (!$isEnglish && $newCode !== $previousCode) {
+            $this->staticTranslations->renameLanguageFile($previousCode, $newCode);
         }
 
         return redirect()->back()->with('success', 'Language updated.');
@@ -277,62 +212,8 @@ class LanguageController extends Controller
         if ($language->flag_image) {
             MediaStorage::delete($language->flag_image);
         }
+        $this->staticTranslations->deleteLanguageFile(strtolower((string) $language->code));
         $language->delete();
         return redirect()->back()->with('success', 'Language deleted.');
-    }
-
-    private function flattenLocaleLeafValues(array $data, string $prefix = ''): array
-    {
-        $result = [];
-
-        foreach ($data as $key => $value) {
-            $path = $prefix === '' ? (string) $key : $prefix.'.'.$key;
-
-            if (is_array($value)) {
-                $result += $this->flattenLocaleLeafValues($value, $path);
-                continue;
-            }
-
-            $result[$path] = $value;
-        }
-
-        return $result;
-    }
-
-    private function buildLocalePayloadFromLeafValues(array $masterData, array $leafValues): array
-    {
-        $masterLeafValues = $this->flattenLocaleLeafValues($masterData);
-        $payload = [];
-
-        foreach ($masterLeafValues as $key => $defaultValue) {
-            Arr::set($payload, $key, array_key_exists($key, $leafValues) ? $leafValues[$key] : $defaultValue);
-        }
-
-        return $payload;
-    }
-
-    private function castToMasterType(mixed $value, mixed $masterValue): mixed
-    {
-        if (is_bool($masterValue)) {
-            return filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false;
-        }
-
-        if (is_int($masterValue)) {
-            return (int) $value;
-        }
-
-        if (is_float($masterValue)) {
-            return (float) $value;
-        }
-
-        if (is_null($masterValue)) {
-            return $value === '' ? null : $value;
-        }
-
-        if (is_string($masterValue)) {
-            return (string) $value;
-        }
-
-        return $value;
     }
 }

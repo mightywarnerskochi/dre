@@ -12,7 +12,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     @php
-        $primaryColor = config('cms-kit.common.theme.primary_color', '#dc3545');
+        $theme = config('cms-kit.common.theme', []);
+        $primaryColor = $theme['primary_color'] ?? '#dc3545';
+        $primaryGradient = $theme['primary_gradient'] ?? null;
+        $primaryFill = $primaryGradient ?: $primaryColor;
         $normalizedPrimary = ltrim($primaryColor, '#');
         if (strlen($normalizedPrimary) === 3) {
             $normalizedPrimary = collect(str_split($normalizedPrimary))->map(fn ($char) => $char . $char)->implode('');
@@ -22,11 +25,22 @@
     <style>
         :root {
             --primary-color: {{ $primaryColor }};
+            --primary-gradient: {{ $primaryGradient ?: $primaryColor }};
+            --primary-fill: {{ $primaryFill }};
+            --heading-gradient: {{ $primaryFill }};
+            --theme-status-success-bg: rgba(25, 135, 84, 0.12);
+            --theme-status-success-text: #198754;
+            --theme-status-danger-bg: rgba(220, 53, 69, 0.12);
+            --theme-status-danger-text: #dc3545;
             --primary-rgb: {{ $primaryRed }}, {{ $primaryGreen }}, {{ $primaryBlue }};
-            --secondary-color: {{ config('cms-kit.common.secondary_color', '#212529') }};
-            --bg-color: {{ config('cms-kit.common.background_color', '#f4f7f6') }};
-            --sidebar-color: {{ config('cms-kit.common.sidebar_color', '#1a1d21') }};
-            --text-color: {{ config('cms-kit.common.text_color', '#495057') }};
+            --secondary-color: {{ $theme['secondary_color'] ?? '#212529' }};
+            --bg-color: {{ $theme['background_color'] ?? '#f4f7f6' }};
+            --sidebar-color: {{ $theme['sidebar_color'] ?? '#1a1d21' }};
+            --text-color: {{ $theme['text_color'] ?? '#495057' }};
+            --theme-border-color: rgba({{ $primaryRed }}, {{ $primaryGreen }}, {{ $primaryBlue }}, 0.24);
+            --theme-border-strong: rgba({{ $primaryRed }}, {{ $primaryGreen }}, {{ $primaryBlue }}, 0.45);
+            --theme-soft-bg: rgba({{ $primaryRed }}, {{ $primaryGreen }}, {{ $primaryBlue }}, 0.08);
+            --theme-focus-ring: 0 0 0 0.2rem rgba({{ $primaryRed }}, {{ $primaryGreen }}, {{ $primaryBlue }}, 0.15);
             --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             --header-bg: rgba(255, 255, 255, 0.8);
             --sidebar-width: 280px;
@@ -67,7 +81,7 @@
                             <div class="collapse sidebar-submenu @if(request()->routeIs('cms.languages.*') || request()->routeIs('cms.site-information.*')) show @endif" id="settingsMenu">
                                 <nav class="nav flex-column">
                                     @if(config('cms-kit.common.modules.languages', true) && $cmsUser->can('languages.view'))
-                                    <a class="nav-link py-2 @if(request()->routeIs('cms.languages.*')) active @endif" href="{{ route('cms.languages.index') }}">
+                                    <a class="nav-link py-2 @if(request()->routeIs('cms.languages.index') || request()->routeIs('cms.languages.static-texts.*') || request()->routeIs('cms.languages.translations*')) active @endif" href="{{ route('cms.languages.index') }}">
                                         Languages
                                     </a>
                                     @endif
@@ -82,16 +96,16 @@
                     @endif
 
                     {{-- SEO Group --}}
-                    @if((config('cms-kit.common.modules.metadata', true) && $cmsUser->can('metadata.view')) || $cmsUser->can('sitemap.view'))
+                    @if((config('cms-kit.common.modules.metadata', true) && $cmsUser->can('metadata.view')) || $cmsUser->can('sitemap.view') || $cmsUser->can('robots-txt.view') || $cmsUser->can('llms-txt.view') || $cmsUser->can('url-redirects.view') || $cmsUser->can('url-miss-logs.view'))
                     <div class="nav-item sidebar-group">
-                        <a class="nav-link d-flex align-items-center sidebar-group-toggle @if(request()->routeIs('cms.metadata.*') || request()->routeIs('cms.sitemap.*')) active @endif" 
+                        <a class="nav-link d-flex align-items-center sidebar-group-toggle @if(request()->routeIs('cms.metadata.*') || request()->routeIs('cms.sitemap.*') || request()->routeIs('cms.robots-txt.*') || request()->routeIs('cms.llms-txt.*') || request()->routeIs('cms.url-redirects.*') || request()->routeIs('cms.url-miss-logs.*')) active @endif" 
                            data-bs-toggle="collapse" href="#seoMenu" role="button" 
-                           aria-expanded="@if(request()->routeIs('cms.metadata.*') || request()->routeIs('cms.sitemap.*')) true @else false @endif">
+                           aria-expanded="@if(request()->routeIs('cms.metadata.*') || request()->routeIs('cms.sitemap.*') || request()->routeIs('cms.robots-txt.*') || request()->routeIs('cms.llms-txt.*') || request()->routeIs('cms.url-redirects.*') || request()->routeIs('cms.url-miss-logs.*')) true @else false @endif">
                             <i class="fas fa-search"></i>
                             <span>SEO Management</span>
                             <i class="fas fa-chevron-down ms-auto sidebar-chevron"></i>
                         </a>
-                        <div class="collapse sidebar-submenu @if(request()->routeIs('cms.metadata.*') || request()->routeIs('cms.sitemap.*')) show @endif" id="seoMenu">
+                        <div class="collapse sidebar-submenu @if(request()->routeIs('cms.metadata.*') || request()->routeIs('cms.sitemap.*') || request()->routeIs('cms.robots-txt.*') || request()->routeIs('cms.llms-txt.*') || request()->routeIs('cms.url-redirects.*') || request()->routeIs('cms.url-miss-logs.*')) show @endif" id="seoMenu">
                             <nav class="nav flex-column">
                                 @if(config('cms-kit.common.modules.metadata', true) && $cmsUser->can('metadata.view'))
                                 <a class="nav-link py-2 @if(request()->routeIs('cms.metadata.*')) active @endif" href="{{ route('cms.metadata.index') }}">
@@ -101,6 +115,26 @@
                                 @if($cmsUser->can('sitemap.view'))
                                 <a class="nav-link py-2 @if(request()->routeIs('cms.sitemap.*')) active @endif" href="{{ route('cms.sitemap.index') }}">
                                     Sitemap Generator
+                                </a>
+                                @endif
+                                @if($cmsUser->can('robots-txt.view'))
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.robots-txt.*')) active @endif" href="{{ route('cms.robots-txt.index') }}">
+                                    Robots.txt Editor
+                                </a>
+                                @endif
+                                @if($cmsUser->can('llms-txt.view'))
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.llms-txt.*')) active @endif" href="{{ route('cms.llms-txt.index') }}">
+                                    LLMs.txt Generator
+                                </a>
+                                @endif
+                                @if($cmsUser->can('url-redirects.view'))
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.url-redirects.*')) active @endif" href="{{ route('cms.url-redirects.index') }}">
+                                    URL redirects
+                                </a>
+                                @endif
+                                @if($cmsUser->can('url-miss-logs.view'))
+                                <a class="nav-link py-2 @if(request()->routeIs('cms.url-miss-logs.*')) active @endif" href="{{ route('cms.url-miss-logs.index') }}">
+                                    404 log
                                 </a>
                                 @endif
                             </nav>
@@ -422,7 +456,6 @@
 
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             if (typeof tinymce === 'undefined' || !document.querySelector('.tinymce-extra-field')) {

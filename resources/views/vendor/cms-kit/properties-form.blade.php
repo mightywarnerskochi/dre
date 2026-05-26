@@ -200,7 +200,7 @@
 <div class="card bg-light border-0 mb-4 property-main-tabs-card">
     <div class="card-body p-4 p-xl-5">
         @if($showLanguageUi)
-        <ul class="nav nav-pills mb-4 bg-light p-2 rounded-3 property-top-tabs" id="propertyLanguageTabs" role="tablist">
+        <ul class="nav nav-pills mb-4 bg-light p-2 rounded-3 property-top-tabs language-switcher-tabs" id="propertyLanguageTabs" role="tablist">
             @foreach($languages as $lang)
             <li class="nav-item" role="presentation">
                 <button class="nav-link {{ $lang->code === $fallbackLocale ? 'active' : '' }} px-4 py-2 fw-medium" data-bs-toggle="tab" data-bs-target="#property-panel-{{ $lang->code }}" type="button" role="tab">
@@ -216,7 +216,7 @@
         </ul>
         @endif
 
-        <div class="tab-content mb-4">
+        <div class="tab-content mb-4 language-switcher-content">
             {{-- Language Specific Panels --}}
             @foreach($languages as $lang)
                 @php
@@ -692,21 +692,20 @@
     .career-dual-dropdown-secondary { color: #64748b; font-size: 0.875rem; }
 
     .property-main-tabs-card { border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-    .property-top-tabs .nav-link { border-radius: 10px; color: #64748b; font-weight: 600; }
-    .property-top-tabs .nav-link.active { background: #0d6efd; color: #fff; box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2); }
+    .property-top-tabs .nav-link { font-weight: 600; }
 
     .property-section-tabs .nav-link { text-align: left; margin-bottom: 0.5rem; border-radius: 10px; font-weight: 500; color: #475569; background: #fff; border: 1px solid #e2e8f0; }
-    .property-section-tabs .nav-link.active { background: #0d6efd; color: #fff; border-color: #0d6efd; }
+    .property-section-tabs .nav-link.active { background: var(--primary-fill); color: #fff; border-color: var(--primary-color); }
     .property-section-tabs .nav-link.has-error { border-color: #dc3545; color: #dc3545; }
     .property-section-tabs .nav-link.has-error::after { content: ' \f06a'; font-family: 'Font Awesome 6 Free'; font-weight: 900; float: right; }
 
     .property-image-board { display: flex; flex-wrap: wrap; gap: 1rem; min-height: 120px; padding: 1rem; border: 2px dashed #cbd5e1; border-radius: 15px; transition: border-color 0.3s, background 0.3s; }
-    .property-image-board.reordering-active { border-color: #0d6efd; background: #f0f7ff; cursor: grab; }
+    .property-image-board.reordering-active { border-color: var(--primary-color); background: var(--theme-soft-bg); cursor: grab; }
     .property-image-card { width: 100px; position: relative; }
     .property-image-card-preview { height: 100px; border-radius: 10px; overflow: hidden; background: #f1f5f9; position: relative; }
     .property-image-card-thumb { width:100%; height:100%; object-fit: cover; }
     .property-image-rank-badge { position: absolute; top: 5px; right: 5px; background: rgba(0,0,0,0.6); color:#fff; font-size: 10px; padding: 2px 6px; border-radius: 10px; }
-    .property-image-feature-badge { position: absolute; bottom: 5px; left: 5px; background: #0d6efd; color:#fff; font-size: 9px; padding: 2px 6px; border-radius: 10px; text-transform: uppercase; }
+    .property-image-feature-badge { position: absolute; bottom: 5px; left: 5px; background: var(--primary-fill); color:#fff; font-size: 9px; padding: 2px 6px; border-radius: 10px; text-transform: uppercase; }
     .property-image-actions { position: absolute; top: -8px; left: -8px; }
     .property-image-action-icon-btn { width: 20px; height: 20px; border-radius: 50%; background: #dc3545; color:#fff; border: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; }
 

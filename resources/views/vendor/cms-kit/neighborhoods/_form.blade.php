@@ -28,7 +28,7 @@
     
     @if($showLanguageUi)
         <div class="col-12">
-            <ul class="nav nav-pills mb-4 bg-light p-2 rounded-3" id="neighborhoodLanguageTabs" role="tablist">
+            <ul class="nav nav-pills mb-4 bg-light p-2 rounded-3 language-switcher-tabs" id="neighborhoodLanguageTabs" role="tablist">
                 @foreach($languages as $lang)
                     <li class="nav-item" role="presentation">
                         <button
@@ -44,7 +44,7 @@
                 @endforeach
             </ul>
 
-            <div class="tab-content mb-4">
+            <div class="tab-content mb-4 language-switcher-content">
                 @foreach($languages as $lang)
                     @php
                         $translation = data_get($neighborhoodItem, "translations.{$lang->code}", []);
@@ -160,4 +160,3 @@
         }, true);
     </script>
 @endpush
-
