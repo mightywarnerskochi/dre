@@ -101,7 +101,7 @@ final class MediaStorage
 
     private static function cloudinaryDeliveryUrl(string $path): ?string
     {
-        $cloud = trim((string) env('CLOUDINARY_CLOUD_NAME'));
+        $cloud = trim((string) config('filesystems.disks.cloudinary.cloud'));
         if ($cloud === '') {
             return null;
         }
