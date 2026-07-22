@@ -16,7 +16,14 @@
                 </RouterLink>
 
                 <div class="header-right d-flex align-items-center">
-                    <a href="#" class="header-btn" :aria-label="t('header.tenantPortalAria')">{{ t('header.tenantPortal') }}</a>
+                    <a
+                        v-if="dreSite?.tenantPortal?.link"
+                        :href="tenantPortalHref"
+                        class="header-btn"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        :aria-label="tenantPortalLabel"
+                    >{{ tenantPortalLabel }}</a>
 
                     <div v-if="showLanguageSwitcher" class="dropdown lang-switcher">
                         <button
@@ -90,6 +97,13 @@ const activeLanguages = computed(() => {
         ? langs.filter((lang) => String(lang?.code || '').trim() !== '')
         : [];
 });
+
+const tenantPortalHref = computed(() => dreSite.value?.tenantPortal?.link || '#');
+const tenantPortalLabel = computed(
+    () => dreSite.value?.tenantPortal?.text?.[locale.value]
+        || dreSite.value?.tenantPortal?.text?.en
+        || t('header.tenantPortal'),
+);
 
 const showLanguageSwitcher = computed(() => Boolean(dreSite.value?.languagesEnabled) && activeLanguages.value.length > 1);
 const defaultLanguage = computed(() => activeLanguages.value.find((lang) => lang.isDefault) || activeLanguages.value[0] || { code: 'en' });

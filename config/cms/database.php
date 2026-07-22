@@ -223,6 +223,18 @@ return [
                 'placeholder' => 'https://apps.apple.com/app/id...',
                 'translatable' => false,
             ],
+            'tenant_portal_link' => [
+                'type' => 'text',
+                'label' => 'Tenant Portal Link',
+                'placeholder' => 'https://portal.example.com',
+                'translatable' => false,
+            ],
+            'tenant_portal_text' => [
+                'type' => 'text',
+                'label' => 'Tenant Portal Button Text',
+                'placeholder' => 'e.g. Tenant Portal',
+                'translatable' => true,
+            ],
             'cookie_policy' => [
                 'type' => 'textarea',
                 'label' => 'Cookie Policy',

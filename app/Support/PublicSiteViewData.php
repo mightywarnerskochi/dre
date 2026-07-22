@@ -62,6 +62,7 @@ class PublicSiteViewData
         }
 
         $extraFields = is_array($info->extra_fields) ? $info->extra_fields : [];
+        $translations = is_array($info->translations) ? $info->translations : [];
 
         $socialRows = [
             ['network' => 'facebook', 'url' => $info->facebook],
@@ -121,6 +122,13 @@ class PublicSiteViewData
                 'googlePlayUrl' => self::normalizeUrl(data_get($extraFields, 'google_play_link')),
                 'appStoreUrl' => self::normalizeUrl(data_get($extraFields, 'app_store_link')),
             ],
+            'tenantPortal' => [
+                'link' => self::normalizeUrl(data_get($extraFields, 'tenant_portal_link')),
+                'text' => [
+                    'en' => self::nonEmptyString((string) data_get($translations, 'en.extra_fields.tenant_portal_text', data_get($extraFields, 'tenant_portal_text', ''))),
+                    'ar' => self::nonEmptyString((string) data_get($translations, 'ar.extra_fields.tenant_portal_text', data_get($translations, 'en.extra_fields.tenant_portal_text', data_get($extraFields, 'tenant_portal_text', '')))),
+                ],
+            ],
         ];
     }
 
@@ -165,6 +173,10 @@ class PublicSiteViewData
                 'qrCodeUrl' => null,
                 'googlePlayUrl' => null,
                 'appStoreUrl' => null,
+            ],
+            'tenantPortal' => [
+                'link' => null,
+                'text' => ['en' => null, 'ar' => null],
             ],
         ];
     }
