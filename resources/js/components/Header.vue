@@ -16,6 +16,8 @@
                 </RouterLink>
 
                 <div class="header-right d-flex align-items-center">
+                    <a href="#" class="header-btn" :aria-label="t('header.tenantPortalAria')">{{ t('header.tenantPortal') }}</a>
+
                     <div v-if="showLanguageSwitcher" class="dropdown lang-switcher">
                         <button
                             class="lang-switcher__toggle"

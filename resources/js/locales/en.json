@@ -205,6 +205,10 @@
         "quickLinks": "Quick Links",
         "whoWeAre": "Who we are"
     },
+    "header": {
+        "tenantPortal": "Tenant Portal",
+        "tenantPortalAria": "Tenant Portal"
+    },
     "home": {
         "rentals": {
             "card": {
