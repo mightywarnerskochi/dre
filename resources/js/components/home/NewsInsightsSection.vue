@@ -59,12 +59,12 @@
                         <span class="property-slider__progress-fill" style="width: 40%;"></span>
                     </div>
                     <div class="property-slider__arrows ml-4 pl-4 flex-shrink-0">
-                        <button type="button" class="property-slider__arrow property-slider__arrow--prev bg-transparent border-0" aria-label="Previous news">
+                        <button type="button" class="property-slider__arrow property-slider__arrow--prev  border-0" aria-label="Previous news">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#A4B3C9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M20 12H4M4 12L10 6M4 12L10 18"></path>
                             </svg>
                         </button>
-                        <button type="button" class="property-slider__arrow property-slider__arrow--next bg-transparent border-0 ml-2" aria-label="Next news">
+                        <button type="button" class="property-slider__arrow property-slider__arrow--next  border-0 ml-2" aria-label="Next news">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2A559C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M4 12L20 12M20 12L14 18M20 12L14 6"></path>
                             </svg>

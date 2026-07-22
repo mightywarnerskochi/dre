@@ -1481,26 +1481,56 @@
 }
 
 .property-slider__arrows {
-    display: inline-flex;
-    gap: 0.35rem;
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+    padding: 0 clamp(8px, 1.5vw, 20px);
+    pointer-events: none;
+    z-index: 2;
 
     button:hover {
-        path {
 
-            stroke: $primaryColor;
-        }
 
     }
 
 }
 
 .property-slider__arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: clamp(44px, 4.5vw, 64px);
+    height: clamp(44px, 4.5vw, 64px);
+    border-radius: 50%;
+    background: rgb(105 105 105 / 10%);
+    pointer-events: auto;
+    transition: background 0.25s ease, transform 0.25s ease;
 
-    &:hover {}
+    svg {
+        width: clamp(24px, 2.4vw, 34px);
+        height: clamp(24px, 2.4vw, 34px);
+
+        path{
+                stroke: rgb(42, 85, 156);
+        }
+    }
+
+    &:hover {
+        // background: rgba($white, 0.85);
+        transform: translateY(-2px);
+                        background: rgb(42, 85, 156);
+          path{
+                stroke: #fff;
+        }
+    }
 }
 
 .neighborhoods {
-    background: rgba(229, 234, 243, 0.35);
+    // background: rgba(229, 234, 243, 0.35);
 
     &__tabs-wrapper {
         display: flex;
