@@ -249,7 +249,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.0/slick.min.js"></script>
     <script src="{{ asset('js/lib/jquery.fancybox.min.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ asset('js/script.js') }}?v={{ $styleVersion }}" defer></script>
+    <script src="{{ asset('js/script.js') }}?v={{ time() }}" ></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
 </body>
 </html>

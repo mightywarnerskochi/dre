@@ -107,7 +107,7 @@ jQuery(function () {
       });
       try {
         localStorage.setItem("dre_lang", safeLang);
-      } catch (e) {}
+      } catch (e) { }
     }
 
     const current = root.getAttribute("lang") || "en";
@@ -364,16 +364,19 @@ jQuery(function () {
       dots: false,
       autoplay: true,
       autoplaySpeed: 4000,
-      speed: 450,
       centerMode: true,
       centerPadding: '0',
+      swipeToSlide: true,
+      speed: 150,
+      draggable: true,
+
       responsive: [
         {
           breakpoint: 575,
           settings: {
             slidesToShow: 1,
             slidesToScroll: 1,
-            variableWidth: false  ,
+            variableWidth: false,
           },
         },
       ],
@@ -1053,7 +1056,7 @@ jQuery(function () {
       try {
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
-      } catch (e) {}
+      } catch (e) { }
     }
 
     function extractFromCard(buttonEl) {
@@ -1126,7 +1129,7 @@ jQuery(function () {
         size: sizeStr,
       };
     }
-    
+
     function applyContextToModal(triggerEl) {
       const context = extractFromTriggerData(triggerEl) || extractFromCard(triggerEl) || extractFromDetailPage() || {
         title: '',
@@ -1165,7 +1168,7 @@ jQuery(function () {
         }
         try {
           typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
-        } catch (e) {}
+        } catch (e) { }
         typeSelect.disabled = typeStr !== '';
       }
     }
@@ -1191,7 +1194,7 @@ jQuery(function () {
         typeSelect.value = '';
         try {
           typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
-        } catch (e) {}
+        } catch (e) { }
         typeSelect.disabled = false;
       }
     });
@@ -1255,8 +1258,8 @@ jQuery(function () {
 
   // --- Sticky Share Button ---
   const stickyShareTrigger = document.getElementById('stickyShareTrigger');
-  const stickySharePanel   = document.getElementById('stickySharePanel');
-  const stickyShareClose   = document.getElementById('stickyShareClose');
+  const stickySharePanel = document.getElementById('stickySharePanel');
+  const stickyShareClose = document.getElementById('stickyShareClose');
 
   const listingGrid = document.querySelector(".properties-grid");
   const listingToggleBtns = document.querySelectorAll("[data-listing-view]");
@@ -1301,7 +1304,7 @@ jQuery(function () {
   if (stickyShareTrigger && stickySharePanel) {
     // Inject current page URL into share links
     const pageUrl = encodeURIComponent(window.location.href);
-    stickySharePanel.querySelectorAll('.sticky-share__icon[href]').forEach(function(a) {
+    stickySharePanel.querySelectorAll('.sticky-share__icon[href]').forEach(function (a) {
       const href = a.getAttribute('href');
       const isShareUrl = href && (
         href.includes('facebook.com/sharer/sharer.php?u=') ||
@@ -1536,7 +1539,7 @@ function initializePhoneInput(selector, options) {
     if (existing) {
       try {
         existing.destroy();
-      } catch (e) {}
+      } catch (e) { }
     }
   }
   var previousDialCode = "";
@@ -1591,7 +1594,7 @@ function initializePhoneInput(selector, options) {
     previousDialCode = dial;
     try {
       input.dispatchEvent(new Event("input", { bubbles: true }));
-    } catch (e) {}
+    } catch (e) { }
   }
 
   var phoneInput = window.intlTelInput(input, {
@@ -1827,6 +1830,10 @@ initializePhoneInput(".book-viewing-form", { skipContactPhoneBlur: true });
       speed: 450,
       centerMode: true,
       centerPadding: "0",
+      swipeToSlide: true,
+      speed: 150,
+      draggable: true,
+
       responsive: [
         {
           breakpoint: 575,
