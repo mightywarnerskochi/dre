@@ -57,6 +57,7 @@ export function getPublicSiteBoot() {
             legalPages: {},
             languagesEnabled: false,
             languages: [],
+            tenantPortal: { link: null, text: { en: null, ar: null } },
         };
     }
     const raw = window.__DRE_SITE__;
@@ -73,6 +74,7 @@ export function getPublicSiteBoot() {
             legalPages: {},
             languagesEnabled: false,
             languages: [],
+            tenantPortal: { link: null, text: { en: null, ar: null } },
         };
     }
     const socialRaw = Array.isArray(raw.social) ? raw.social : [];
@@ -80,6 +82,8 @@ export function getPublicSiteBoot() {
     const legalPages = raw.legalPages && typeof raw.legalPages === 'object' ? raw.legalPages : {};
     const languages = Array.isArray(raw.languages) ? raw.languages : [];
     const appLinks = raw.appLinks && typeof raw.appLinks === 'object' ? raw.appLinks : {};
+    const tenantPortalRaw = raw.tenantPortal && typeof raw.tenantPortal === 'object' ? raw.tenantPortal : {};
+    const tenantPortalTextRaw = tenantPortalRaw.text && typeof tenantPortalRaw.text === 'object' ? tenantPortalRaw.text : {};
 
     return {
         phone1: typeof raw.phone1 === 'string' && raw.phone1.trim() !== '' ? raw.phone1.trim() : null,
@@ -97,6 +101,13 @@ export function getPublicSiteBoot() {
             qrCodeUrl: typeof appLinks.qrCodeUrl === 'string' && appLinks.qrCodeUrl.trim() !== '' ? appLinks.qrCodeUrl.trim() : null,
             googlePlayUrl: typeof appLinks.googlePlayUrl === 'string' && appLinks.googlePlayUrl.trim() !== '' ? appLinks.googlePlayUrl.trim() : null,
             appStoreUrl: typeof appLinks.appStoreUrl === 'string' && appLinks.appStoreUrl.trim() !== '' ? appLinks.appStoreUrl.trim() : null,
+        },
+        tenantPortal: {
+            link: typeof tenantPortalRaw.link === 'string' && tenantPortalRaw.link.trim() !== '' ? tenantPortalRaw.link.trim() : null,
+            text: {
+                en: typeof tenantPortalTextRaw.en === 'string' && tenantPortalTextRaw.en.trim() !== '' ? tenantPortalTextRaw.en.trim() : null,
+                ar: typeof tenantPortalTextRaw.ar === 'string' && tenantPortalTextRaw.ar.trim() !== '' ? tenantPortalTextRaw.ar.trim() : null,
+            },
         },
     };
 }

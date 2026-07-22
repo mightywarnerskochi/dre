@@ -205,6 +205,10 @@
         "quickLinks": "روابط سريعة",
         "whoWeAre": "من نحن"
     },
+    "header": {
+        "tenantPortal": "بوابة المستأجرين",
+        "tenantPortalAria": "بوابة المستأجرين"
+    },
     "home": {
         "rentals": {
             "card": {

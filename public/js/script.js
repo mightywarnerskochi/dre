@@ -17,6 +17,62 @@ function initBannerSearchDropdowns() {
     });
 }
 
+// Left/Right arrow keys move any Slick slider: while hovered with the mouse, or
+// when keyboard focus is inside one (works regardless of each slider's own
+// `accessibility`/`arrows` options, and honors RTL direction).
+function initSliderKeyboardNav() {
+  if (typeof jQuery === "undefined") return;
+
+  // Some sliders render their prev/next buttons (or other overlay content, e.g.
+  // the banner's title/search box) as a SIBLING of the actual `.slick-slider`
+  // element, not a descendant. These wrapper classes group a slider with its
+  // overlay so hovering the overlay still resolves back to the right slider.
+  const ZONE_SELECTOR = ".slick-slider, .property-slider-wrap, .property-detail-gallery__viewport, .banner";
+
+  function resolveSlider(zone) {
+    if (!zone) return null;
+    return zone.classList.contains("slick-slider") ? zone : zone.querySelector(".slick-slider");
+  }
+
+  let hoveredZone = null;
+
+  document.addEventListener("mouseover", function (e) {
+    const el = e.target.closest && e.target.closest(ZONE_SELECTOR);
+    if (el) hoveredZone = el;
+  });
+
+  document.addEventListener("mouseout", function (e) {
+    if (hoveredZone && !hoveredZone.contains(e.relatedTarget)) {
+      hoveredZone = null;
+    }
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+
+    const target = e.target;
+    const tag = target && target.tagName;
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag) || (target && target.isContentEditable)) return;
+
+    const zone =
+      hoveredZone ||
+      (document.activeElement && document.activeElement.closest && document.activeElement.closest(ZONE_SELECTOR));
+    const slider = resolveSlider(zone);
+    if (!slider || !slider.classList.contains("slick-initialized")) return;
+    if (!jQuery.fn || !jQuery.fn.slick) return;
+
+    const isRtl = slider.closest('[dir="rtl"]') !== null;
+    const goNext = isRtl ? e.key === "ArrowLeft" : e.key === "ArrowRight";
+
+    e.preventDefault();
+    try {
+      jQuery(slider).slick(goNext ? "slickNext" : "slickPrev");
+    } catch (err) {
+      /* ignore */
+    }
+  });
+}
+
 // jQuery ready (not DOMContentLoaded alone): with defer, script may run after DOMContentLoaded fired
 jQuery(function () {
   (function initLanguageSwitcher() {
@@ -90,6 +146,7 @@ jQuery(function () {
   });
 
   initBannerSearchDropdowns();
+  initSliderKeyboardNav();
 
   // About page: when the timeline section is in view, use vertical wheel to scroll the
   // horizontal track first; only after it reaches the end (or start, when scrolling up) does
@@ -1484,23 +1541,6 @@ function initializePhoneInput(selector, options) {
   }
   var previousDialCode = "";
 
-  function ensureEmptyPhoneStyle() {
-    if (document.getElementById("dre-phone-empty-style")) return;
-    var style = document.createElement("style");
-    style.id = "dre-phone-empty-style";
-    style.textContent =
-      ".iti:not(.dre-phone-has-value) .iti__selected-dial-code{display:none}" +
-      ".iti:not(.dre-phone-has-value) input.phone_number::placeholder{opacity:1}";
-    document.head.appendChild(style);
-  }
-
-  function updatePhoneHasValueState() {
-    var wrapper = input.closest(".iti");
-    if (!wrapper) return;
-    var hasDigits = String(input.value || "").replace(/\D/g, "").length > 0;
-    wrapper.classList.toggle("dre-phone-has-value", hasDigits);
-  }
-
   function isRepeatedDialOnly(digits, dial) {
     if (!digits || !dial) return false;
     if (digits.length < dial.length * 2) return false;
@@ -1541,28 +1581,10 @@ function initializePhoneInput(selector, options) {
     if (!dial) return;
     var current = String(input.value || "").trim();
     var digits = current.replace(/\D/g, "");
-    if (!digits) {
-      input.value = "";
-      previousDialCode = dial;
-      try {
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-      } catch (e) {}
-      updatePhoneHasValueState();
-      return;
-    }
     var nationalDigits = extractNationalDigits(digits, dial);
     var hasNationalDigits = nationalDigits.length > 0;
-    if (!hasNationalDigits) {
-      input.value = "";
-      previousDialCode = dial;
-      try {
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-      } catch (e) {}
-      updatePhoneHasValueState();
-      return;
-    }
     var nextValue =
-      forceReplace || current === "+" || /^\+\d{1,4}$/.test(current) || current.charAt(0) !== "+"
+      forceReplace || current === "" || current === "+" || /^\+\d{1,4}$/.test(current)
         ? "+" + dial + (hasNationalDigits ? nationalDigits : "")
         : current;
     input.value = nextValue;
@@ -1570,22 +1592,19 @@ function initializePhoneInput(selector, options) {
     try {
       input.dispatchEvent(new Event("input", { bubbles: true }));
     } catch (e) {}
-    updatePhoneHasValueState();
   }
 
-  ensureEmptyPhoneStyle();
   var phoneInput = window.intlTelInput(input, {
     initialCountry: options.initialCountry || "ae",
     preferredCountries: ["ae", "sa", "kw", "bh", "qa", "om"],
     excludeCountries: ["ru", "cu", "sy", "ir", "sd", "ss", "kp", "ye", "KR", "UA"],
-    nationalMode: true,
-    autoHideDialCode: true,
+    nationalMode: false,
+    autoHideDialCode: false,
     formatOnDisplay: false,
     utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js",
   });
   previousDialCode = String((phoneInput.getSelectedCountryData() || {}).dialCode || "").replace(/\D/g, "");
   syncDialCodeInInput(false);
-  updatePhoneHasValueState();
   if (input.__dreCountryChangeHandler) {
     input.removeEventListener("countrychange", input.__dreCountryChangeHandler);
   }
@@ -1599,7 +1618,6 @@ function initializePhoneInput(selector, options) {
       contactPhone(selector, phoneInput);
     });
   }
-  $(selector + " .phone_number").off("input.drePhone").on("input.drePhone", updatePhoneHasValueState);
 }
 
 /** Called when #siteEnquiryForm is visible (e.g. from Vue ModalEnquiry `shown.bs.modal`). */
@@ -1614,51 +1632,25 @@ window.dreInitContactFormPhone = function () {
 
 /** Book a Viewing page (Vue SPA). */
 window.dreInitBookViewingPhone = function () {
-  initializePhoneInput(".book-viewing-form");
+  initializePhoneInput(".book-viewing-form", { skipContactPhoneBlur: true });
 };
 
 function contactPhone(selector, phoneInput) {
   let phoneNumber = phoneInput.getNumber(); // Get full international number
-  const input = document.querySelector(selector + ' .phone_number');
-  const raw = String(input && input.value ? input.value : '').trim();
-  const countryCode = String(phoneInput.getSelectedCountryData().dialCode || '').replace(/\D/g, '');
-  const rawDigits = raw.replace(/\D/g, '');
-
-  function setPhoneValue(value) {
-    $(selector + ' .phone_number').val(value);
-    if (input) {
-      try {
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-      } catch (e) {}
-    }
-  }
-
-  if (!rawDigits || (countryCode && rawDigits === countryCode)) {
-    setPhoneValue('');
-    return;
-  }
-
-  if (!phoneNumber) {
-    const localNumber = countryCode && rawDigits.startsWith(countryCode) ? rawDigits.slice(countryCode.length) : rawDigits;
-    phoneNumber = countryCode ? `+${countryCode}${localNumber}` : localNumber;
-  }
 
   if (phoneNumber.startsWith('+')) {
-    let localNumber = phoneNumber.replace('+' + countryCode, '').replace(/\D/g, ''); // Remove country code from full number
-    if (!localNumber) {
-      setPhoneValue('');
-      return;
-    }
+    let countryCode = phoneInput.getSelectedCountryData().dialCode; // Get country code only
+    let localNumber = phoneNumber.replace('+' + countryCode, ''); // Remove country code from full number
     phoneNumber = `+${countryCode}-${localNumber}`; // Add separator
   }
 
-  setPhoneValue(phoneNumber);
+  $(selector + ' .phone_number').val(phoneNumber);
 }
 
-initializePhoneInput("#careerApplyModal");
+initializePhoneInput("#careerApplyModal", { skipContactPhoneBlur: true });
 initializePhoneInput("#siteEnquiryForm");
 initializePhoneInput(".contact-form");
-initializePhoneInput(".book-viewing-form");
+initializePhoneInput(".book-viewing-form", { skipContactPhoneBlur: true });
 
 
 (function attachSpaRouteReinitializer() {
@@ -1908,7 +1900,7 @@ initializePhoneInput(".book-viewing-form");
   }
 
   function dreInitCareerApplyOnly() {
-    initializePhoneInput("#careerApplyModal");
+    initializePhoneInput("#careerApplyModal", { skipContactPhoneBlur: true });
   }
 
   function initHomePageUiForSpa() {

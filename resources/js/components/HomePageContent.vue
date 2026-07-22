@@ -1,10 +1,4 @@
 <template>
-    <HomeRentalPropertiesSection />
-
-
-    <HomeNeighborhoodMapSection />
-
-
     <AboutSection
         v-if="homeAbout.isAvailable"
         :about="{
@@ -14,7 +8,14 @@
         }"
     />
 
+    <HomeRentalPropertiesSection />
     <NewsInsightsSection />
+
+
+    <HomeNeighborhoodMapSection />
+
+
+
 
     
 

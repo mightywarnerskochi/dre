@@ -55,6 +55,15 @@
                     <li>
                         <MobileNavLink :to="{ name: 'contact' }" active-class-extra="mobile-menu__link">{{ t('footer.navContact') }}</MobileNavLink>
                     </li>
+                    <li v-if="tenantPortalLink">
+                        <a
+                            :href="tenantPortalLink"
+                            class="mobile-menu__link mobile-menu__link--cta"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            :aria-label="tenantPortalLabel"
+                        >{{ tenantPortalLabel }}</a>
+                    </li>
                 </ul>
             </nav>
             <div v-if="showMobileMenuFooter" class="footer">
@@ -119,10 +128,17 @@ import FollowUsNetworkIcon from '@/components/FollowUsNetworkIcon.vue';
 import { getPublicSiteBoot, telHref } from '@/utils/publicSite';
 import { siteWhatsappUrl } from '@/utils/siteContact';
 
-const { t } = useI18n({ useScope: 'global' });
+const { t, locale } = useI18n({ useScope: 'global' });
 const isPropertiesMenuOpen = ref(false);
 const injectedSite = inject('dreSite', null);
 const dreSiteRef = injectedSite ?? computed(() => getPublicSiteBoot());
+
+const tenantPortalLink = computed(() => dreSiteRef.value?.tenantPortal?.link || null);
+const tenantPortalLabel = computed(
+    () => dreSiteRef.value?.tenantPortal?.text?.[locale.value]
+        || dreSiteRef.value?.tenantPortal?.text?.en
+        || t('header.tenantPortal'),
+);
 
 const MOBILE_MENU_SOCIAL_NETWORKS = new Set(['facebook', 'twitter', 'linkedin', 'instagram', 'youtube', 'whatsapp']);
 

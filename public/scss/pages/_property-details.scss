@@ -120,33 +120,52 @@
         color: $primaryColor;
     }
 
+    &__viewport {
+        position: relative;
+    }
+
     &__nav {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
         display: flex;
         align-items: center;
+        justify-content: space-between;
+        transform: translateY(-50%);
+        padding: 0 clamp(8px, 1.5vw, 20px);
         gap: 4px;
+        pointer-events: none;
+        z-index: 2;
     }
 
     &__arrow {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        width: clamp(25px, 1.266vw, 44px);
-        height: clamp(25px, 1.266vw, 44px);
+        width: clamp(36px, 3.5vw, 52px);
+        height: clamp(36px, 3.5vw, 52px);
         padding: 0;
         border: 0;
-        background: transparent;
+        border-radius: 50%;
+        background: rgba($white, 0.55);
         color: #0a1119;
         cursor: pointer;
-        transition: color 0.2s, opacity 0.2s;
+        pointer-events: auto;
+        transition: color 0.2s, opacity 0.2s, background 0.2s;
         svg{
-            width: 100%;
+            width: 55%;
             height: auto;
         }
         path{
             transition: 0.2s ease all;
+                fill: #000;
+
 
         }
         &:hover{
+            background: rgba($white, 0.85);
+
             path{
                 fill: $primaryColor;
                 transition: 0.2s ease all;
@@ -1714,7 +1733,7 @@ $calc-hoa: #FF513A;
     .property-card__inner{
         background: #F8F8F8;
         border-radius: 0;
-        height: auto;
+        height: 100%;
         min-height: 0;
     }
 
@@ -1768,7 +1787,7 @@ $calc-hoa: #FF513A;
 
         > .slick-list > .slick-track {
             display: flex !important;
-            align-items: flex-start;
+            align-items: stretch;
             min-height: 0 !important;
         }
         .property-card__inner {
@@ -1815,16 +1834,12 @@ $calc-hoa: #FF513A;
     // Match listing grid cards; only neutralize global .property-card gutters inside the track
     .property-card--listing {
         width: 100%;
-        align-self: flex-start;
-        height: auto;
+        align-self: stretch;
+        height: 100%;
         min-height: 0;
 
         .property-card__body {
-            flex: 0 1 auto;
-        }
-
-        .property-details {
-            margin-top: 0;
+            flex: 1;
         }
 
         // Similar only: price + tags on one row; photo count on its own row below

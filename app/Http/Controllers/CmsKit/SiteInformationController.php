@@ -102,6 +102,8 @@ class SiteInformationController extends Controller
             $rules["remove_{$fieldName}"] = 'nullable|boolean';
         }
 
+        $rules['extra_fields.tenant_portal_link'] = 'nullable|url|max:255';
+
         foreach ($languages as $lang) {
             foreach ($this->translatableFields as $field) {
                 if ($siteInfoConfig[$field] ?? true) {
