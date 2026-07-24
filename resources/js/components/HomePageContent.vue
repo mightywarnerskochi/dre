@@ -9,11 +9,11 @@
     />
 
     <HomeRentalPropertiesSection />
-    <NewsInsightsSection />
 
 
     <HomeNeighborhoodMapSection />
 
+    <NewsInsightsSection />
 
 
 
