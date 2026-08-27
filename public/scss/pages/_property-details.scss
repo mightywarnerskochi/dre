@@ -716,13 +716,25 @@
 
 // --- Content sections ---
 .property-detail-body {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 35.804%);
     align-items: flex-start;
     padding-top: clamp(8px, 2vw, 24px);
-    gap: 0 clamp(24px, 3vw, 40px);
+    column-gap: clamp(20px, 3vw, 40px);
+    row-gap: clamp(28px, 4vw, 44px);
+
+    @media (max-width: 1199px) {
+        grid-template-columns: minmax(0, 1fr) minmax(300px, 36%);
+        column-gap: 24px;
+    }
+
+    @media (max-width: 767px) {
+        grid-template-columns: 1fr;
+    }
 
     &--no-map {
+        grid-template-columns: 1fr;
+
         .property-detail-body__main._left_col {
             width: 100%;
         }
@@ -731,28 +743,20 @@
     &__main {
         &._left_col {
             min-width: 0;
-            width: 61.686%;
+            width: 100%;
             max-width: 100%;
-
-            @media (max-width: 991px) {
-                width: 100%;
-            }
         }
     }
 
     &__map {
         position: sticky;
         top: 82px;
-        flex-shrink: 0;
-        width: 35.804%;
+        width: 100%;
         max-width: 100%;
         height: fit-content;
 
-        @media (max-width: 991px) {
+        @media (max-width: 767px) {
             position: static;
-            order: -1;
-            flex-shrink: 1;
-            width: 100%;
         }
     }
 }
@@ -1288,6 +1292,10 @@ $calc-hoa: #FF513A;
             padding:28px 28px 16px;
 
         }
+
+        @media (min-width: 768px) and (max-width: 1199px) {
+            padding: 16px 18px 14px;
+        }
     }
 
     &__title {
@@ -1307,17 +1315,29 @@ $calc-hoa: #FF513A;
         overflow: hidden;
         background: #dbe4f0;
         border: 1px solid #e4e9f0;
+
+        @media (min-width: 768px) and (max-width: 1199px) {
+            margin: 18px;
+        }
     }
 
     &__leaflet {
         width: 100%;
         min-height: min(420px, 55vh);
+
+        @media (min-width: 768px) and (max-width: 1199px) {
+            min-height: 320px;
+        }
     }
 
     &__leaflet .leaflet-container {
         width: 100%;
         height: min(420px, 55vh);
         font-family: inherit;
+
+        @media (min-width: 768px) and (max-width: 1199px) {
+            height: 320px;
+        }
     }
 
     &__leaflet-divicon {
@@ -1571,6 +1591,7 @@ $calc-hoa: #FF513A;
         transform: translate(-50%, -90%);
         z-index: 1100;
         pointer-events: auto;
+        max-width: calc(100% - 28px);
     }
 
     &__tabs {
@@ -1581,11 +1602,13 @@ $calc-hoa: #FF513A;
         border-radius: 999px;
         background: #fff;
         padding: 6px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
 
     }
 
     &__tab {
-        flex: 1;
+        flex: 1 0 auto;
 
         margin: 0;
         border: none;
@@ -1601,6 +1624,11 @@ $calc-hoa: #FF513A;
         transition: background 0.2s, color 0.2s;
         @include max(575){
             font-size: 13px;
+        }
+
+        @media (min-width: 768px) and (max-width: 1199px) {
+            padding: 9px 10px;
+            font-size: 14px;
         }
         &:hover:not(.is-active) {
             color: #2f3f58;
@@ -1702,8 +1730,12 @@ $calc-hoa: #FF513A;
 
 // Similar listings (horizontal slick + listing cards)
 .property-detail-similar {
+    background: #eef3f9;
+    overflow: hidden;
+
     .property-card--listing .property-card__footer{
         justify-content: flex-end;
+        margin-top: auto;
     }
     .property-card__price{
         font-size: clamp(18px, 1.25vw, 24px);
@@ -1812,9 +1844,10 @@ $calc-hoa: #FF513A;
             @include min(1900){margin-right:57px;}
         }
         .property-card__ghost{
-            left: unset;
-            border-radius: 0;
-            right: -22px;
+            left: 0.65rem;
+            right: -0.25rem;
+            bottom: -30px;
+            border-radius: 1.25rem;
         }
         .slick-slide {
             display: flex;
@@ -1900,12 +1933,123 @@ $calc-hoa: #FF513A;
         }
     }
     .property-tag {
+        font-size: clamp(12px, 1vw, 16px);
+    }
 
-        font-size: clamp(12px, 1vw, 16px);}
+    .property-details__item + div {
+        padding-left: clamp(8px, 0.8vw, 14px);
+    }
 
-        .property-details__item + div {
-            padding-left: clamp(8px, 0.8vw, 14px);
+    // Final home-card match for Similar Listing.
+    .property-detail-similar__slide {
+        display: flex;
+        align-items: stretch;
+    }
+
+    .property-card {
+        width: 330px;
+        height: 100%;
+        margin-left: 0;
+        margin-right: 0;
+
+        @include min(576) {
+            width: 330px;
         }
+
+        @include min(1200) {
+            width: 350px;
+        }
+
+        @include min(1350) {
+            width: 360px;
+        }
+
+        @include min(1600) {
+            width: 424px;
+        }
+
+        @include min(1900) {
+            width: 514px;
+        }
+    }
+
+    .property-card__inner {
+        background: $white !important;
+        border-radius: 1.25rem !important;
+        height: 100% !important;
+        min-height: 100%;
+        padding: clamp(16px, 1.5vw, 32px) !important;
+    }
+
+    .property-card__ghost {
+        left: 0.65rem !important;
+        right: -0.25rem !important;
+        bottom: -30px !important;
+        border-radius: 1.25rem !important;
+    }
+
+    .property-card__media {
+        margin-bottom: 27px;
+
+        picture,
+        .property-card__media-slide {
+            display: block;
+            max-height: none !important;
+        }
+
+        img {
+            width: 100%;
+            height: clamp(190px, 12.1875vw, 260px) !important;
+            aspect-ratio: auto !important;
+            object-fit: cover;
+        }
+    }
+
+    .property-card__body {
+        flex: 1 1 auto;
+    }
+
+    .property-card__meta--similar {
+        margin-bottom: 15px;
+
+        @include min(1200) {
+            margin-bottom: 28px;
+        }
+    }
+
+    .property-card__photos--similar-row {
+        display: none;
+    }
+
+    .property-details {
+        margin-top: auto;
+    }
+
+    .property-card__actions {
+        justify-content: flex-end;
+        margin-top: 17px;
+    }
+
+    .js-property-detail-similar-slider {
+        margin: 0 -0.5rem;
+
+        > .slick-list > .slick-track {
+            align-items: stretch;
+        }
+
+        .property-detail-similar__slide {
+            margin-right: 0;
+            padding-bottom: 35px;
+        }
+
+        .slick-slide {
+            align-self: stretch;
+
+            > div {
+                padding: 0;
+            }
+        }
+    }
 }
 
 // .property-card--similar {

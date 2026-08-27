@@ -581,7 +581,7 @@
                                                 @php
                                                     $selectedTypePlaces = collect($selectedNearbyPlaces->get($type, []))->map(fn ($value) => (string) $value);
                                                 @endphp
-                                                <select name="nearby_places[{{ $type }}][]" class="form-select nearby-places-select2" multiple data-placeholder="Search {{ strtolower($label) }}" data-dropdown-parent="#nearby-place-card-{{ $type }}">
+                                                <select name="nearby_places[{{ $type }}][]" class="form-select nearby-places-select2 nearby-places-source" multiple data-placeholder="Search {{ strtolower($label) }}...">
                                                     @foreach(($nearbyPlaces[$type] ?? collect()) as $place)
                                                         @php
                                                             $placeName = $place->getTranslation('name') ?: $place->name;
@@ -714,6 +714,200 @@
     .section-icon-placeholder { font-size: 10px; color: #94a3b8; text-align: center; }
 
     .nearby-place-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; background: #fff; }
+    .nearby-places-source { position: absolute !important; width: 1px !important; height: 1px !important; opacity: 0 !important; pointer-events: none !important; }
+    .nearby-place-picker { position: relative; }
+    .nearby-place-picker__trigger {
+        min-height: 46px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        flex-wrap: wrap;
+        padding: 0.45rem 2.5rem 0.45rem 0.75rem;
+        border: 1px solid #dbe3ee;
+        border-radius: 10px;
+        background: #fff;
+        color: #25364d;
+        text-align: left;
+        position: relative;
+    }
+    .nearby-place-picker__trigger::after {
+        content: '\f078';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        right: 0.9rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+        font-size: 0.75rem;
+    }
+    .nearby-place-picker.open .nearby-place-picker__trigger {
+        border-color: var(--primary-color);
+        border-bottom-color: #dbe3ee;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        box-shadow: var(--theme-focus-ring);
+    }
+    .nearby-place-picker__placeholder { color: #6b7280; }
+    .nearby-place-picker__chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        min-height: 28px;
+        max-width: 100%;
+        padding: 0.2rem 0.5rem;
+        border: 1px solid var(--theme-border-color);
+        border-radius: 6px;
+        background: var(--theme-soft-bg);
+        color: #25364d;
+        font-size: 0.9rem;
+    }
+    .nearby-place-picker__chip-remove {
+        width: 18px;
+        height: 18px;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: #64748b;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        padding: 0;
+    }
+    .nearby-place-picker__dropdown {
+        display: none;
+        position: fixed;
+        z-index: 2060;
+        background: #fff;
+        border: 1px solid #dbe3ee;
+        border-radius: 0 0 10px 10px;
+        overflow: hidden;
+        box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+    }
+    .nearby-place-picker__dropdown.open { display: block; }
+    .nearby-place-picker__search-wrap { padding: 0.65rem; border-bottom: 1px solid #eef2f7; }
+    .nearby-place-picker__search {
+        width: 100%;
+        min-height: 44px;
+        border: 1px solid #dbe3ee;
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        outline: 0;
+    }
+    .nearby-place-picker__search:focus {
+        border-color: var(--primary-color);
+        box-shadow: var(--theme-focus-ring);
+    }
+    .nearby-place-picker__options {
+        max-height: 150px;
+        overflow-y: auto;
+    }
+    .nearby-place-picker__option {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.65rem 0.8rem;
+        border: 0;
+        border-bottom: 1px solid #eef2f7;
+        background: #fff;
+        color: #111827;
+        text-align: left;
+        font-size: 0.95rem;
+    }
+    .nearby-place-picker__option:hover,
+    .nearby-place-picker__option.selected {
+        background: #f8fafc;
+    }
+    .nearby-place-picker__option.selected::after {
+        content: '\f00c';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        color: var(--primary-color);
+        font-size: 0.8rem;
+    }
+    .nearby-place-picker__empty { padding: 0.8rem; color: #64748b; font-size: 0.9rem; }
+    .nearby-place-card .select2-container { width: 100% !important; display: block; }
+    .nearby-place-card .select2-container--default .select2-selection--multiple {
+        min-height: 46px;
+        border: 1px solid #dbe3ee;
+        border-radius: 10px;
+        padding: 0.25rem 0.45rem;
+        background: #fff;
+    }
+    .nearby-place-card .select2-container--default.select2-container--focus .select2-selection--multiple,
+    .nearby-place-card .select2-container--default.select2-container--open .select2-selection--multiple {
+        border-color: var(--primary-color);
+        box-shadow: var(--theme-focus-ring);
+    }
+    .nearby-place-card .select2-container--default .select2-selection--multiple .select2-selection__choice {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        min-height: 28px;
+        margin-top: 0.25rem;
+        border: 1px solid var(--theme-border-color);
+        border-radius: 6px;
+        background: var(--theme-soft-bg);
+        color: #25364d;
+        font-size: 0.9rem;
+    }
+    .nearby-place-card .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+        position: static;
+        border: 0;
+        color: #64748b;
+        font-size: 1rem;
+        line-height: 1;
+    }
+    .nearby-place-card .select2-container--default .select2-search--inline .select2-search__field {
+        height: 30px;
+        margin-top: 0.25rem;
+        font-family: inherit;
+    }
+    .nearby-place-card .select2-dropdown {
+        border-color: #dbe3ee;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
+    }
+    .nearby-place-card .select2-search--dropdown { padding: 0.65rem; }
+    .nearby-place-card .select2-search--dropdown .select2-search__field {
+        border: 1px solid #dbe3ee;
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        outline: 0;
+    }
+    .nearby-place-card .select2-results__option {
+        padding: 0.55rem 0.75rem;
+        font-size: 0.95rem;
+    }
+    .nearby-place-card .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+        background: var(--primary-fill);
+    }
+    body > .select2-container--open .select2-dropdown {
+        z-index: 2060;
+        border-color: #dbe3ee;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
+    }
+    body > .select2-container--open .select2-search--dropdown { padding: 0.65rem; }
+    body > .select2-container--open .select2-search--dropdown .select2-search__field {
+        border: 1px solid #dbe3ee;
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        outline: 0;
+    }
+    body > .select2-container--open .select2-results__option {
+        padding: 0.55rem 0.75rem;
+        font-size: 0.95rem;
+    }
+    body > .select2-container--open .select2-results__option--highlighted.select2-results__option--selectable {
+        background: var(--primary-fill);
+    }
 </style>
 @endpush
 
@@ -1136,9 +1330,196 @@
         }
     });
 
-    // Select2 Init
-    if (window.jQuery && jQuery.fn.select2) {
-        jQuery('.nearby-places-select2').select2({ width: '100%', allowClear: true });
-    }
+    // Nearby Places searchable multi-select
+    document.querySelectorAll('.nearby-places-source').forEach((select) => {
+        const picker = document.createElement('div');
+        picker.className = 'nearby-place-picker';
+
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'nearby-place-picker__trigger';
+        trigger.setAttribute('aria-haspopup', 'listbox');
+        trigger.setAttribute('aria-expanded', 'false');
+
+        const dropdown = document.createElement('div');
+        dropdown.className = 'nearby-place-picker__dropdown';
+
+        const searchWrap = document.createElement('div');
+        searchWrap.className = 'nearby-place-picker__search-wrap';
+
+        const search = document.createElement('input');
+        search.type = 'search';
+        search.className = 'nearby-place-picker__search';
+        search.placeholder = 'Search...';
+
+        const optionsWrap = document.createElement('div');
+        optionsWrap.className = 'nearby-place-picker__options';
+        optionsWrap.setAttribute('role', 'listbox');
+        optionsWrap.setAttribute('aria-multiselectable', 'true');
+
+        searchWrap.appendChild(search);
+        dropdown.append(searchWrap, optionsWrap);
+        picker.appendChild(trigger);
+        select.insertAdjacentElement('afterend', picker);
+        document.body.appendChild(dropdown);
+
+        const optionData = Array.from(select.options).map((option) => ({
+            value: option.value,
+            label: option.textContent.trim(),
+        }));
+
+        function selectedOptions() {
+            return Array.from(select.selectedOptions);
+        }
+
+        function renderTrigger() {
+            trigger.innerHTML = '';
+            const selected = selectedOptions();
+
+            if (!selected.length) {
+                const placeholder = document.createElement('span');
+                placeholder.className = 'nearby-place-picker__placeholder';
+                placeholder.textContent = select.dataset.placeholder || 'Select nearby places...';
+                trigger.appendChild(placeholder);
+                return;
+            }
+
+            selected.slice(0, 3).forEach((option) => {
+                const chip = document.createElement('span');
+                chip.className = 'nearby-place-picker__chip';
+                chip.textContent = option.textContent.trim();
+
+                const remove = document.createElement('span');
+                remove.className = 'nearby-place-picker__chip-remove';
+                remove.setAttribute('aria-hidden', 'true');
+                remove.textContent = 'x';
+                chip.appendChild(remove);
+                trigger.appendChild(chip);
+            });
+
+            if (selected.length > 3) {
+                const extra = document.createElement('span');
+                extra.className = 'nearby-place-picker__chip';
+                extra.textContent = `+${selected.length - 3} more`;
+                trigger.appendChild(extra);
+            }
+        }
+
+        function renderOptions() {
+            const term = search.value.trim().toLowerCase();
+            const selectedValues = new Set(selectedOptions().map((option) => option.value));
+            const matches = optionData.filter((option) => option.label.toLowerCase().includes(term));
+
+            optionsWrap.innerHTML = '';
+
+            if (!matches.length) {
+                const empty = document.createElement('div');
+                empty.className = 'nearby-place-picker__empty';
+                empty.textContent = 'No results found';
+                optionsWrap.appendChild(empty);
+                return;
+            }
+
+            matches.forEach((option) => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'nearby-place-picker__option';
+                item.textContent = option.label;
+                item.setAttribute('role', 'option');
+                item.setAttribute('aria-selected', selectedValues.has(option.value) ? 'true' : 'false');
+                item.classList.toggle('selected', selectedValues.has(option.value));
+
+                item.addEventListener('click', () => {
+                    const sourceOption = Array.from(select.options).find((source) => source.value === option.value);
+                    if (!sourceOption) return;
+
+                    sourceOption.selected = !sourceOption.selected;
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                    renderTrigger();
+                    renderOptions();
+                    search.focus();
+                });
+
+                optionsWrap.appendChild(item);
+            });
+        }
+
+        function positionDropdown() {
+            const rect = trigger.getBoundingClientRect();
+            const viewportGap = 12;
+            const menuHeightCap = 220;
+            const dropdownHeight = Math.min(menuHeightCap, dropdown.scrollHeight || menuHeightCap);
+            const spaceBelow = window.innerHeight - rect.bottom - viewportGap;
+            const spaceAbove = rect.top - viewportGap;
+            const openAbove = spaceBelow < 150 && spaceAbove > spaceBelow;
+            const availableHeight = Math.max(160, Math.min(dropdownHeight, openAbove ? spaceAbove : spaceBelow));
+
+            dropdown.style.left = `${rect.left}px`;
+            dropdown.style.width = `${rect.width}px`;
+            dropdown.style.maxHeight = `${availableHeight}px`;
+            dropdown.style.borderRadius = openAbove ? '10px 10px 0 0' : '0 0 10px 10px';
+            dropdown.style.top = openAbove
+                ? `${Math.max(viewportGap, rect.top - availableHeight)}px`
+                : `${rect.bottom - 1}px`;
+            optionsWrap.style.maxHeight = `${Math.max(90, availableHeight - searchWrap.offsetHeight)}px`;
+        }
+
+        function openPicker() {
+            document.querySelectorAll('.nearby-place-picker.open').forEach((openPickerEl) => {
+                if (openPickerEl !== picker) {
+                    openPickerEl.classList.remove('open');
+                    openPickerEl.querySelector('.nearby-place-picker__trigger')?.setAttribute('aria-expanded', 'false');
+                }
+            });
+            document.querySelectorAll('.nearby-place-picker__dropdown.open').forEach((openDropdown) => {
+                if (openDropdown !== dropdown) openDropdown.classList.remove('open');
+            });
+
+            picker.classList.add('open');
+            dropdown.classList.add('open');
+            trigger.setAttribute('aria-expanded', 'true');
+            search.value = '';
+            renderOptions();
+            positionDropdown();
+            setTimeout(() => {
+                positionDropdown();
+                search.focus();
+            }, 0);
+        }
+
+        function closePicker() {
+            picker.classList.remove('open');
+            dropdown.classList.remove('open');
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+
+        trigger.addEventListener('click', openPicker);
+        search.addEventListener('input', renderOptions);
+        search.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') closePicker();
+        });
+        window.addEventListener('scroll', () => {
+            if (picker.classList.contains('open')) positionDropdown();
+        }, true);
+        window.addEventListener('resize', () => {
+            if (picker.classList.contains('open')) positionDropdown();
+        });
+
+        renderTrigger();
+        renderOptions();
+    });
+
+    document.addEventListener('mousedown', (event) => {
+        document.querySelectorAll('.nearby-place-picker.open').forEach((picker) => {
+            const trigger = picker.querySelector('.nearby-place-picker__trigger');
+            const openDropdown = document.querySelector('.nearby-place-picker__dropdown.open');
+
+            if (!picker.contains(event.target) && !openDropdown?.contains(event.target)) {
+                picker.classList.remove('open');
+                openDropdown?.classList.remove('open');
+                trigger?.setAttribute('aria-expanded', 'false');
+            }
+        });
+    });
 </script>
 @endpush
