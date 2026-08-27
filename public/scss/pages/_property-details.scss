@@ -1730,12 +1730,8 @@ $calc-hoa: #FF513A;
 
 // Similar listings (horizontal slick + listing cards)
 .property-detail-similar {
-    background: #eef3f9;
-    overflow: hidden;
-
     .property-card--listing .property-card__footer{
         justify-content: flex-end;
-        margin-top: auto;
     }
     .property-card__price{
         font-size: clamp(18px, 1.25vw, 24px);
@@ -1844,10 +1840,9 @@ $calc-hoa: #FF513A;
             @include min(1900){margin-right:57px;}
         }
         .property-card__ghost{
-            left: 0.65rem;
-            right: -0.25rem;
-            bottom: -30px;
-            border-radius: 1.25rem;
+            left: unset;
+            border-radius: 0;
+            right: -22px;
         }
         .slick-slide {
             display: flex;
@@ -1938,117 +1933,6 @@ $calc-hoa: #FF513A;
 
     .property-details__item + div {
         padding-left: clamp(8px, 0.8vw, 14px);
-    }
-
-    // Final home-card match for Similar Listing.
-    .property-detail-similar__slide {
-        display: flex;
-        align-items: stretch;
-    }
-
-    .property-card {
-        width: 330px;
-        height: 100%;
-        margin-left: 0;
-        margin-right: 0;
-
-        @include min(576) {
-            width: 330px;
-        }
-
-        @include min(1200) {
-            width: 350px;
-        }
-
-        @include min(1350) {
-            width: 360px;
-        }
-
-        @include min(1600) {
-            width: 424px;
-        }
-
-        @include min(1900) {
-            width: 514px;
-        }
-    }
-
-    .property-card__inner {
-        background: $white !important;
-        border-radius: 1.25rem !important;
-        height: 100% !important;
-        min-height: 100%;
-        padding: clamp(16px, 1.5vw, 32px) !important;
-    }
-
-    .property-card__ghost {
-        left: 0.65rem !important;
-        right: -0.25rem !important;
-        bottom: -30px !important;
-        border-radius: 1.25rem !important;
-    }
-
-    .property-card__media {
-        margin-bottom: 27px;
-
-        picture,
-        .property-card__media-slide {
-            display: block;
-            max-height: none !important;
-        }
-
-        img {
-            width: 100%;
-            height: clamp(190px, 12.1875vw, 260px) !important;
-            aspect-ratio: auto !important;
-            object-fit: cover;
-        }
-    }
-
-    .property-card__body {
-        flex: 1 1 auto;
-    }
-
-    .property-card__meta--similar {
-        margin-bottom: 15px;
-
-        @include min(1200) {
-            margin-bottom: 28px;
-        }
-    }
-
-    .property-card__photos--similar-row {
-        display: none;
-    }
-
-    .property-details {
-        margin-top: auto;
-    }
-
-    .property-card__actions {
-        justify-content: flex-end;
-        margin-top: 17px;
-    }
-
-    .js-property-detail-similar-slider {
-        margin: 0 -0.5rem;
-
-        > .slick-list > .slick-track {
-            align-items: stretch;
-        }
-
-        .property-detail-similar__slide {
-            margin-right: 0;
-            padding-bottom: 35px;
-        }
-
-        .slick-slide {
-            align-self: stretch;
-
-            > div {
-                padding: 0;
-            }
-        }
     }
 }
 
