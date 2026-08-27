@@ -383,7 +383,7 @@
                 <div class="property-detail-similar__slider-outer">
                     <div class="js-property-detail-similar-slider property-detail-similar__slider">
                         <div v-for="p in similar" :key="p.id" class="property-detail-similar__slide">
-                            <article class="property-card property-card--listing" :data-property-url="similarCardDataPropertyUrl(p)">
+                            <article class="property-card" :data-property-url="similarCardDataPropertyUrl(p)">
                                 <div class="property-card__ghost" aria-hidden="true"></div>
                                 <div class="property-card__inner">
                                     <div class="property-card__media">
@@ -454,27 +454,25 @@
                                                 <span>{{ formatSqft(p.sqft) }}{{ t('listing.sqftSuffix') }}</span>
                                             </div>
                                         </div>
-                                        <div class="property-card__footer property-card__footer--actions-only">
-                                            <div class="property-card__actions">
-                                                <a
-                                                    class="property-btn property-btn--primary"
-                                                    href="#"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#siteEnquiryForm"
-                                                    :data-property-title="p.title || ''"
-                                                    :data-property-location="p.location || ''"
-                                                    :data-property-type="similarPropertyTypeLabel(p)"
-                                                    :data-property-size="similarSizeLabel(p)"
-                                                >{{ t('propertyDetail.enquiry') }}</a>
-                                                <a v-if="siteCallHref" class="property-btn property-btn--outline" :href="siteCallHref">{{ t('propertyDetail.callNow') }}</a>
-                                                <a
-                                                    v-if="siteWhatsappLink"
-                                                    class="property-btn property-btn--outline"
-                                                    :href="siteWhatsappLink"
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                >{{ t('propertyDetail.whatsapp') }}</a>
-                                            </div>
+                                        <div class="property-card__actions">
+                                            <a
+                                                class="property-btn property-btn--primary"
+                                                href="#"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#siteEnquiryForm"
+                                                :data-property-title="p.title || ''"
+                                                :data-property-location="p.location || ''"
+                                                :data-property-type="similarPropertyTypeLabel(p)"
+                                                :data-property-size="similarSizeLabel(p)"
+                                            >{{ t('propertyDetail.enquiry') }}</a>
+                                            <a v-if="siteCallHref" class="property-btn property-btn--outline" :href="siteCallHref">{{ t('propertyDetail.callNow') }}</a>
+                                            <a
+                                                v-if="siteWhatsappLink"
+                                                class="property-btn property-btn--outline"
+                                                :href="siteWhatsappLink"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >{{ t('propertyDetail.whatsapp') }}</a>
                                         </div>
                                     </div>
                                 </div>

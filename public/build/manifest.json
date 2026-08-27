@@ -90,8 +90,12 @@
     "file": "assets/OurPropertyContent-JBcxUxLV.css",
     "src": "_OurPropertyContent-JBcxUxLV.css"
   },
-  "_PropertyDetailsContent-B7sXN3aq.js": {
-    "file": "assets/PropertyDetailsContent-B7sXN3aq.js",
+  "_PropertyDetailsContent-BBa6VEu6.css": {
+    "file": "assets/PropertyDetailsContent-BBa6VEu6.css",
+    "src": "_PropertyDetailsContent-BBa6VEu6.css"
+  },
+  "_PropertyDetailsContent-CJFgEUIX.js": {
+    "file": "assets/PropertyDetailsContent-CJFgEUIX.js",
     "name": "PropertyDetailsContent",
     "imports": [
       "_leaflet-src-CcCnUo0T.js",
@@ -107,10 +111,6 @@
     "css": [
       "assets/PropertyDetailsContent-BBa6VEu6.css"
     ]
-  },
-  "_PropertyDetailsContent-BBa6VEu6.css": {
-    "file": "assets/PropertyDetailsContent-BBa6VEu6.css",
-    "src": "_PropertyDetailsContent-BBa6VEu6.css"
   },
   "_asset-C8GDrsbb.js": {
     "file": "assets/asset-C8GDrsbb.js",
@@ -221,7 +221,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-D3QchK1F.js",
+    "file": "assets/app-CYx9XgvF.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -273,13 +273,13 @@
     ]
   },
   "resources/js/properties-detail.js": {
-    "file": "assets/properties-detail-DQ_iKX58.js",
+    "file": "assets/properties-detail-DsIl4tFG.js",
     "name": "properties-detail",
     "src": "resources/js/properties-detail.js",
     "isEntry": true,
     "imports": [
       "_runtime-dom.esm-bundler-d8uFIF6X.js",
-      "_PropertyDetailsContent-B7sXN3aq.js",
+      "_PropertyDetailsContent-CJFgEUIX.js",
       "_i18n-DP-Codek.js",
       "_leaflet-src-CcCnUo0T.js",
       "_asset-C8GDrsbb.js",
@@ -309,7 +309,7 @@
     ]
   },
   "resources/js/router/index.js": {
-    "file": "assets/index-BsPYRo5g.js",
+    "file": "assets/index-Q-PRInK4.js",
     "name": "index",
     "src": "resources/js/router/index.js",
     "isDynamicEntry": true,
@@ -323,7 +323,7 @@
       "_Home-B6l78ZQO.js",
       "_About-BLuhyDu8.js",
       "_OurPropertyContent-DMTOKLP7.js",
-      "_PropertyDetailsContent-B7sXN3aq.js",
+      "_PropertyDetailsContent-CJFgEUIX.js",
       "_publicContent-hG0-RrkD.js",
       "_seo-BimjELNl.js",
       "_MapContent-B0SA_3V8.js",
